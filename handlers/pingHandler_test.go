@@ -20,3 +20,16 @@ func TestPingHandler(t *testing.T) {
 		assert.Equal(t, "pong", rec.Body.String())
 	}
 }
+
+// Test failing test
+func TestPingHandlerFail(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if assert.NoError(t, PingHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "pang", rec.Body.String())
+	}
+}
