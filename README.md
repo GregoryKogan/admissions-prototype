@@ -10,7 +10,7 @@ Service for applicants to the L2SH
 
 ## Build and run
 
-Server listens on `localhost:8080` by default.
+Server listens on `localhost:8888` by default.
 
 ### Docker (recommended)
 
