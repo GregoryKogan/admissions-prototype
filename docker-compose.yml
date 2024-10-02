@@ -44,5 +44,15 @@ services:
       - "5050:80"
     restart: unless-stopped
 
+  migrate:
+  image: migrate/migrate
+  container_name: migrate
+  depends_on:
+    database:
+      condition: service_healthy
+  volumes:
+    - ./migrations:/migrations
+  entrypoint: [ "sh", "-c", "until nc -z -v -w30 database 5432; do echo waiting for database; sleep 1; done; migrate -path=/migrations -database=postgres://l2shdev:l2sh@database:5432/admissions?sslmode=disable up" ]
+
 volumes:
   pgadmin:
