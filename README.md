@@ -44,17 +44,5 @@ To connect to the database, use credentials from `docker-compose.yml`.
 How to find out the host name of the database:
 
 ```bash
-docker inspect database | grep IPAddress
-```
-
-Or use the following command:
-
-```bash
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' database
-```
-
-It's a bit more complicated, but returns only the IP address. It's convenient if you want to copy it into secrets for example.
-
-```bash
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' database > secrets/database_host.txt
 ```
