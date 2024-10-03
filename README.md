@@ -1,16 +1,19 @@
 # admissions
 
-Сервис для поступающих в Лицей "Вторая школа"
+Service for applicants to the L2SH
 
-## Структура проекта
+## Project structure
 
-- `server.go` - точка входа
-- `ui/` - фронтенд
+- `server.go` - entry point
+- `handlers` - api request handlers
+- `ui/` - frontend
 - `scripts/` - miscellaneous scripts
 - `migrations/` - database migrations
 - `secrets/` - secrets (ignored by git)
 
-## Сборка и запуск
+## Build and run
+
+Server listens on `localhost:8888` by default.
 
 ### Profiles
 
@@ -45,4 +48,25 @@ How to find out the host name of the database:
 
 ```bash
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' database
+```
+
+## Testing
+
+### Run tests
+
+```bash
+go test -v ./...
+```
+
+### Code coverage
+
+```bash
+go test -v -coverprofile=coverage.out ./...
+```
+
+`coverage.out` file will be generated in the project root directory.  
+To view the coverage report, run:
+
+```bash
+go tool cover -html=coverage.out
 ```

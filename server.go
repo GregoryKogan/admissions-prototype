@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx"
+	"github.com/L2SH-Dev/admissions/handlers"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -48,9 +49,7 @@ func main() {
 	}))
 
 	api := e.Group("/api")
-	api.GET("/hello", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	api.GET("/ping", handlers.PingHandler)
 
 	e.Logger.Fatal(e.Start(":8888"))
 }
