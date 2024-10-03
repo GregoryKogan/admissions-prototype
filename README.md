@@ -1,30 +1,54 @@
 # admissions
 
-Сервис для поступающих в Лицей "Вторая школа"
+Service for applicants to the L2SH
 
-## Структура проекта
+## Project structure
 
-- `server.go` - точка входа
-- `ui/` - фронтенд
+- `server.go` - entry point
+- `handlers` - api request handlers
+- `ui/` - frontend
 
-## Сборка и запуск
+## Build and run
 
-### С Docker (рекомендуется)
+Server listens on `localhost:8888` by default.
+
+### Docker (recommended)
 
 ```bash
 docker-compose up --build
 ```
 
-### Без Docker
+### Manual
 
 ```bash
-# Сборка фронтенда
+# Build frontend
 cd ui
 yarn install
 yarn build
 cd ..
-# Сборка и запуск сервера
+# Build and run server
 go mod download
 go build -o server .
 ./server
+```
+
+## Testing
+
+### Run tests
+
+```bash
+go test -v ./...
+```
+
+### Code coverage
+
+```bash
+go test -v -coverprofile=coverage.out ./...
+```
+
+`coverage.out` file will be generated in the project root directory.  
+To view the coverage report, run:
+
+```bash
+go tool cover -html=coverage.out
 ```
