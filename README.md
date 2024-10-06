@@ -7,29 +7,47 @@ Service for applicants to the L2SH
 - `server.go` - entry point
 - `handlers` - api request handlers
 - `ui/` - frontend
+- `scripts/` - miscellaneous scripts
+- `migrations/` - database migrations
+- `secrets/` - secrets (ignored by git)
 
 ## Build and run
 
 Server listens on `localhost:8888` by default.
 
-### Docker (recommended)
+### Profiles
+
+`docker-compose.yml` has `dev` profile that is bound to `database` and `pgadmin` services. Therefore in development run:
 
 ```bash
-docker-compose up --build
+docker compose --profile dev up --build
 ```
 
-### Manual
+For production without mock database and pgAdmin:
 
 ```bash
-# Build frontend
-cd ui
-yarn install
-yarn build
-cd ..
-# Build and run server
-go mod download
-go build -o server .
-./server
+docker compose up --build
+```
+
+### Secrets
+
+Secrets are stored in `secrets/` directory.  
+`docker-compose.yml` expects the following files:
+
+- `secrets/database_host.txt` - database host
+- `secrets/database_uri.txt` - database URI (for migrations)
+
+## Administration
+
+### PgAdmin
+
+- URL: http://localhost:5050
+
+To connect to the database, use credentials from `docker-compose.yml`.  
+How to find out the host name of the database:
+
+```bash
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' database
 ```
 
 ## Testing
