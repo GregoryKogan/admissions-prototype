@@ -13,21 +13,28 @@ Service for applicants to the L2SH
 
 ## Build and run
 
-Server listens on `localhost:8888` by default.
-
-### Profiles
-
-`docker-compose.yml` has `dev` profile that is bound to `database` and `pgadmin` services. Therefore in development run:
+### Development
 
 ```bash
-docker compose --profile dev up --build
+docker compose --profile dev up --build --watch
 ```
 
-For production without mock database and pgAdmin:
+- `--profile dev` - use `dev` profile that is bound to `database` and `pgadmin` services
+- `--watch` - update the container on code changes
+
+### Production
 
 ```bash
 docker compose up --build
 ```
+
+### Ports
+
+Default ports:
+
+- `server` - 8888
+- `pgadmin` - 5050
+- `database` - 5432
 
 ### Secrets
 

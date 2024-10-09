@@ -24,11 +24,11 @@ RUN go build -o server .
 # Stage 3: Create the final image
 FROM alpine:latest
 
+RUN adduser -D -u 1001 app
+
 WORKDIR /root/
 
-COPY --from=backend-builder /app/server .
-COPY --from=frontend-builder /app/dist ./ui/dist
+COPY --from=backend-builder --chown=app:app /app/server .
+COPY --from=frontend-builder --chown=app:app /app/dist ./ui/dist
 
 EXPOSE 8888
-
-CMD ["./server"]

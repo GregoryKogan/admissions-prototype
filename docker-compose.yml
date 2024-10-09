@@ -10,6 +10,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8888:8888"
+    command: ./server
+    develop:
+      watch:
+        - action: sync
+          path: ./ui/dist
+          target: /ui/dist
+        - action: rebuild
+          path: ./server.go
+          target: /server.go
+        - action: rebuild
+          path: ./handlers
+          target: /handlers
 
   database:
     container_name: database
