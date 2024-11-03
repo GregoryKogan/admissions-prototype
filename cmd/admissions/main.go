@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/L2SH-Dev/admissions/internal/auth"
 	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/database"
 	"github.com/L2SH-Dev/admissions/internal/logging"
@@ -30,6 +31,7 @@ func main() {
 
 	api := e.Group("/api")
 	ping.AddRoutes(api)
+	auth.AddRoutes(api)
 
 	port := viper.GetString("server.port")
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", port)))
