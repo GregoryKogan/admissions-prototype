@@ -60,6 +60,7 @@ Secrets are stored in `secrets/` directory.
 `docker-compose.yml` expects the following files:
 
 - `secrets/db_password.txt` - database password
+- `secrets/jwt_key.txt` - JWT signing key
 
 ## Administration
 
