@@ -2,6 +2,20 @@
 
 Service for applicants to the L2SH
 
+## ToC <!-- omit in toc -->
+
+- [Project structure](#project-structure)
+- [Build and run](#build-and-run)
+  - [Development](#development)
+  - [Production](#production)
+  - [Ports](#ports)
+  - [Secrets](#secrets)
+- [Administration](#administration)
+  - [PgAdmin](#pgadmin)
+- [Testing](#testing)
+  - [Run tests](#run-tests)
+  - [Code coverage](#code-coverage)
+
 ## Project structure
 
 - `server.go` - entry point
