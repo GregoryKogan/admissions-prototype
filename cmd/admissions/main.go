@@ -29,7 +29,7 @@ func main() {
 	e.File("/", "ui/dist/index.html")
 
 	api := e.Group("/api")
-	api.GET("/ping", ping.PingHandler)
+	ping.AddRoutes(api)
 
 	port := viper.GetString("server.port")
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", port)))
