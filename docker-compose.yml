@@ -13,6 +13,7 @@ services:
     command: ./admissions
     secrets:
       - db_password
+      - jwt_key
     develop:
       watch:
         - action: sync
@@ -69,6 +70,8 @@ services:
 secrets:
   db_password:
     file: ./secrets/db_password.txt
+  jwt_key:
+    file: ./secrets/jwt_key.txt
 
 volumes:
   pgadmin:
