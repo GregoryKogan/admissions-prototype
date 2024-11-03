@@ -23,7 +23,6 @@ Service for applicants to the L2SH
 - `internal/` - internal packages
 - `tests/` - tests
 - `ui/` - frontend
-- `migrations/` - database migrations
 - `secrets/` - secrets (ignored by git)
 - `config.yml` - configuration file
 
@@ -60,8 +59,6 @@ Secrets are stored in `secrets/` directory.
 `docker-compose.yml` expects the following files:
 
 - `secrets/db_password.txt` - database password
-- `secrets/database_host.txt` - database host
-- `secrets/database_uri.txt` - database URI (for migrations)
 
 ## Administration
 

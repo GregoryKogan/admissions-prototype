@@ -66,23 +66,9 @@ services:
     secrets:
       - db_password
 
-  migrate:
-    image: migrate/migrate
-    container_name: migrate
-    volumes:
-      - ./migrations:/migrations
-    entrypoint: [ "sh", "-c", "until nc -z -v -w30 $(cat /run/secrets/database_host) 5432; do echo waiting for database; sleep 1; done; migrate -path=/migrations -database=$(cat /run/secrets/database_uri) up" ]
-    secrets:
-      - database_uri
-      - database_host
-
 secrets:
   db_password:
     file: ./secrets/db_password.txt
-  database_uri:
-    file: ./secrets/database_uri.txt
-  database_host:
-    file: ./secrets/database_host.txt
 
 volumes:
   pgadmin:
