@@ -3,19 +3,35 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
+	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/ping"
+	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/jackc/pgx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	// TODO: use configuration to store the database connection parameters
+	config.Init()
+
 	// connect to the database
-	conn, err := pgx.Connect(pgx.ConnConfig{Host: "database", Port: 5432, User: "l2shdev", Password: "l2sh", Database: "admissions"})
+	dbConfig := viper.Sub("database")
+	db_password, err := secrets.ReadSecret("db_password")
+	if err != nil {
+		log.Fatalf("Failed to read database password: %v", err)
+	}
+	conn, err := pgx.Connect(pgx.ConnConfig{
+		Host:     dbConfig.GetString("host"),
+		Port:     uint16(dbConfig.GetInt("port")),
+		User:     dbConfig.GetString("user"),
+		Password: db_password,
+		Database: dbConfig.GetString("name"),
+	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)

@@ -1,0 +1,8 @@
+server:
+  port: 8888
+
+database:
+  user: l2sh
+  name: admissions
+  host: database
+  port: 5432

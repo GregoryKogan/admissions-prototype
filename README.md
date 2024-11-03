@@ -18,14 +18,18 @@ Service for applicants to the L2SH
 
 ## Project structure
 
-- `server.go` - entry point
-- `handlers` - api request handlers
+- `cmd/` - application entry points
+  - `cmd/admissions/main.go` - main entry point
+- `internal/` - internal packages
+- `tests/` - tests
 - `ui/` - frontend
-- `scripts/` - miscellaneous scripts
 - `migrations/` - database migrations
 - `secrets/` - secrets (ignored by git)
+- `config.yml` - configuration file
 
 ## Build and run
+
+Before running the application, make sure to create the necessary secrets files (see [Secrets](#secrets)).
 
 ### Development
 
@@ -46,7 +50,7 @@ docker compose up --build
 
 Default ports:
 
-- `server` - 8888
+- `server` - 8888 (set in `config.yml`)
 - `pgadmin` - 5050
 - `database` - 5432
 
@@ -55,6 +59,7 @@ Default ports:
 Secrets are stored in `secrets/` directory.  
 `docker-compose.yml` expects the following files:
 
+- `secrets/db_password.txt` - database password
 - `secrets/database_host.txt` - database host
 - `secrets/database_uri.txt` - database URI (for migrations)
 
@@ -64,12 +69,7 @@ Secrets are stored in `secrets/` directory.
 
 - URL: http://localhost:5050
 
-To connect to the database, use credentials from `docker-compose.yml`.  
-How to find out the host name of the database:
-
-```bash
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' database
-```
+Credentials to connect to the development database are in `docker-compose.yml` and `secrets/db_password.txt`.
 
 ## Testing
 

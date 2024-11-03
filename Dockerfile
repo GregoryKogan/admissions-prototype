@@ -29,6 +29,7 @@ RUN adduser -D -u 1001 app
 WORKDIR /root/
 
 COPY --from=backend-builder --chown=app:app /app/admissions ./admissions
+COPY --from=backend-builder --chown=app:app /app/config.yml ./
 COPY --from=frontend-builder --chown=app:app /app/dist ./ui/dist
 
 EXPOSE 8888
