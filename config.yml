@@ -6,3 +6,5 @@ database:
   name: admissions
   host: database
   port: 5432
+  connection:
+    timezone: Europe/Moscow
