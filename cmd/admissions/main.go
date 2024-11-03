@@ -10,6 +10,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/database"
 	"github.com/L2SH-Dev/admissions/internal/logging"
 	"github.com/L2SH-Dev/admissions/internal/ping"
+	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -44,9 +45,15 @@ func initDatabase() {
 		os.Exit(1)
 	}
 
-	err = db.AutoMigrate()
+	err = users.Migrate(db)
 	if err != nil {
 		slog.Error("Failed to migrate the database", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	err = users.CreateDefaultRoles(db)
+	if err != nil {
+		slog.Error("Failed to create default roles", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
