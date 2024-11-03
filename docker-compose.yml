@@ -11,6 +11,8 @@ services:
     ports:
       - "8888:8888"
     command: ./admissions
+    secrets:
+      - db_password
     develop:
       watch:
         - action: sync
@@ -21,7 +23,7 @@ services:
         - action: rebuild
           path: ./internal
         - action: rebuild
-          path: ./pkg
+          path: config.yml
 
   database:
     container_name: database
@@ -29,13 +31,15 @@ services:
     profiles: [ dev ]
     restart: unless-stopped
     environment:
-      POSTGRES_USER: l2shdev
-      POSTGRES_PASSWORD: l2sh
+      POSTGRES_USER: l2sh
       POSTGRES_DB: admissions
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     volumes:
       - database:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    secrets:
+      - db_password
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       interval: 1s
@@ -51,12 +55,16 @@ services:
       database:
         condition: service_healthy
     environment:
+      PGADMIN_DEFAULT_EMAIL: l2sh@localhost.org
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/db_password
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       GUNICORN_ACCESS_LOGFILE: /dev/null
     volumes:
       - pgadmin:/var/lib/pgadmin
     ports:
       - "5050:80"
+    secrets:
+      - db_password
 
   migrate:
     image: migrate/migrate
@@ -69,6 +77,8 @@ services:
       - database_host
 
 secrets:
+  db_password:
+    file: ./secrets/db_password.txt
   database_uri:
     file: ./secrets/database_uri.txt
   database_host:
