@@ -1,38 +1,44 @@
 package main
 
 import (
-	"log"
 	"net/http"
+	"os"
 
 	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/database"
+	"github.com/L2SH-Dev/admissions/internal/logging"
 	"github.com/L2SH-Dev/admissions/internal/ping"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/exp/slog"
 )
 
 func main() {
 	config.Init()
+	logging.Init()
 
 	db, err := database.Connect()
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+		slog.Error("Failed to connect to the database", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	err = db.AutoMigrate()
 	if err != nil {
-		log.Fatalf("Failed to migrate the database: %v", err)
+		slog.Error("Failed to migrate the database", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	e := echo.New()
 
-	e.Static("/", "ui/dist")
-	e.File("/", "ui/dist/index.html")
-
+	logging.AddMiddleware(e)
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8888"},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 	}))
+
+	e.Static("/", "ui/dist")
+	e.File("/", "ui/dist/index.html")
 
 	api := e.Group("/api")
 	api.GET("/ping", ping.PingHandler)

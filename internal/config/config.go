@@ -1,9 +1,10 @@
 package config
 
 import (
-	"log"
+	"os"
 
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slog"
 )
 
 func Init() {
@@ -12,9 +13,13 @@ func Init() {
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Fatalf("Config file not found, %s", err)
+			slog.Error("Config file not found", slog.Any("error", err))
+			os.Exit(1)
 		} else {
-			log.Fatalf("Error reading config file, %s", err)
+			slog.Error("Error reading config file", slog.Any("error", err))
+			os.Exit(1)
 		}
 	}
+
+	slog.Info("Config file successfully read")
 }

@@ -1,3 +1,6 @@
+# available modes: development, production
+mode: development
+
 server:
   port: 8888
 
@@ -8,3 +11,6 @@ database:
   port: 5432
   connection:
     timezone: Europe/Moscow
+
+logging:
+  level: debug

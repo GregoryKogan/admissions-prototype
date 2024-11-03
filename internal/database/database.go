@@ -2,10 +2,10 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,7 +14,7 @@ func Connect() (*gorm.DB, error) {
 	dbConfig := viper.Sub("database")
 	db_password, err := secrets.ReadSecret("db_password")
 	if err != nil {
-		log.Printf("Failed to read database password: %v", err)
+		slog.Error("Failed to read database password", slog.Any("error", err))
 		return nil, err
 	}
 
@@ -30,9 +30,10 @@ func Connect() (*gorm.DB, error) {
 		)), &gorm.Config{})
 
 	if err != nil {
-		log.Printf("Failed to connect to the database: %v", err)
+		slog.Error("Failed to connect to the database", slog.Any("error", err))
 		return nil, err
 	}
 
+	slog.Info("Connected to the database")
 	return db, nil
 }

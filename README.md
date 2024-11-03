@@ -62,6 +62,14 @@ Secrets are stored in `secrets/` directory.
 
 ## Administration
 
+### Logging
+
+The application logs to `stdout`, which can be viewed with `docker logs` command.
+
+```bash
+docker logs admissions
+```
+
 ### PgAdmin
 
 - URL: http://localhost:5050
