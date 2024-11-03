@@ -11,6 +11,7 @@ Service for applicants to the L2SH
   - [Ports](#ports)
   - [Secrets](#secrets)
 - [Administration](#administration)
+  - [Logging](#logging)
   - [PgAdmin](#pgadmin)
 - [Testing](#testing)
   - [Run tests](#run-tests)
