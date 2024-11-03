@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/L2SH-Dev/admissions/internal/ping"
 	"github.com/jackc/pgx"
-	"github.com/L2SH-Dev/admissions/handlers"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -49,7 +49,7 @@ func main() {
 	}))
 
 	api := e.Group("/api")
-	api.GET("/ping", handlers.PingHandler)
+	api.GET("/ping", ping.PingHandler)
 
 	e.Logger.Fatal(e.Start(":8888"))
 }

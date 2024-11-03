@@ -4,8 +4,8 @@ secrets/
 # Ignore the migrations directory
 migrations/
 
-# Ignore the scripts directory
-scripts/
+# Ignore the tests directory
+tests/
 
 # Ignore the .git directory
 .git
@@ -31,3 +31,4 @@ coverage.out
 
 # Ignore Docker-related files
 docker-compose.yml
+Dockerfile
