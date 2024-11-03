@@ -52,6 +52,9 @@ func initDatabase() {
 func addMiddleware(e *echo.Echo) {
 	logging.AddMiddleware(e)
 
+	e.Use(middleware.Recover())
+	e.Use(middleware.Secure())
+
 	port := viper.GetString("server.port")
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{fmt.Sprintf("http://localhost:%s", port)},
