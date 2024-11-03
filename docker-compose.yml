@@ -50,6 +50,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    environment:
+      GUNICORN_ACCESS_LOGFILE: /dev/null
     volumes:
       - pgadmin:/var/lib/pgadmin
     ports:
