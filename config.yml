@@ -14,3 +14,7 @@ database:
 
 logging:
   level: debug
+
+jwt:
+  access_lifetime: 15m
+  refresh_lifetime: 30d
