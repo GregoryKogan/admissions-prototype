@@ -1,63 +1,58 @@
 package users
 
 import (
-	"github.com/jackc/pgx/pgtype"
+	"errors"
+
 	"gorm.io/gorm"
 )
 
-func Migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&User{}, &Password{}, &Role{})
-	if err != nil {
-		return err
-	}
-	return nil
+type UsersRepo struct {
+	db *gorm.DB
 }
 
-func CreateDefaultRoles(db *gorm.DB) error {
-	roles := []Role{
-		{
-			Title: "admin",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": true}`),
-				Status: pgtype.Present,
-			},
-		},
-		{
-			Title: "user",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": false}`),
-				Status: pgtype.Present,
-			},
-		},
+func NewUsersRepo(db *gorm.DB) *UsersRepo {
+	if err := db.AutoMigrate(&User{}, &Role{}); err != nil {
+		panic(err)
 	}
+	return &UsersRepo{db: db}
+}
 
-	for _, role := range roles {
-		var existingRole Role
-		err := db.Where("title = ?", role.Title).First(&existingRole).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			return err
-		}
-		if err == gorm.ErrRecordNotFound {
-			err = db.Create(&role).Error
-			if err != nil {
-				return err
-			}
-		}
+func (r *UsersRepo) CreateRole(role *Role) error {
+	err := r.db.Create(role).Error
+	if err != nil {
+		return errors.Join(errors.New("failed to create role"), err)
 	}
 
 	return nil
 }
 
-func HasPermission(role Role, permission string) bool {
-	if role.Permissions.Status != pgtype.Present {
-		return false
+func (r *UsersRepo) RoleExists(title string) (bool, error) {
+	var role Role
+	err := r.db.Where("title = ?", title).First(&role).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, err
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
 	}
 
-	var permissions map[string]bool
-	err := role.Permissions.AssignTo(&permissions)
+	return true, nil
+}
+
+func (r *UsersRepo) CreateUser(user *User) error {
+	err := r.db.Create(user).Error
 	if err != nil {
-		return false
+		return errors.Join(errors.New("failed to create user"), err)
 	}
 
-	return permissions[permission]
+	return nil
+}
+
+func (r *UsersRepo) GetByEmail(email string) (*User, error) {
+	var user User
+	err := r.db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
