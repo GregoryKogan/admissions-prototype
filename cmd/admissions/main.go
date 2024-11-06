@@ -7,6 +7,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/logging"
 	"github.com/L2SH-Dev/admissions/internal/ping"
+	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
@@ -19,6 +20,8 @@ func main() {
 	e := echo.New()
 
 	addMiddleware(e)
+
+	validation.AddValidation(e)
 
 	serveFrontend(e)
 
