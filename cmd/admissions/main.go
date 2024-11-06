@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/auth"
@@ -16,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slog"
 	"gorm.io/gorm"
 )
 

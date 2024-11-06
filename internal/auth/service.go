@@ -23,6 +23,14 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh"`
 }
 
+func (s *AuthService) ValidatePassword(password string) error {
+	return s.passwordsService.Validate(password)
+}
+
+func (s *AuthService) Register(userID uint, password string) error {
+	return s.passwordsService.Create(userID, password)
+}
+
 func (s *AuthService) Login(userID uint, password string) (*TokenPair, error) {
 	ok, err := s.passwordsService.Verify(userID, password)
 	if err != nil {

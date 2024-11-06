@@ -20,8 +20,8 @@ func NewPasswordsRepo(db *gorm.DB) *PasswordsRepo {
 func (r *PasswordsRepo) Create(userID uint, hashedPassword *HashedPassword) error {
 	record := Password{
 		UserID:    userID,
-		Hash:      string(hashedPassword.Hash),
-		Salt:      string(hashedPassword.Salt),
+		Hash:      hashedPassword.Hash,
+		Salt:      hashedPassword.Salt,
 		Algorithm: hashedPassword.Algorithm,
 	}
 
