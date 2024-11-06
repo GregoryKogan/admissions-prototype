@@ -10,7 +10,7 @@ type PasswordsRepo struct {
 	db *gorm.DB
 }
 
-func NewPasswordRepo(db *gorm.DB) *PasswordsRepo {
+func NewPasswordsRepo(db *gorm.DB) *PasswordsRepo {
 	if err := db.AutoMigrate(&Password{}); err != nil {
 		panic(err)
 	}
