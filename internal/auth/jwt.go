@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var ErrInvalidToken = errors.New("invalid token")
+
 type JWTClaims struct {
 	UserID uint   `json:"user_id"`
 	Type   string `json:"type"`
@@ -37,16 +39,16 @@ func ParseToken(tokenString string) (*JWTClaims, error) {
 		// check whether error is validation error or not
 		if validationErr, ok := err.(*jwt.ValidationError); ok {
 			if validationErr.Errors&jwt.ValidationErrorMalformed != 0 {
-				return nil, errors.Join(errors.New("malformed access token"), err)
+				return nil, errors.Join(ErrInvalidToken, errors.New("malformed token"), err)
 			} else if validationErr.Errors&jwt.ValidationErrorExpired != 0 {
-				return nil, errors.Join(errors.New("expired access token"), err)
+				return nil, errors.Join(ErrInvalidToken, errors.New("expired token"), err)
 			} else if validationErr.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return nil, errors.Join(errors.New("access token not valid yet"), err)
+				return nil, errors.Join(ErrInvalidToken, errors.New("token not valid yet"), err)
 			} else {
-				return nil, errors.Join(errors.New("failed to parse access token"), err)
+				return nil, errors.Join(ErrInvalidToken, err)
 			}
 		} else {
-			return nil, errors.Join(errors.New("failed to parse access token"), err)
+			return nil, errors.Join(ErrInvalidToken, err)
 		}
 	}
 

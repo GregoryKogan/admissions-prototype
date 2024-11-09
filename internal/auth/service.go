@@ -10,6 +10,7 @@ type AuthService interface {
 	ValidatePassword(password string) error
 	Register(userID uint, password string) error
 	Login(userID uint, password string) (*TokenPair, error)
+	Refresh(refreshToken string) (*TokenPair, error)
 }
 
 type AuthServiceImpl struct {
@@ -60,5 +61,31 @@ func (s *AuthServiceImpl) Login(userID uint, password string) (*TokenPair, error
 	return &TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *AuthServiceImpl) Refresh(refreshToken string) (*TokenPair, error) {
+	claims, err := ParseToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims.Type != "refresh" {
+		return nil, errors.Join(ErrInvalidToken, errors.New("invalid token type"))
+	}
+
+	newAccessToken, err := NewAccessToken(claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	newRefreshToken, err := NewRefreshToken(claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TokenPair{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }

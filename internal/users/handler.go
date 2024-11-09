@@ -14,6 +14,7 @@ type UsersHandler interface {
 	AddRoutes(g *echo.Group)
 	Register(c echo.Context) error
 	Login(c echo.Context) error
+	Refresh(c echo.Context) error
 }
 
 type UsersHandlerImpl struct {
@@ -33,6 +34,7 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	authGroup := usersGroup.Group("/auth")
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
+	authGroup.POST("/refresh", h.Refresh)
 }
 
 func (h *UsersHandlerImpl) Register(c echo.Context) error {
@@ -99,6 +101,31 @@ func (h *UsersHandlerImpl) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid email or password")
 	} else if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, tokenPair)
+}
+
+func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
+	refreshRequest := new(struct {
+		RefreshToken string `json:"refresh" validate:"required"`
+	})
+
+	if err := c.Bind(refreshRequest); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := c.Validate(refreshRequest); err != nil {
+		return err
+	}
+
+	tokenPair, err := h.authService.Refresh(refreshRequest.RefreshToken)
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidToken) {
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		} else {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.JSON(http.StatusOK, tokenPair)
