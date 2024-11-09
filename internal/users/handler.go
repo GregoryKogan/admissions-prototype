@@ -2,9 +2,11 @@ package users
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/auth"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/exp/slog"
 	"gorm.io/gorm"
@@ -15,6 +17,7 @@ type UsersHandler interface {
 	Register(c echo.Context) error
 	Login(c echo.Context) error
 	Refresh(c echo.Context) error
+	GetMe(c echo.Context) error
 }
 
 type UsersHandlerImpl struct {
@@ -31,10 +34,18 @@ func NewUsersHandler(usersService UsersService, authService auth.AuthService) Us
 
 func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	usersGroup := g.Group("/users")
+
 	authGroup := usersGroup.Group("/auth")
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/refresh", h.Refresh)
+
+	restrictedGroup := usersGroup.Group("")
+	if err := auth.AddJWTMiddleware(restrictedGroup); err != nil {
+		panic(err)
+	}
+
+	restrictedGroup.GET("/me", h.GetMe)
 }
 
 func (h *UsersHandlerImpl) Register(c echo.Context) error {
@@ -129,4 +140,20 @@ func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, tokenPair)
+}
+
+func (h *UsersHandlerImpl) GetMe(c echo.Context) error {
+	fmt.Println(c.Get("user"))
+	token := c.Get("user").(*jwt.Token)
+	claims := token.Claims.(*auth.JWTClaims)
+	userID := claims.UserID
+
+	user, err := h.usersService.GetFullByID(userID)
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return echo.NewHTTPError(http.StatusNotFound, "user not found")
+	} else if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, user)
 }

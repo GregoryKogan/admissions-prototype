@@ -2,9 +2,10 @@ package auth
 
 import (
 	"errors"
+	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/secrets"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/viper"
 )
 
@@ -13,7 +14,7 @@ var ErrInvalidToken = errors.New("invalid token")
 type JWTClaims struct {
 	UserID uint   `json:"user_id"`
 	Type   string `json:"type"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func NewAccessToken(userID uint) (string, error) {
@@ -36,23 +37,13 @@ func ParseToken(tokenString string) (*JWTClaims, error) {
 	})
 
 	if err != nil {
-		// check whether error is validation error or not
-		if validationErr, ok := err.(*jwt.ValidationError); ok {
-			if validationErr.Errors&jwt.ValidationErrorMalformed != 0 {
-				return nil, errors.Join(ErrInvalidToken, errors.New("malformed token"), err)
-			} else if validationErr.Errors&jwt.ValidationErrorExpired != 0 {
-				return nil, errors.Join(ErrInvalidToken, errors.New("expired token"), err)
-			} else if validationErr.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return nil, errors.Join(ErrInvalidToken, errors.New("token not valid yet"), err)
-			} else {
-				return nil, errors.Join(ErrInvalidToken, err)
-			}
-		} else {
-			return nil, errors.Join(ErrInvalidToken, err)
-		}
+		return nil, errors.Join(ErrInvalidToken, err)
 	}
 
-	return token.Claims.(*JWTClaims), nil
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, ErrInvalidToken
 }
 
 func newSignedJWT(claims jwt.Claims) (string, error) {
@@ -68,10 +59,10 @@ func newAccessJWTClaims(userID uint) *JWTClaims {
 	return &JWTClaims{
 		UserID: userID,
 		Type:   "access",
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: jwt.TimeFunc().Add(viper.GetDuration("jwt.access_lifetime")).Unix(),
-			IssuedAt:  jwt.TimeFunc().Unix(),
-			NotBefore: jwt.TimeFunc().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(viper.GetDuration("jwt.access_lifetime"))),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "l2sh.admissions",
 		},
 	}
@@ -81,10 +72,10 @@ func newRefreshJWTClaims(userID uint) *JWTClaims {
 	return &JWTClaims{
 		UserID: userID,
 		Type:   "refresh",
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: jwt.TimeFunc().Add(viper.GetDuration("jwt.refresh_lifetime")).Unix(),
-			IssuedAt:  jwt.TimeFunc().Unix(),
-			NotBefore: jwt.TimeFunc().Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(viper.GetDuration("jwt.refresh_lifetime"))),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "l2sh.admissions",
 		},
 	}

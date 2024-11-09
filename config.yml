@@ -17,4 +17,4 @@ logging:
 
 jwt:
   access_lifetime: 15m
-  refresh_lifetime: 30d
+  refresh_lifetime: 720h

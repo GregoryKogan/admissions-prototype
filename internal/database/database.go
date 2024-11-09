@@ -15,7 +15,6 @@ func Connect() (*gorm.DB, error) {
 	dbConfig := viper.Sub("database")
 	db_password, err := secrets.ReadSecret("db_password")
 	if err != nil {
-		slog.Error("Failed to read database password", slog.Any("error", err))
 		return nil, err
 	}
 

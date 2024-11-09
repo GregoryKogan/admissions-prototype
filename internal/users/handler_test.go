@@ -13,6 +13,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,6 +79,8 @@ func TestUsersHandler_Refresh(t *testing.T) {
 	handler, _ := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
+	viper.Set("jwt.access_lifetime", "15m")
+	viper.Set("jwt.refresh_lifetime", "720h")
 
 	// Register user first via endpoint
 	req := httptest.NewRequest(http.MethodPost, "/users/auth/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
@@ -116,8 +119,55 @@ func TestUsersHandler_Refresh(t *testing.T) {
 	c = e.NewContext(req, rec)
 
 	err = handler.Refresh(c)
+
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), `"access"`)
 	assert.Contains(t, rec.Body.String(), `"refresh"`)
+}
+
+func TestUsersHandler_GetMe(t *testing.T) {
+	handler, _ := setupTestHandler(t)
+	e := echo.New()
+	validation.AddValidation(e)
+
+	// Mock JWT key
+	secrets.SetMockSecret("jwt_key", "test_key")
+	defer secrets.ClearMockSecrets()
+
+	handler.AddRoutes(e.Group(""))
+	viper.Set("jwt.access_lifetime", "15m")
+	viper.Set("jwt.refresh_lifetime", "720h")
+
+	// Register user first via endpoint
+	req := httptest.NewRequest(http.MethodPost, "/users/auth/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+
+	// Login user to get access token
+	req = httptest.NewRequest(http.MethodPost, "/users/auth/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	// Extract access token from response
+	var loginResponse struct {
+		AccessToken string `json:"access"`
+	}
+	err := json.NewDecoder(rec.Body).Decode(&loginResponse)
+	assert.NoError(t, err)
+
+	// Use access token to get user info
+	req = httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+loginResponse.AccessToken)
+	rec = httptest.NewRecorder()
+
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), `"email":"test@example.com"`)
 }
