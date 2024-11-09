@@ -7,10 +7,10 @@ import (
 )
 
 type AuthService struct {
-	passwordsService *passwords.PasswordsService
+	passwordsService passwords.PasswordsService
 }
 
-func NewAuthService(passwordsService *passwords.PasswordsService) *AuthService {
+func NewAuthService(passwordsService passwords.PasswordsService) *AuthService {
 	return &AuthService{
 		passwordsService: passwordsService,
 	}

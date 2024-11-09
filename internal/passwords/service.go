@@ -14,51 +14,65 @@ var (
 	ErrPasswordNoSpecial = errors.New("password must contain at least one special character")
 )
 
-type PasswordsService struct {
-	repo *PasswordsRepo
+type PasswordsService interface {
+	GetByUserID(userID uint) (*Password, error)
+	Create(userID uint, password string) error
+	Validate(password string) error
+	Verify(userID uint, password string) (bool, error)
 }
 
-func NewPasswordsService(repo *PasswordsRepo) *PasswordsService {
-	return &PasswordsService{repo: repo}
+type PasswordsServiceImpl struct {
+	repo   *PasswordsRepo
+	params *Argon2idParams
 }
 
-func (s *PasswordsService) GetByUserID(userID uint) (*Password, error) {
+func NewPasswordsService(repo *PasswordsRepo) *PasswordsServiceImpl {
+	return &PasswordsServiceImpl{
+		repo:   repo,
+		params: DefaultArgon2idParams(),
+	}
+}
+
+func (s *PasswordsServiceImpl) GetByUserID(userID uint) (*Password, error) {
 	record, err := s.repo.GetByUserID(userID)
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to get password record"), err)
+		return nil, fmt.Errorf("failed to get password record: %w", err)
 	}
-
 	return record, nil
 }
 
-func (s *PasswordsService) Create(userID uint, password string) error {
-	exists, err := s.repo.ExistsByUserID(userID)
-	if err != nil {
-		return errors.Join(errors.New("failed to check if password exists"), err)
+func (s *PasswordsServiceImpl) Create(userID uint, password string) error {
+	if err := s.Validate(password); err != nil {
+		return fmt.Errorf("invalid password: %w", err)
 	}
 
+	exists, err := s.repo.ExistsByUserID(userID)
+	if err != nil {
+		return fmt.Errorf("failed to check if password exists: %w", err)
+	}
 	if exists {
 		return fmt.Errorf("password already exists for user with ID: %d", userID)
 	}
 
-	params := DefaultArgon2idParams()
-	hashedPassword, err := params.GenerateHash([]byte(password), nil)
+	hashedPassword, err := s.params.GenerateHash([]byte(password))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to generate hash: %w", err)
 	}
 
 	return s.repo.Create(userID, hashedPassword)
 }
 
-func (s *PasswordsService) Validate(password string) error {
+func (s *PasswordsServiceImpl) Validate(password string) error {
 	if len(password) < 8 {
 		return ErrPasswordTooShort
 	}
 
-	hasNumber := false
-	hasUpper := false
-	hasLower := false
-	hasSpecial := false
+	var (
+		hasNumber  bool
+		hasUpper   bool
+		hasLower   bool
+		hasSpecial bool
+	)
 
 	for _, char := range password {
 		switch {
@@ -89,23 +103,22 @@ func (s *PasswordsService) Validate(password string) error {
 	return nil
 }
 
-func (s *PasswordsService) Verify(userID uint, password string) (bool, error) {
+func (s *PasswordsServiceImpl) Verify(userID uint, password string) (bool, error) {
 	record, err := s.GetByUserID(userID)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to retrieve password: %w", err)
 	}
 
 	hashedPassword := &HashedPassword{
-		Hash:      []byte(record.Hash),
-		Salt:      []byte(record.Salt),
+		Hash:      record.Hash,
+		Salt:      record.Salt,
 		Algorithm: record.Algorithm,
 	}
 
-	params := DefaultArgon2idParams()
-	same, err := params.Compare([]byte(password), hashedPassword)
+	match, err := s.params.Compare([]byte(password), hashedPassword)
 	if err != nil {
-		return false, errors.Join(errors.New("failed to compare passwords"), err)
+		return false, fmt.Errorf("failed to compare passwords: %w", err)
 	}
 
-	return same, nil
+	return match, nil
 }

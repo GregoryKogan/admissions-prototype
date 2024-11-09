@@ -68,11 +68,11 @@ func (s *UsersService) Create(email string) (*User, error) {
 }
 
 func (s *UsersService) Delete(userID uint) error {
-	ok, err := s.repo.UserExistsByID(userID)
+	exists, err := s.repo.UserExistsByID(userID)
 	if err != nil {
 		return errors.Join(errors.New("failed to check if user exists"), err)
 	}
-	if !ok {
+	if exists {
 		return s.repo.DeleteUser(userID)
 	}
 

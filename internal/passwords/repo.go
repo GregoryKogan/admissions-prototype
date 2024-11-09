@@ -2,6 +2,7 @@ package passwords
 
 import (
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -25,9 +26,8 @@ func (r *PasswordsRepo) Create(userID uint, hashedPassword *HashedPassword) erro
 		Algorithm: hashedPassword.Algorithm,
 	}
 
-	err := r.db.Create(&record).Error
-	if err != nil {
-		return errors.Join(errors.New("failed to create password record"), err)
+	if err := r.db.Create(&record).Error; err != nil {
+		return fmt.Errorf("failed to create password record: %w", err)
 	}
 
 	return nil
@@ -35,22 +35,20 @@ func (r *PasswordsRepo) Create(userID uint, hashedPassword *HashedPassword) erro
 
 func (r *PasswordsRepo) GetByUserID(userID uint) (*Password, error) {
 	var record Password
-	err := r.db.Where("user_id = ?", userID).First(&record).Error
-	if err != nil {
-		return nil, err
+	if err := r.db.Where("user_id = ?", userID).First(&record).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("password not found for user ID %d", userID)
+		}
+		return nil, fmt.Errorf("failed to get password for user ID %d: %w", userID, err)
 	}
 
 	return &record, nil
 }
 
 func (r *PasswordsRepo) ExistsByUserID(userID uint) (bool, error) {
-	var record Password
-	err := r.db.Where("user_id = ?", userID).First(&record).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, err
-	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, nil
+	var count int64
+	if err := r.db.Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+		return false, fmt.Errorf("failed to check existence for user ID %d: %w", userID, err)
 	}
-
-	return true, nil
+	return count > 0, nil
 }

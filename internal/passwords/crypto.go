@@ -8,11 +8,11 @@ import (
 )
 
 type Argon2idParams struct {
-	time    uint32
-	memory  uint32
-	threads uint8
-	keyLen  uint32
-	saltLen uint32
+	Time    uint32
+	Memory  uint32
+	Threads uint8
+	KeyLen  uint32
+	SaltLen uint32
 }
 
 type HashedPassword struct {
@@ -23,11 +23,11 @@ type HashedPassword struct {
 
 func NewArgon2idParams(time, memory uint32, threads uint8, keyLen, saltLen uint32) *Argon2idParams {
 	return &Argon2idParams{
-		time:    time,
-		memory:  memory,
-		threads: threads,
-		keyLen:  keyLen,
-		saltLen: saltLen,
+		Time:    time,
+		Memory:  memory,
+		Threads: threads,
+		KeyLen:  keyLen,
+		SaltLen: saltLen,
 	}
 }
 
@@ -44,24 +44,20 @@ func DefaultArgon2idParams() *Argon2idParams {
 
 func randomSecret(length uint32) ([]byte, error) {
 	secret := make([]byte, length)
-	_, err := rand.Read(secret)
-	if err != nil {
+	if _, err := rand.Read(secret); err != nil {
 		return nil, err
 	}
 
 	return secret, nil
 }
 
-func (p *Argon2idParams) GenerateHash(password []byte, salt []byte) (*HashedPassword, error) {
-	var err error
-	if len(salt) == 0 {
-		salt, err = randomSecret(p.saltLen)
-	}
+func (p *Argon2idParams) GenerateHash(password []byte) (*HashedPassword, error) {
+	salt, err := randomSecret(p.SaltLen)
 	if err != nil {
 		return nil, err
 	}
 
-	hash := argon2.IDKey(password, salt, p.time, p.memory, p.threads, p.keyLen)
+	hash := argon2.IDKey(password, salt, p.Time, p.Memory, p.Threads, p.KeyLen)
 
 	return &HashedPassword{
 		Hash:      hash,
@@ -71,10 +67,7 @@ func (p *Argon2idParams) GenerateHash(password []byte, salt []byte) (*HashedPass
 }
 
 func (p *Argon2idParams) Compare(password []byte, hashedPassword *HashedPassword) (bool, error) {
-	newHash, err := p.GenerateHash(password, hashedPassword.Salt)
-	if err != nil {
-		return false, err
-	}
-
-	return subtle.ConstantTimeCompare(newHash.Hash, hashedPassword.Hash) == 1, nil
+	hash := argon2.IDKey(password, hashedPassword.Salt, p.Time, p.Memory, p.Threads, p.KeyLen)
+	equal := subtle.ConstantTimeCompare(hash, hashedPassword.Hash) == 1
+	return equal, nil
 }
