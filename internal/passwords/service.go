@@ -22,11 +22,11 @@ type PasswordsService interface {
 }
 
 type PasswordsServiceImpl struct {
-	repo   *PasswordsRepo
+	repo   PasswordsRepo
 	params *Argon2idParams
 }
 
-func NewPasswordsService(repo *PasswordsRepo) *PasswordsServiceImpl {
+func NewPasswordsService(repo PasswordsRepo) PasswordsService {
 	return &PasswordsServiceImpl{
 		repo:   repo,
 		params: DefaultArgon2idParams(),

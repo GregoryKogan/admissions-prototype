@@ -7,14 +7,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type UsersService struct {
-	repo *UsersRepo
+type UsersService interface {
+	GetByEmail(email string) (*User, error)
+	GetByID(userID uint) (*User, error)
+	GetFullByID(userID uint) (*User, error)
+	Create(email string) (*User, error)
+	Delete(userID uint) error
+}
+
+type UsersServiceImpl struct {
+	repo UsersRepo
 }
 
 var ErrUserAlreadyExists = errors.New("user with the same email already exists")
 
-func NewUsersService(repo *UsersRepo) *UsersService {
-	service := &UsersService{repo: repo}
+func NewUsersService(repo UsersRepo) UsersService {
+	service := &UsersServiceImpl{repo: repo}
 	err := service.createDefaultRoles()
 	if err != nil {
 		panic(err)
@@ -23,19 +31,19 @@ func NewUsersService(repo *UsersRepo) *UsersService {
 	return service
 }
 
-func (s *UsersService) GetByEmail(email string) (*User, error) {
+func (s *UsersServiceImpl) GetByEmail(email string) (*User, error) {
 	return s.repo.GetByEmail(email)
 }
 
-func (s *UsersService) GetByID(userID uint) (*User, error) {
+func (s *UsersServiceImpl) GetByID(userID uint) (*User, error) {
 	return s.repo.GetByID(userID)
 }
 
-func (s *UsersService) GetFullByID(userID uint) (*User, error) {
+func (s *UsersServiceImpl) GetFullByID(userID uint) (*User, error) {
 	return s.repo.GetWithDetailsByID(userID)
 }
 
-func (s *UsersService) Create(email string) (*User, error) {
+func (s *UsersServiceImpl) Create(email string) (*User, error) {
 	// Check if user with the same email already exists
 	user, err := s.GetByEmail(email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,7 +75,7 @@ func (s *UsersService) Create(email string) (*User, error) {
 	return newUser, nil
 }
 
-func (s *UsersService) Delete(userID uint) error {
+func (s *UsersServiceImpl) Delete(userID uint) error {
 	exists, err := s.repo.UserExistsByID(userID)
 	if err != nil {
 		return errors.Join(errors.New("failed to check if user exists"), err)
@@ -79,7 +87,7 @@ func (s *UsersService) Delete(userID uint) error {
 	return nil
 }
 
-func (s *UsersService) createDefaultRoles() error {
+func (s *UsersServiceImpl) createDefaultRoles() error {
 	roles := []Role{
 		{
 			Title: "admin",

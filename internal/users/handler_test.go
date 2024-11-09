@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestHandler(t *testing.T) (*users.UsersHandler, *users.UsersService) {
+func setupTestHandler(t *testing.T) (users.UsersHandler, users.UsersService) {
 	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
 	repo := users.NewUsersRepo(db)
 	service := users.NewUsersService(repo)

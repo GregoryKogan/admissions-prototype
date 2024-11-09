@@ -7,18 +7,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type PasswordsRepo struct {
+type PasswordsRepo interface {
+	Create(userID uint, hashedPassword *HashedPassword) error
+	GetByUserID(userID uint) (*Password, error)
+	ExistsByUserID(userID uint) (bool, error)
+}
+
+type PasswordsRepoImpl struct {
 	db *gorm.DB
 }
 
-func NewPasswordsRepo(db *gorm.DB) *PasswordsRepo {
+func NewPasswordsRepo(db *gorm.DB) PasswordsRepo {
 	if err := db.AutoMigrate(&Password{}); err != nil {
 		panic(err)
 	}
-	return &PasswordsRepo{db: db}
+	return &PasswordsRepoImpl{db: db}
 }
 
-func (r *PasswordsRepo) Create(userID uint, hashedPassword *HashedPassword) error {
+func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *HashedPassword) error {
 	record := Password{
 		UserID:    userID,
 		Hash:      hashedPassword.Hash,
@@ -33,7 +39,7 @@ func (r *PasswordsRepo) Create(userID uint, hashedPassword *HashedPassword) erro
 	return nil
 }
 
-func (r *PasswordsRepo) GetByUserID(userID uint) (*Password, error) {
+func (r *PasswordsRepoImpl) GetByUserID(userID uint) (*Password, error) {
 	var record Password
 	if err := r.db.Where("user_id = ?", userID).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -45,7 +51,7 @@ func (r *PasswordsRepo) GetByUserID(userID uint) (*Password, error) {
 	return &record, nil
 }
 
-func (r *PasswordsRepo) ExistsByUserID(userID uint) (bool, error) {
+func (r *PasswordsRepoImpl) ExistsByUserID(userID uint) (bool, error) {
 	var count int64
 	if err := r.db.Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check existence for user ID %d: %w", userID, err)

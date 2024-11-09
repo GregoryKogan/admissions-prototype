@@ -6,16 +6,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type PingHandler struct{}
-
-func NewPingHandler() *PingHandler {
-	return &PingHandler{}
+type PingHandler interface {
+	AddRoutes(g *echo.Group)
+	Ping(c echo.Context) error
 }
 
-func (h *PingHandler) AddRoutes(g *echo.Group) {
+type PingHandlerImpl struct{}
+
+func NewPingHandler() PingHandler {
+	return &PingHandlerImpl{}
+}
+
+func (h *PingHandlerImpl) AddRoutes(g *echo.Group) {
 	g.GET("/ping", h.Ping)
 }
 
-func (h *PingHandler) Ping(c echo.Context) error {
+func (h *PingHandlerImpl) Ping(c echo.Context) error {
 	return c.String(http.StatusOK, "pong")
 }

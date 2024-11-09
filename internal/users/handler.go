@@ -10,26 +10,32 @@ import (
 	"gorm.io/gorm"
 )
 
-type UsersHandler struct {
-	usersService *UsersService
-	authService  *auth.AuthService
+type UsersHandler interface {
+	AddRoutes(g *echo.Group)
+	Register(c echo.Context) error
+	Login(c echo.Context) error
 }
 
-func NewUsersHandler(usersService *UsersService, authService *auth.AuthService) *UsersHandler {
-	return &UsersHandler{
+type UsersHandlerImpl struct {
+	usersService UsersService
+	authService  auth.AuthService
+}
+
+func NewUsersHandler(usersService UsersService, authService auth.AuthService) UsersHandler {
+	return &UsersHandlerImpl{
 		usersService: usersService,
 		authService:  authService,
 	}
 }
 
-func (h *UsersHandler) AddRoutes(g *echo.Group) {
+func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	usersGroup := g.Group("/users")
 	authGroup := usersGroup.Group("/auth")
 	authGroup.POST("/register", h.Register)
 	authGroup.POST("/login", h.Login)
 }
 
-func (h *UsersHandler) Register(c echo.Context) error {
+func (h *UsersHandlerImpl) Register(c echo.Context) error {
 	registerRequest := new(struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
@@ -67,7 +73,7 @@ func (h *UsersHandler) Register(c echo.Context) error {
 	return c.JSON(http.StatusCreated, user)
 }
 
-func (h *UsersHandler) Login(c echo.Context) error {
+func (h *UsersHandlerImpl) Login(c echo.Context) error {
 	loginRequest := new(struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`

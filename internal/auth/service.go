@@ -6,12 +6,18 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/passwords"
 )
 
-type AuthService struct {
+type AuthService interface {
+	ValidatePassword(password string) error
+	Register(userID uint, password string) error
+	Login(userID uint, password string) (*TokenPair, error)
+}
+
+type AuthServiceImpl struct {
 	passwordsService passwords.PasswordsService
 }
 
-func NewAuthService(passwordsService passwords.PasswordsService) *AuthService {
-	return &AuthService{
+func NewAuthService(passwordsService passwords.PasswordsService) AuthService {
+	return &AuthServiceImpl{
 		passwordsService: passwordsService,
 	}
 }
@@ -23,15 +29,15 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh"`
 }
 
-func (s *AuthService) ValidatePassword(password string) error {
+func (s *AuthServiceImpl) ValidatePassword(password string) error {
 	return s.passwordsService.Validate(password)
 }
 
-func (s *AuthService) Register(userID uint, password string) error {
+func (s *AuthServiceImpl) Register(userID uint, password string) error {
 	return s.passwordsService.Create(userID, password)
 }
 
-func (s *AuthService) Login(userID uint, password string) (*TokenPair, error) {
+func (s *AuthServiceImpl) Login(userID uint, password string) (*TokenPair, error) {
 	ok, err := s.passwordsService.Verify(userID, password)
 	if err != nil {
 		return nil, err
