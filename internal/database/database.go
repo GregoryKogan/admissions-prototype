@@ -11,11 +11,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Connect() (*gorm.DB, error) {
+func InitDBConnection() *gorm.DB {
 	dbConfig := viper.Sub("database")
 	db_password, err := secrets.ReadSecret("db_password")
 	if err != nil {
-		return nil, err
+		slog.Error("Failed to connect to the database", slog.Any("error", err))
+		panic(err)
 	}
 
 	db, err := gorm.Open(
@@ -33,9 +34,9 @@ func Connect() (*gorm.DB, error) {
 
 	if err != nil {
 		slog.Error("Failed to connect to the database", slog.Any("error", err))
-		return nil, err
+		panic(err)
 	}
 
 	slog.Info("Connected to the database")
-	return db, nil
+	return db
 }

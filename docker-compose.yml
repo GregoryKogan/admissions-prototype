@@ -5,6 +5,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      cache:
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile
@@ -46,6 +48,20 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+      start_period: 5s
+
+  cache:
+    container_name: cache
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   pgadmin:
     container_name: pgadmin

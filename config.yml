@@ -12,6 +12,10 @@ database:
   connection:
     timezone: Europe/Moscow
 
+cache:
+  host: cache
+  port: 6379
+
 logging:
   level: debug
 
