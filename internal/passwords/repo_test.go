@@ -1,16 +1,39 @@
 package passwords_test
 
 import (
+	"context"
+	"os"
 	"testing"
 
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/passwords"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	storage datastore.Storage
+)
+
+func TestMain(m *testing.M) {
+	s, cleanup := datastore.SetupMockStorage()
+	storage = s
+
+	code := m.Run()
+
+	cleanup()
+	os.Exit(code)
+}
+
 func setupTestRepo(t *testing.T) passwords.PasswordsRepo {
-	storage := storage.SetupMockStorage(t)
+	t.Cleanup(func() {
+		err := storage.DB.Exec("DELETE FROM passwords").Error
+		assert.NoError(t, err)
+
+		err = storage.Cache.FlushDB(context.Background()).Err()
+		assert.NoError(t, err)
+	})
+
 	return passwords.NewPasswordsRepo(storage)
 }
 

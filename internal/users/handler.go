@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/auth"
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/passwords"
 	"github.com/L2SH-Dev/admissions/internal/server"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/exp/slog"
@@ -28,7 +28,7 @@ type UsersHandlerImpl struct {
 	authService  auth.AuthService
 }
 
-func NewUsersHandler(storage storage.Storage) server.Handler {
+func NewUsersHandler(storage datastore.Storage) server.Handler {
 	usersRepo := NewUsersRepo(storage)
 	usersService := NewUsersService(usersRepo)
 	passwordsRepo := passwords.NewPasswordsRepo(storage)

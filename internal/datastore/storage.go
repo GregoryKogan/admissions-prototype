@@ -1,4 +1,4 @@
-package storage
+package datastore
 
 import (
 	"github.com/redis/go-redis/v9"

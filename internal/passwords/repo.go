@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/L2SH-Dev/admissions/internal/storage"
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"gorm.io/gorm"
 )
 
@@ -15,10 +15,10 @@ type PasswordsRepo interface {
 }
 
 type PasswordsRepoImpl struct {
-	storage storage.Storage
+	storage datastore.Storage
 }
 
-func NewPasswordsRepo(storage storage.Storage) PasswordsRepo {
+func NewPasswordsRepo(storage datastore.Storage) PasswordsRepo {
 	if err := storage.DB.AutoMigrate(&Password{}); err != nil {
 		panic(err)
 	}

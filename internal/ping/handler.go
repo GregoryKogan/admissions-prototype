@@ -3,8 +3,8 @@ package ping
 import (
 	"net/http"
 
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/server"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,7 +15,7 @@ type PingHandler interface {
 
 type PingHandlerImpl struct{}
 
-func NewPingHandler(_ storage.Storage) server.Handler {
+func NewPingHandler(_ datastore.Storage) server.Handler {
 	return &PingHandlerImpl{}
 }
 

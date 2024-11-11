@@ -1,6 +1,7 @@
 package users_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -11,6 +12,21 @@ import (
 
 func setupTestService(t *testing.T) users.UsersService {
 	repo := setupTestRepo(t)
+
+	t.Cleanup(func() {
+		err := storage.DB.Exec("DELETE FROM users").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM roles").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM passwords").Error
+		assert.NoError(t, err)
+
+		err = storage.Cache.FlushDB(context.Background()).Err()
+		assert.NoError(t, err)
+	})
+
 	return users.NewUsersService(repo)
 }
 

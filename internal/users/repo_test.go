@@ -1,16 +1,45 @@
 package users_test
 
 import (
+	"context"
+	"os"
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/storage"
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	storage datastore.Storage
+)
+
+func TestMain(m *testing.M) {
+	s, cleanup := datastore.SetupMockStorage()
+	storage = s
+
+	code := m.Run()
+
+	cleanup()
+	os.Exit(code)
+}
+
 func setupTestRepo(t *testing.T) users.UsersRepo {
-	storage := storage.SetupMockStorage(t)
+	t.Cleanup(func() {
+		err := storage.DB.Exec("DELETE FROM users").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM roles").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM passwords").Error
+		assert.NoError(t, err)
+
+		err = storage.Cache.FlushDB(context.Background()).Err()
+		assert.NoError(t, err)
+	})
+
 	return users.NewUsersRepo(storage)
 }
 

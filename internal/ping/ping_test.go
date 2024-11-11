@@ -5,15 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/ping"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestHandler(t *testing.T) ping.PingHandler {
-	storage := storage.SetupMockStorage(t)
-	return ping.NewPingHandler(storage).(ping.PingHandler)
+func setupTestHandler() ping.PingHandler {
+	return ping.NewPingHandler(datastore.Storage{}).(ping.PingHandler)
 }
 
 func TestPingHandler(t *testing.T) {
@@ -22,7 +21,7 @@ func TestPingHandler(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	handler := setupTestHandler(t)
+	handler := setupTestHandler()
 	if assert.NoError(t, handler.Ping(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "pong", rec.Body.String())

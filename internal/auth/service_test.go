@@ -1,19 +1,43 @@
 package auth_test
 
 import (
+	"context"
+	"os"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/auth"
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/passwords"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	storage datastore.Storage
+)
+
+func TestMain(m *testing.M) {
+	s, cleanup := datastore.SetupMockStorage()
+	storage = s
+
+	code := m.Run()
+
+	cleanup()
+	os.Exit(code)
+}
+
 func setupTestService(t *testing.T) auth.AuthService {
-	storage := storage.SetupMockStorage(t)
 	passwordsRepo := passwords.NewPasswordsRepo(storage)
 	passwordsService := passwords.NewPasswordsService(passwordsRepo)
+
+	t.Cleanup(func() {
+		err := storage.DB.Exec("DELETE FROM passwords").Error
+		assert.NoError(t, err)
+
+		err = storage.Cache.FlushDB(context.Background()).Err()
+		assert.NoError(t, err)
+	})
+
 	return auth.NewAuthService(passwordsService)
 }
 

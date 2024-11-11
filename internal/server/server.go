@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/logging"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,7 +15,7 @@ import (
 type Server interface {
 	Start()
 	AddFrontend(static string, index string)
-	AddHandlers(storage storage.Storage, handlers ...func(storage storage.Storage) Handler)
+	AddHandlers(storage datastore.Storage, handlers ...func(storage datastore.Storage) Handler)
 }
 
 type server struct {
@@ -47,7 +47,7 @@ func (s *server) AddFrontend(static string, index string) {
 	s.Echo.File("/", index)
 }
 
-func (s *server) AddHandlers(storage storage.Storage, handlers ...func(storage storage.Storage) Handler) {
+func (s *server) AddHandlers(storage datastore.Storage, handlers ...func(storage datastore.Storage) Handler) {
 	for _, handler := range handlers {
 		s.addHandler(handler(storage))
 	}

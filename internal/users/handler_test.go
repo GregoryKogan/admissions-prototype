@@ -1,6 +1,7 @@
 package users_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/secrets"
-	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
@@ -17,7 +17,20 @@ import (
 )
 
 func setupTestHandler(t *testing.T) users.UsersHandler {
-	storage := storage.SetupMockStorage(t)
+	t.Cleanup(func() {
+		err := storage.DB.Exec("DELETE FROM passwords").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM users").Error
+		assert.NoError(t, err)
+
+		err = storage.DB.Exec("DELETE FROM roles").Error
+		assert.NoError(t, err)
+
+		err = storage.Cache.FlushDB(context.Background()).Err()
+		assert.NoError(t, err)
+	})
+
 	return users.NewUsersHandler(storage).(users.UsersHandler)
 }
 

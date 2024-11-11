@@ -3,7 +3,7 @@ package users
 import (
 	"errors"
 
-	"github.com/L2SH-Dev/admissions/internal/storage"
+	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"gorm.io/gorm"
 )
 
@@ -21,10 +21,10 @@ type UsersRepo interface {
 }
 
 type UsersRepoImpl struct {
-	storage storage.Storage
+	storage datastore.Storage
 }
 
-func NewUsersRepo(storage storage.Storage) UsersRepo {
+func NewUsersRepo(storage datastore.Storage) UsersRepo {
 	if err := storage.DB.AutoMigrate(&User{}, &Role{}); err != nil {
 		panic(err)
 	}
