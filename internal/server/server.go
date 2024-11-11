@@ -4,34 +4,31 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/L2SH-Dev/admissions/internal/database"
 	"github.com/L2SH-Dev/admissions/internal/logging"
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
-	"gorm.io/gorm"
 )
 
 type Server interface {
 	Start()
-	GetEcho() *echo.Echo
-	GetDB() *gorm.DB
-	GetCache() *redis.Client
+	AddFrontend(static string, index string)
+	AddHandlers(storage storage.Storage, handlers ...func(storage storage.Storage) Handler)
 }
 
 type server struct {
-	Echo  *echo.Echo
-	DB    *gorm.DB
-	Cache *redis.Client
+	Echo *echo.Echo
+}
+
+type Handler interface {
+	AddRoutes(g *echo.Group)
 }
 
 func NewServer() Server {
 	srv := &server{
-		Echo:  echo.New(),
-		DB:    database.InitDBConnection(),
-		Cache: database.InitCacheConnection(),
+		Echo: echo.New(),
 	}
 
 	srv.addMiddleware()
@@ -45,16 +42,19 @@ func (s *server) Start() {
 	s.Echo.Logger.Fatal(s.Echo.Start(fmt.Sprintf(":%s", port)))
 }
 
-func (s *server) GetEcho() *echo.Echo {
-	return s.Echo
+func (s *server) AddFrontend(static string, index string) {
+	s.Echo.Static("/", static)
+	s.Echo.File("/", index)
 }
 
-func (s *server) GetDB() *gorm.DB {
-	return s.DB
+func (s *server) AddHandlers(storage storage.Storage, handlers ...func(storage storage.Storage) Handler) {
+	for _, handler := range handlers {
+		s.addHandler(handler(storage))
+	}
 }
 
-func (s *server) GetCache() *redis.Client {
-	return s.Cache
+func (s *server) addHandler(h Handler) {
+	h.AddRoutes(s.Echo.Group("/api"))
 }
 
 func (s *server) addMiddleware() {

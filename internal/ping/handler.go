@@ -3,17 +3,19 @@ package ping
 import (
 	"net/http"
 
+	"github.com/L2SH-Dev/admissions/internal/server"
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/labstack/echo/v4"
 )
 
 type PingHandler interface {
-	AddRoutes(g *echo.Group)
+	server.Handler
 	Ping(c echo.Context) error
 }
 
 type PingHandlerImpl struct{}
 
-func NewPingHandler() PingHandler {
+func NewPingHandler(_ storage.Storage) server.Handler {
 	return &PingHandlerImpl{}
 }
 

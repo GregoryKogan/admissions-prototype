@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"gorm.io/gorm"
 )
 
@@ -14,14 +15,14 @@ type PasswordsRepo interface {
 }
 
 type PasswordsRepoImpl struct {
-	db *gorm.DB
+	storage storage.Storage
 }
 
-func NewPasswordsRepo(db *gorm.DB) PasswordsRepo {
-	if err := db.AutoMigrate(&Password{}); err != nil {
+func NewPasswordsRepo(storage storage.Storage) PasswordsRepo {
+	if err := storage.DB.AutoMigrate(&Password{}); err != nil {
 		panic(err)
 	}
-	return &PasswordsRepoImpl{db: db}
+	return &PasswordsRepoImpl{storage: storage}
 }
 
 func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *HashedPassword) error {
@@ -32,7 +33,7 @@ func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *HashedPassword) 
 		Algorithm: hashedPassword.Algorithm,
 	}
 
-	if err := r.db.Create(&record).Error; err != nil {
+	if err := r.storage.DB.Create(&record).Error; err != nil {
 		return fmt.Errorf("failed to create password record: %w", err)
 	}
 
@@ -41,7 +42,7 @@ func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *HashedPassword) 
 
 func (r *PasswordsRepoImpl) GetByUserID(userID uint) (*Password, error) {
 	var record Password
-	if err := r.db.Where("user_id = ?", userID).First(&record).Error; err != nil {
+	if err := r.storage.DB.Where("user_id = ?", userID).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("password not found for user ID %d", userID)
 		}
@@ -53,7 +54,7 @@ func (r *PasswordsRepoImpl) GetByUserID(userID uint) (*Password, error) {
 
 func (r *PasswordsRepoImpl) ExistsByUserID(userID uint) (bool, error) {
 	var count int64
-	if err := r.db.Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+	if err := r.storage.DB.Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check existence for user ID %d: %w", userID, err)
 	}
 	return count > 0, nil

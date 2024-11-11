@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"gorm.io/gorm"
 )
 
@@ -20,18 +21,18 @@ type UsersRepo interface {
 }
 
 type UsersRepoImpl struct {
-	db *gorm.DB
+	storage storage.Storage
 }
 
-func NewUsersRepo(db *gorm.DB) UsersRepo {
-	if err := db.AutoMigrate(&User{}, &Role{}); err != nil {
+func NewUsersRepo(storage storage.Storage) UsersRepo {
+	if err := storage.DB.AutoMigrate(&User{}, &Role{}); err != nil {
 		panic(err)
 	}
-	return &UsersRepoImpl{db: db}
+	return &UsersRepoImpl{storage: storage}
 }
 
 func (r *UsersRepoImpl) CreateRole(role *Role) error {
-	err := r.db.Create(role).Error
+	err := r.storage.DB.Create(role).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to create role"), err)
 	}
@@ -41,7 +42,7 @@ func (r *UsersRepoImpl) CreateRole(role *Role) error {
 
 func (r *UsersRepoImpl) RoleExists(title string) (bool, error) {
 	var role Role
-	err := r.db.Where("title = ?", title).First(&role).Error
+	err := r.storage.DB.Where("title = ?", title).First(&role).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, err
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -53,7 +54,7 @@ func (r *UsersRepoImpl) RoleExists(title string) (bool, error) {
 
 func (r *UsersRepoImpl) GetRoleByTitle(title string) (*Role, error) {
 	var role Role
-	err := r.db.Where("title = ?", title).First(&role).Error
+	err := r.storage.DB.Where("title = ?", title).First(&role).Error
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (r *UsersRepoImpl) GetRoleByTitle(title string) (*Role, error) {
 }
 
 func (r *UsersRepoImpl) CreateUser(user *User) error {
-	err := r.db.Create(user).Error
+	err := r.storage.DB.Create(user).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to create user"), err)
 	}
@@ -71,7 +72,7 @@ func (r *UsersRepoImpl) CreateUser(user *User) error {
 }
 
 func (r *UsersRepoImpl) DeleteUser(userID uint) error {
-	err := r.db.Delete(&User{}, userID).Error
+	err := r.storage.DB.Delete(&User{}, userID).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to delete user"), err)
 	}
@@ -81,7 +82,7 @@ func (r *UsersRepoImpl) DeleteUser(userID uint) error {
 
 func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 	var user User
-	err := r.db.First(&user, userID).Error
+	err := r.storage.DB.First(&user, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +92,7 @@ func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 
 func (r *UsersRepoImpl) GetWithDetailsByID(userID uint) (*User, error) {
 	var user User
-	err := r.db.Preload("Role").First(&user, userID).Error
+	err := r.storage.DB.Preload("Role").First(&user, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func (r *UsersRepoImpl) UserExistsByID(userID uint) (bool, error) {
 
 func (r *UsersRepoImpl) GetByEmail(email string) (*User, error) {
 	var user User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.storage.DB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

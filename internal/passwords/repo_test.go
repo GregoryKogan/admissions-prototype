@@ -4,27 +4,23 @@ import (
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/passwords"
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-	return db
+func setupTestRepo(t *testing.T) passwords.PasswordsRepo {
+	storage := storage.SetupMockStorage(t)
+	return passwords.NewPasswordsRepo(storage)
 }
 
 func TestNewPasswordsRepo(t *testing.T) {
-	db := setupTestDB(t)
-	repo := passwords.NewPasswordsRepo(db)
+	repo := setupTestRepo(t)
 	assert.NotNil(t, repo)
 }
 
 func TestCreate(t *testing.T) {
-	db := setupTestDB(t)
-	repo := passwords.NewPasswordsRepo(db)
+	repo := setupTestRepo(t)
 
 	hashedPassword := &passwords.HashedPassword{
 		Hash:      []byte("hashedpassword"),
@@ -35,8 +31,7 @@ func TestCreate(t *testing.T) {
 	err := repo.Create(1, hashedPassword)
 	require.NoError(t, err)
 
-	var record passwords.Password
-	err = db.Where("user_id = ?", 1).First(&record).Error
+	record, err := repo.GetByUserID(1)
 	require.NoError(t, err)
 	assert.Equal(t, hashedPassword.Hash, record.Hash)
 	assert.Equal(t, hashedPassword.Salt, record.Salt)
@@ -44,8 +39,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGetByUserID(t *testing.T) {
-	db := setupTestDB(t)
-	repo := passwords.NewPasswordsRepo(db)
+	repo := setupTestRepo(t)
 
 	hashedPassword := &passwords.HashedPassword{
 		Hash:      []byte("hashedpassword"),
@@ -64,8 +58,7 @@ func TestGetByUserID(t *testing.T) {
 }
 
 func TestExistsByUserID(t *testing.T) {
-	db := setupTestDB(t)
-	repo := passwords.NewPasswordsRepo(db)
+	repo := setupTestRepo(t)
 
 	hashedPassword := &passwords.HashedPassword{
 		Hash:      []byte("hashedpassword"),

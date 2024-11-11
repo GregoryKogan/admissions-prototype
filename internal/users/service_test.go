@@ -9,10 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
+func setupTestService(t *testing.T) users.UsersService {
+	repo := setupTestRepo(t)
+	return users.NewUsersService(repo)
+}
+
 func TestUsersService_CreateUser(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create default roles
 	createdUser, err := service.Create("test@example.com")
@@ -26,9 +29,7 @@ func TestUsersService_CreateUser(t *testing.T) {
 }
 
 func TestUsersService_CreateUserAlreadyExists(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create default roles
 	_, err := service.Create("test@example.com")
@@ -41,9 +42,7 @@ func TestUsersService_CreateUserAlreadyExists(t *testing.T) {
 }
 
 func TestUsersService_DeleteUser(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create user
 	user, err := service.Create("test@example.com")
@@ -60,9 +59,7 @@ func TestUsersService_DeleteUser(t *testing.T) {
 }
 
 func TestUsersService_GetByEmail(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create user
 	_, err := service.Create("test@example.com")
@@ -75,9 +72,7 @@ func TestUsersService_GetByEmail(t *testing.T) {
 }
 
 func TestUsersService_GetByID(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create user
 	createdUser, err := service.Create("test@example.com")
@@ -90,9 +85,7 @@ func TestUsersService_GetByID(t *testing.T) {
 }
 
 func TestUsersService_GetFullByID(t *testing.T) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
+	service := setupTestService(t)
 
 	// Create user
 	createdUser, err := service.Create("test@example.com")

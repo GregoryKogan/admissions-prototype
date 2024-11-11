@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/auth"
+	"github.com/L2SH-Dev/admissions/internal/passwords"
+	"github.com/L2SH-Dev/admissions/internal/server"
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/exp/slog"
@@ -13,7 +16,7 @@ import (
 )
 
 type UsersHandler interface {
-	AddRoutes(g *echo.Group)
+	server.Handler
 	Register(c echo.Context) error
 	Login(c echo.Context) error
 	Refresh(c echo.Context) error
@@ -25,7 +28,12 @@ type UsersHandlerImpl struct {
 	authService  auth.AuthService
 }
 
-func NewUsersHandler(usersService UsersService, authService auth.AuthService) UsersHandler {
+func NewUsersHandler(storage storage.Storage) server.Handler {
+	usersRepo := NewUsersRepo(storage)
+	usersService := NewUsersService(usersRepo)
+	passwordsRepo := passwords.NewPasswordsRepo(storage)
+	passwordsService := passwords.NewPasswordsService(passwordsRepo)
+	authService := auth.NewAuthService(passwordsService)
 	return &UsersHandlerImpl{
 		usersService: usersService,
 		authService:  authService,

@@ -7,9 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/auth"
-	"github.com/L2SH-Dev/admissions/internal/passwords"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
+	"github.com/L2SH-Dev/admissions/internal/storage"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
@@ -17,19 +16,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestHandler(t *testing.T) (users.UsersHandler, users.UsersService) {
-	db := setupTestDB(t) // Reuse setupTestDB from repo_test.go
-	repo := users.NewUsersRepo(db)
-	service := users.NewUsersService(repo)
-	passwordsRepo := passwords.NewPasswordsRepo(db)
-	passwordsService := passwords.NewPasswordsService(passwordsRepo)
-	authService := auth.NewAuthService(passwordsService)
-	handler := users.NewUsersHandler(service, authService)
-	return handler, service
+func setupTestHandler(t *testing.T) users.UsersHandler {
+	storage := storage.SetupMockStorage(t)
+	return users.NewUsersHandler(storage).(users.UsersHandler)
 }
 
 func TestUsersHandler_Register(t *testing.T) {
-	handler, _ := setupTestHandler(t)
+	handler := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
 
@@ -45,7 +38,7 @@ func TestUsersHandler_Register(t *testing.T) {
 }
 
 func TestUsersHandler_Login(t *testing.T) {
-	handler, _ := setupTestHandler(t)
+	handler := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
 
@@ -76,7 +69,7 @@ func TestUsersHandler_Login(t *testing.T) {
 }
 
 func TestUsersHandler_Refresh(t *testing.T) {
-	handler, _ := setupTestHandler(t)
+	handler := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
 	viper.Set("jwt.access_lifetime", "15m")
@@ -127,7 +120,7 @@ func TestUsersHandler_Refresh(t *testing.T) {
 }
 
 func TestUsersHandler_GetMe(t *testing.T) {
-	handler, _ := setupTestHandler(t)
+	handler := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
 

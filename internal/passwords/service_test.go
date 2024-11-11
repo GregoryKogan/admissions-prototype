@@ -8,14 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupService(t *testing.T) passwords.PasswordsService {
-	db := setupTestDB(t)
-	repo := passwords.NewPasswordsRepo(db)
+func setupTestService(t *testing.T) passwords.PasswordsService {
+	repo := setupTestRepo(t)
 	return passwords.NewPasswordsService(repo)
 }
 
 func TestPasswordsService_Create(t *testing.T) {
-	service := setupService(t)
+	service := setupTestService(t)
 
 	err := service.Create(1, "Valid1Password!")
 	require.NoError(t, err)
@@ -26,7 +25,7 @@ func TestPasswordsService_Create(t *testing.T) {
 }
 
 func TestPasswordsService_Validate(t *testing.T) {
-	service := setupService(t)
+	service := setupTestService(t)
 
 	tests := []struct {
 		password string
@@ -51,7 +50,7 @@ func TestPasswordsService_Validate(t *testing.T) {
 }
 
 func TestPasswordsService_Verify(t *testing.T) {
-	service := setupService(t)
+	service := setupTestService(t)
 
 	err := service.Create(1, "Valid1Password!")
 	require.NoError(t, err)
