@@ -3,7 +3,7 @@ package users
 import (
 	"encoding/json"
 
-	"github.com/L2SH-Dev/admissions/internal/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/jackc/pgx/pgtype"
 	"gorm.io/gorm"
 )

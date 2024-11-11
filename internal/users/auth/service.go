@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/L2SH-Dev/admissions/internal/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 )
 
 type AuthService interface {

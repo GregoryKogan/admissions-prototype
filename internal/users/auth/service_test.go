@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/auth"
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"github.com/L2SH-Dev/admissions/internal/passwords"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/L2SH-Dev/admissions/internal/auth"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )

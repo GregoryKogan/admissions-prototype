@@ -3,7 +3,7 @@ package passwords_test
 import (
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

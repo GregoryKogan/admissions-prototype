@@ -3,15 +3,15 @@ package users
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/L2SH-Dev/admissions/internal/auth"
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"github.com/L2SH-Dev/admissions/internal/passwords"
 	"github.com/L2SH-Dev/admissions/internal/server"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/exp/slog"
 	"gorm.io/gorm"
 )
 
