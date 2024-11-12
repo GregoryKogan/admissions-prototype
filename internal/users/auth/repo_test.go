@@ -21,9 +21,11 @@ func TestMain(m *testing.M) {
 	s, cleanup := datastore.SetupMockStorage()
 	storage = s
 
-	secrets.SetMockSecret("jwt_key", "testkey")
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
+	viper.Set("auth.auto_logout", "24h")
+
+	secrets.SetMockSecret("jwt_key", "testkey")
 
 	code := m.Run()
 

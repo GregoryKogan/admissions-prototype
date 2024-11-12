@@ -23,6 +23,7 @@ func TestMain(m *testing.M) {
 
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
+	viper.Set("auth.auto_logout", "24h")
 
 	secrets.SetMockSecret("jwt_key", "test_key")
 
