@@ -45,12 +45,15 @@ func (s *AuthServiceImpl) validateJWTMiddleware() echo.MiddlewareFunc {
 
 			ok, err := s.IsTokenCached(claims)
 			if err != nil {
+				slog.Error("failed to check if token is cached", slog.Any("error", err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to validate token")
 			}
 
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "token not found")
 			}
+
+			s.repo.ExtendTokenPairCacheExpiration(claims.UserID)
 
 			c.Set("userId", claims.UserID)
 

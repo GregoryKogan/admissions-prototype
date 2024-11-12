@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/authjwt"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 var ErrInvalidTokenPair = errors.New("invalid token pair")
 
 type AuthRepo interface {
 	CacheTokenPair(tokenPair *TokenPair) error
+	ExtendTokenPairCacheExpiration(userID uint)
 	IsTokenCached(claims *authjwt.JWTClaims) (bool, error)
 	DeleteTokenPair(userID uint)
 }
@@ -68,8 +69,13 @@ func (r *AuthRepoImpl) CacheTokenPair(tokenPair *TokenPair) error {
 	}
 
 	userID := accessClaims.UserID
-	expirationDuration := time.Duration(time.Hour)
-	return r.storage.Cache.Set(context.Background(), fmt.Sprintf("token-%d", userID), cacheJson, expirationDuration).Err()
+	return r.storage.Cache.Set(context.Background(), fmt.Sprintf("token-%d", userID), cacheJson, viper.GetDuration("auth.auto_logout")).Err()
+}
+
+func (r *AuthRepoImpl) ExtendTokenPairCacheExpiration(userID uint) {
+	go func() {
+		r.storage.Cache.Expire(context.Background(), fmt.Sprintf("token-%d", userID), viper.GetDuration("auth.auto_logout"))
+	}()
 }
 
 func (r *AuthRepoImpl) IsTokenCached(claims *authjwt.JWTClaims) (bool, error) {

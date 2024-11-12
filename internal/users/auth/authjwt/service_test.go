@@ -10,8 +10,8 @@ import (
 )
 
 func setupTestJWTService(t *testing.T) authjwt.JWTService {
-	viper.Set("jwt.access_lifetime", "15m")
-	viper.Set("jwt.refresh_lifetime", "720h")
+	viper.Set("auth.access_lifetime", "15m")
+	viper.Set("auth.refresh_lifetime", "720h")
 	secrets.SetMockSecret("jwt_key", "testkey")
 
 	t.Cleanup(func() {

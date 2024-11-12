@@ -19,6 +19,7 @@ cache:
 logging:
   level: debug
 
-jwt:
+auth:
   access_lifetime: 15m
   refresh_lifetime: 720h
+  auto_logout: 1h

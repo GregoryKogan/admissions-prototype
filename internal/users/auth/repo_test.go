@@ -22,8 +22,8 @@ func TestMain(m *testing.M) {
 	storage = s
 
 	secrets.SetMockSecret("jwt_key", "testkey")
-	viper.Set("jwt.access_lifetime", "15m")
-	viper.Set("jwt.refresh_lifetime", "720h")
+	viper.Set("auth.access_lifetime", "15m")
+	viper.Set("auth.refresh_lifetime", "720h")
 
 	code := m.Run()
 
@@ -183,4 +183,49 @@ func TestDeleteTokenPair(t *testing.T) {
 	cached, err = repo.IsTokenCached(refreshClaims)
 	assert.NoError(t, err)
 	assert.False(t, cached)
+}
+
+func TestExtendTokenPairCacheExpiration(t *testing.T) {
+	repo := setupTestRepo(t)
+
+	jwtService := authjwt.NewJWTService()
+
+	access, err := jwtService.NewAccessToken(1)
+	assert.NoError(t, err)
+
+	refresh, err := jwtService.NewRefreshToken(1)
+	assert.NoError(t, err)
+
+	pair := &auth.TokenPair{
+		Access:  access,
+		Refresh: refresh,
+	}
+
+	err = repo.CacheTokenPair(pair)
+	assert.NoError(t, err)
+
+	// Ensure tokens are cached
+	accessClaims, err := jwtService.ParseToken(access)
+	assert.NoError(t, err)
+	cached, err := repo.IsTokenCached(accessClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
+
+	refreshClaims, err := jwtService.ParseToken(refresh)
+	assert.NoError(t, err)
+	cached, err = repo.IsTokenCached(refreshClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
+
+	// Extend token pair cache expiration
+	repo.ExtendTokenPairCacheExpiration(1)
+
+	// Ensure tokens are still cached after expiration extension
+	cached, err = repo.IsTokenCached(accessClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
+
+	cached, err = repo.IsTokenCached(refreshClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
 }

@@ -70,11 +70,11 @@ func newSignedJWT(claims jwt.Claims) (string, error) {
 }
 
 func newAccessJWTClaims(userID uint) *JWTClaims {
-	return newJWTClaims(userID, "access", viper.GetDuration("jwt.access_lifetime"))
+	return newJWTClaims(userID, "access", viper.GetDuration("auth.access_lifetime"))
 }
 
 func newRefreshJWTClaims(userID uint) *JWTClaims {
-	return newJWTClaims(userID, "refresh", viper.GetDuration("jwt.refresh_lifetime"))
+	return newJWTClaims(userID, "refresh", viper.GetDuration("auth.refresh_lifetime"))
 }
 
 func newJWTClaims(userID uint, tokenType string, lifetime time.Duration) *JWTClaims {
