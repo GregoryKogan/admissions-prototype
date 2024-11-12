@@ -7,6 +7,7 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +46,7 @@ func TestNewPasswordsRepo(t *testing.T) {
 func TestCreate(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	hashedPassword := &passwords.HashedPassword{
+	hashedPassword := &crypto.HashedPassword{
 		Hash:      []byte("hashedpassword"),
 		Salt:      []byte("salt"),
 		Algorithm: "argon2id",
@@ -64,7 +65,7 @@ func TestCreate(t *testing.T) {
 func TestGetByUserID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	hashedPassword := &passwords.HashedPassword{
+	hashedPassword := &crypto.HashedPassword{
 		Hash:      []byte("hashedpassword"),
 		Salt:      []byte("salt"),
 		Algorithm: "argon2id",
@@ -83,7 +84,7 @@ func TestGetByUserID(t *testing.T) {
 func TestExistsByUserID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	hashedPassword := &passwords.HashedPassword{
+	hashedPassword := &crypto.HashedPassword{
 		Hash:      []byte("hashedpassword"),
 		Salt:      []byte("salt"),
 		Algorithm: "argon2id",

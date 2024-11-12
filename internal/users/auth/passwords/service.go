@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"unicode"
+
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
 )
 
 var (
@@ -22,14 +24,14 @@ type PasswordsService interface {
 }
 
 type PasswordsServiceImpl struct {
+	crypto crypto.CryptoService
 	repo   PasswordsRepo
-	params *Argon2idParams
 }
 
 func NewPasswordsService(repo PasswordsRepo) PasswordsService {
 	return &PasswordsServiceImpl{
+		crypto: crypto.NewCryptoService(),
 		repo:   repo,
-		params: DefaultArgon2idParams(),
 	}
 }
 
@@ -54,7 +56,7 @@ func (s *PasswordsServiceImpl) Create(userID uint, password string) error {
 		return fmt.Errorf("password already exists for user with ID: %d", userID)
 	}
 
-	hashedPassword, err := s.params.GenerateHash([]byte(password))
+	hashedPassword, err := s.crypto.GenerateHash([]byte(password))
 	if err != nil {
 		return fmt.Errorf("failed to generate hash: %w", err)
 	}
@@ -109,13 +111,13 @@ func (s *PasswordsServiceImpl) Verify(userID uint, password string) (bool, error
 		return false, fmt.Errorf("failed to retrieve password: %w", err)
 	}
 
-	hashedPassword := &HashedPassword{
+	hashedPassword := &crypto.HashedPassword{
 		Hash:      record.Hash,
 		Salt:      record.Salt,
 		Algorithm: record.Algorithm,
 	}
 
-	match, err := s.params.Compare([]byte(password), hashedPassword)
+	match, err := s.crypto.Compare([]byte(password), hashedPassword)
 	if err != nil {
 		return false, fmt.Errorf("failed to compare passwords: %w", err)
 	}

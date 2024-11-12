@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -31,9 +29,13 @@ type UsersHandlerImpl struct {
 func NewUsersHandler(storage datastore.Storage) server.Handler {
 	usersRepo := NewUsersRepo(storage)
 	usersService := NewUsersService(usersRepo)
+
 	passwordsRepo := passwords.NewPasswordsRepo(storage)
 	passwordsService := passwords.NewPasswordsService(passwordsRepo)
-	authService := auth.NewAuthService(passwordsService)
+
+	authRepo := auth.NewAuthRepo(storage)
+	authService := auth.NewAuthService(authRepo, passwordsService)
+
 	return &UsersHandlerImpl{
 		usersService: usersService,
 		authService:  authService,
@@ -49,7 +51,10 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	authGroup.POST("/refresh", h.Refresh)
 
 	restrictedGroup := usersGroup.Group("")
-	if err := auth.AddJWTMiddleware(restrictedGroup); err != nil {
+	if err := h.authService.AddAuthMiddleware(restrictedGroup); err != nil {
+		panic(err)
+	}
+	if err := h.usersService.AddUserPreloadMiddleware(restrictedGroup); err != nil {
 		panic(err)
 	}
 
@@ -151,17 +156,6 @@ func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
 }
 
 func (h *UsersHandlerImpl) GetMe(c echo.Context) error {
-	fmt.Println(c.Get("user"))
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(*auth.JWTClaims)
-	userID := claims.UserID
-
-	user, err := h.usersService.GetFullByID(userID)
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		return echo.NewHTTPError(http.StatusNotFound, "user not found")
-	} else if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
+	user := c.Get("currentUser").(*User)
 	return c.JSON(http.StatusOK, user)
 }

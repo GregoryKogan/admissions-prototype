@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/pgtype"
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
 type UsersService interface {
+	AddUserPreloadMiddleware(g *echo.Group) error
 	GetByEmail(email string) (*User, error)
 	GetByID(userID uint) (*User, error)
-	GetFullByID(userID uint) (*User, error)
 	Create(email string) (*User, error)
 	Delete(userID uint) error
 }
@@ -37,10 +38,6 @@ func (s *UsersServiceImpl) GetByEmail(email string) (*User, error) {
 
 func (s *UsersServiceImpl) GetByID(userID uint) (*User, error) {
 	return s.repo.GetByID(userID)
-}
-
-func (s *UsersServiceImpl) GetFullByID(userID uint) (*User, error) {
-	return s.repo.GetWithDetailsByID(userID)
 }
 
 func (s *UsersServiceImpl) Create(email string) (*User, error) {

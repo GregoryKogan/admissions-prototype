@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
 	"gorm.io/gorm"
 )
 
 type PasswordsRepo interface {
-	Create(userID uint, hashedPassword *HashedPassword) error
+	Create(userID uint, hashedPassword *crypto.HashedPassword) error
 	GetByUserID(userID uint) (*Password, error)
 	ExistsByUserID(userID uint) (bool, error)
 }
@@ -25,7 +26,7 @@ func NewPasswordsRepo(storage datastore.Storage) PasswordsRepo {
 	return &PasswordsRepoImpl{storage: storage}
 }
 
-func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *HashedPassword) error {
+func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *crypto.HashedPassword) error {
 	record := Password{
 		UserID:    userID,
 		Hash:      hashedPassword.Hash,

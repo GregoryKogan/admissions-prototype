@@ -8,11 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,10 +68,6 @@ func TestUsersHandler_Login(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 
-	// Mock JWT key
-	secrets.SetMockSecret("jwt_key", "test_key")
-	defer secrets.ClearMockSecrets()
-
 	err = handler.Login(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -85,8 +79,6 @@ func TestUsersHandler_Refresh(t *testing.T) {
 	handler := setupTestHandler(t)
 	e := echo.New()
 	validation.AddValidation(e)
-	viper.Set("jwt.access_lifetime", "15m")
-	viper.Set("jwt.refresh_lifetime", "720h")
 
 	// Register user first via endpoint
 	req := httptest.NewRequest(http.MethodPost, "/users/auth/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
@@ -102,10 +94,6 @@ func TestUsersHandler_Refresh(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
-
-	// Mock JWT key
-	secrets.SetMockSecret("jwt_key", "test_key")
-	defer secrets.ClearMockSecrets()
 
 	err = handler.Login(c)
 	assert.NoError(t, err)
@@ -137,13 +125,7 @@ func TestUsersHandler_GetMe(t *testing.T) {
 	e := echo.New()
 	validation.AddValidation(e)
 
-	// Mock JWT key
-	secrets.SetMockSecret("jwt_key", "test_key")
-	defer secrets.ClearMockSecrets()
-
 	handler.AddRoutes(e.Group(""))
-	viper.Set("jwt.access_lifetime", "15m")
-	viper.Set("jwt.refresh_lifetime", "720h")
 
 	// Register user first via endpoint
 	req := httptest.NewRequest(http.MethodPost, "/users/auth/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))

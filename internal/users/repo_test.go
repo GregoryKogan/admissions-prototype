@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/jackc/pgx/pgtype"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,8 +21,14 @@ func TestMain(m *testing.M) {
 	s, cleanup := datastore.SetupMockStorage()
 	storage = s
 
+	viper.Set("jwt.access_lifetime", "15m")
+	viper.Set("jwt.refresh_lifetime", "720h")
+
+	secrets.SetMockSecret("jwt_key", "test_key")
+
 	code := m.Run()
 
+	secrets.ClearMockSecrets()
 	cleanup()
 	os.Exit(code)
 }
@@ -122,21 +130,6 @@ func TestDeleteUser(t *testing.T) {
 func TestGetByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
-	err := repo.CreateUser(user)
-	assert.NoError(t, err)
-
-	result, err := repo.GetByID(user.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", result.Email)
-}
-
-func TestGetWithDetailsByID(t *testing.T) {
-	repo := setupTestRepo(t)
-
 	role := &users.Role{Title: "test_role"}
 	err := repo.CreateRole(role)
 	assert.NoError(t, err)
@@ -145,7 +138,7 @@ func TestGetWithDetailsByID(t *testing.T) {
 	err = repo.CreateUser(user)
 	assert.NoError(t, err)
 
-	result, err := repo.GetWithDetailsByID(user.ID)
+	result, err := repo.GetByID(user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, "test@example.com", result.Email)
 	assert.Equal(t, "test_role", result.Role.Title)

@@ -1,18 +1,22 @@
-package passwords_test
+package crypto_test
 
 import (
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func setupTestCryptoService() crypto.CryptoService {
+	return crypto.NewCryptoService()
+}
+
 func TestGenerateHash(t *testing.T) {
-	params := passwords.DefaultArgon2idParams()
+	service := setupTestCryptoService()
 	password := []byte("mysecretpassword")
 
-	hashedPassword, err := params.GenerateHash(password)
+	hashedPassword, err := service.GenerateHash(password)
 	require.NoError(t, err)
 	require.NotNil(t, hashedPassword)
 
@@ -22,19 +26,19 @@ func TestGenerateHash(t *testing.T) {
 }
 
 func TestCompare(t *testing.T) {
-	params := passwords.DefaultArgon2idParams()
+	service := setupTestCryptoService()
 	password := []byte("mysecretpassword")
 
-	hashedPassword, err := params.GenerateHash(password)
+	hashedPassword, err := service.GenerateHash(password)
 	require.NoError(t, err)
 	require.NotNil(t, hashedPassword)
 
-	match, err := params.Compare(password, hashedPassword)
+	match, err := service.Compare(password, hashedPassword)
 	require.NoError(t, err)
 	assert.True(t, match)
 
 	wrongPassword := []byte("wrongpassword")
-	match, err = params.Compare(wrongPassword, hashedPassword)
+	match, err = service.Compare(wrongPassword, hashedPassword)
 	require.NoError(t, err)
 	assert.False(t, match)
 }

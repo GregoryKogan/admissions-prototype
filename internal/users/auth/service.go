@@ -3,35 +3,44 @@ package auth
 import (
 	"errors"
 
+	"github.com/L2SH-Dev/admissions/internal/users/auth/authjwt"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
+	"github.com/labstack/echo/v4"
 )
 
+var ErrInvalidToken = errors.New("invalid token")
+
 type AuthService interface {
+	AddAuthMiddleware(g *echo.Group) error
 	ValidatePassword(password string) error
+	IsTokenCached(claims *authjwt.JWTClaims) (bool, error)
 	Register(userID uint, password string) error
 	Login(userID uint, password string) (*TokenPair, error)
 	Refresh(refreshToken string) (*TokenPair, error)
 }
 
 type AuthServiceImpl struct {
+	repo             AuthRepo
 	passwordsService passwords.PasswordsService
+	jwtService       authjwt.JWTService
 }
 
-func NewAuthService(passwordsService passwords.PasswordsService) AuthService {
+func NewAuthService(repo AuthRepo, passwordsService passwords.PasswordsService) AuthService {
 	return &AuthServiceImpl{
+		repo:             repo,
 		passwordsService: passwordsService,
+		jwtService:       authjwt.NewJWTService(),
 	}
 }
 
 var ErrInvalidPassword = errors.New("invalid password")
 
-type TokenPair struct {
-	AccessToken  string `json:"access"`
-	RefreshToken string `json:"refresh"`
-}
-
 func (s *AuthServiceImpl) ValidatePassword(password string) error {
 	return s.passwordsService.Validate(password)
+}
+
+func (s *AuthServiceImpl) IsTokenCached(claims *authjwt.JWTClaims) (bool, error) {
+	return s.repo.IsTokenCached(claims)
 }
 
 func (s *AuthServiceImpl) Register(userID uint, password string) error {
@@ -48,24 +57,11 @@ func (s *AuthServiceImpl) Login(userID uint, password string) (*TokenPair, error
 		return nil, ErrInvalidPassword
 	}
 
-	accessToken, err := NewAccessToken(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := NewRefreshToken(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	return s.generateTokenPair(userID)
 }
 
 func (s *AuthServiceImpl) Refresh(refreshToken string) (*TokenPair, error) {
-	claims, err := ParseToken(refreshToken)
+	claims, err := s.jwtService.ParseToken(refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -74,18 +70,38 @@ func (s *AuthServiceImpl) Refresh(refreshToken string) (*TokenPair, error) {
 		return nil, errors.Join(ErrInvalidToken, errors.New("invalid token type"))
 	}
 
-	newAccessToken, err := NewAccessToken(claims.UserID)
+	ok, err := s.IsTokenCached(claims)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefreshToken, err := NewRefreshToken(claims.UserID)
+	if !ok {
+		return nil, errors.Join(ErrInvalidToken, errors.New("token not found"))
+	}
+
+	return s.generateTokenPair(claims.UserID)
+}
+
+func (s *AuthServiceImpl) generateTokenPair(userID uint) (*TokenPair, error) {
+	accessToken, err := s.jwtService.NewAccessToken(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TokenPair{
-		AccessToken:  newAccessToken,
-		RefreshToken: newRefreshToken,
-	}, nil
+	refreshToken, err := s.jwtService.NewRefreshToken(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenPair := &TokenPair{
+		Access:  accessToken,
+		Refresh: refreshToken,
+	}
+
+	err = s.repo.CacheTokenPair(tokenPair)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to cache token pair"), err)
+	}
+
+	return tokenPair, nil
 }

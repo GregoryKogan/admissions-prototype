@@ -15,7 +15,6 @@ type UsersRepo interface {
 	CreateUser(user *User) error
 	DeleteUser(userID uint) error
 	GetByID(userID uint) (*User, error)
-	GetWithDetailsByID(userID uint) (*User, error)
 	UserExistsByID(userID uint) (bool, error)
 	GetByEmail(email string) (*User, error)
 }
@@ -81,16 +80,6 @@ func (r *UsersRepoImpl) DeleteUser(userID uint) error {
 }
 
 func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
-	var user User
-	err := r.storage.DB.First(&user, userID).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
-func (r *UsersRepoImpl) GetWithDetailsByID(userID uint) (*User, error) {
 	var user User
 	err := r.storage.DB.Preload("Role").First(&user, userID).Error
 	if err != nil {

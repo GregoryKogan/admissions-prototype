@@ -94,21 +94,8 @@ func TestUsersService_GetByID(t *testing.T) {
 	createdUser, err := service.Create("test@example.com")
 	assert.NoError(t, err)
 
-	// Get user by ID
-	user, err := service.GetByID(createdUser.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", user.Email)
-}
-
-func TestUsersService_GetFullByID(t *testing.T) {
-	service := setupTestService(t)
-
-	// Create user
-	createdUser, err := service.Create("test@example.com")
-	assert.NoError(t, err)
-
 	// Get user with details by ID
-	user, err := service.GetFullByID(createdUser.ID)
+	user, err := service.GetByID(createdUser.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, "test@example.com", user.Email)
 	assert.Equal(t, "user", user.Role.Title)
