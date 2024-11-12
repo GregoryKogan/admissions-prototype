@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
 )
@@ -14,10 +12,10 @@ func Init() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			slog.Error("Config file not found", slog.Any("error", err))
-			os.Exit(1)
+			panic(err)
 		} else {
 			slog.Error("Error reading config file", slog.Any("error", err))
-			os.Exit(1)
+			panic(err)
 		}
 	}
 

@@ -24,7 +24,7 @@ func Init() {
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
-	slog.Info("Logging initialized")
+	slog.Info("Logging initialized", slog.String("level", opts.Level.Level().String()))
 }
 
 func AddMiddleware(e *echo.Echo) {
@@ -52,7 +52,7 @@ func AddMiddleware(e *echo.Echo) {
 }
 
 func getLogLevel() slog.Level {
-	level := viper.GetString("log.level")
+	level := viper.GetString("logging.level")
 	switch level {
 	case "debug":
 		return slog.LevelDebug

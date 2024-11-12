@@ -12,5 +12,14 @@ database:
   connection:
     timezone: Europe/Moscow
 
+cache:
+  host: cache
+  port: 6379
+
 logging:
   level: debug
+
+auth:
+  access_lifetime: 15m
+  refresh_lifetime: 720h
+  auto_logout: 24h
