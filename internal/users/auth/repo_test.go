@@ -139,3 +139,48 @@ func TestIsTokenCached_NotCached(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, cached)
 }
+
+func TestDeleteTokenPair(t *testing.T) {
+	repo := setupTestRepo(t)
+
+	jwtService := authjwt.NewJWTService()
+
+	access, err := jwtService.NewAccessToken(1)
+	assert.NoError(t, err)
+
+	refresh, err := jwtService.NewRefreshToken(1)
+	assert.NoError(t, err)
+
+	pair := &auth.TokenPair{
+		Access:  access,
+		Refresh: refresh,
+	}
+
+	err = repo.CacheTokenPair(pair)
+	assert.NoError(t, err)
+
+	// Ensure tokens are cached
+	accessClaims, err := jwtService.ParseToken(access)
+	assert.NoError(t, err)
+	cached, err := repo.IsTokenCached(accessClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
+
+	refreshClaims, err := jwtService.ParseToken(refresh)
+	assert.NoError(t, err)
+	cached, err = repo.IsTokenCached(refreshClaims)
+	assert.NoError(t, err)
+	assert.True(t, cached)
+
+	// Delete token pair
+	repo.DeleteTokenPair(1)
+
+	// Ensure tokens are no longer cached
+	cached, err = repo.IsTokenCached(accessClaims)
+	assert.NoError(t, err)
+	assert.False(t, cached)
+
+	cached, err = repo.IsTokenCached(refreshClaims)
+	assert.NoError(t, err)
+	assert.False(t, cached)
+}

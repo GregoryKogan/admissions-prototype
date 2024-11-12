@@ -17,6 +17,7 @@ var ErrInvalidTokenPair = errors.New("invalid token pair")
 type AuthRepo interface {
 	CacheTokenPair(tokenPair *TokenPair) error
 	IsTokenCached(claims *authjwt.JWTClaims) (bool, error)
+	DeleteTokenPair(userID uint)
 }
 
 type TokenPair struct {
@@ -95,4 +96,8 @@ func (r *AuthRepoImpl) IsTokenCached(claims *authjwt.JWTClaims) (bool, error) {
 	}
 
 	return claims.UID == cachedUID, nil
+}
+
+func (r *AuthRepoImpl) DeleteTokenPair(userID uint) {
+	r.storage.Cache.Del(context.Background(), fmt.Sprintf("token-%d", userID))
 }

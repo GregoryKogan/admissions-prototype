@@ -17,6 +17,7 @@ type AuthService interface {
 	Register(userID uint, password string) error
 	Login(userID uint, password string) (*TokenPair, error)
 	Refresh(refreshToken string) (*TokenPair, error)
+	Logout(userID uint)
 }
 
 type AuthServiceImpl struct {
@@ -80,6 +81,10 @@ func (s *AuthServiceImpl) Refresh(refreshToken string) (*TokenPair, error) {
 	}
 
 	return s.generateTokenPair(claims.UserID)
+}
+
+func (s *AuthServiceImpl) Logout(userID uint) {
+	s.repo.DeleteTokenPair(userID)
 }
 
 func (s *AuthServiceImpl) generateTokenPair(userID uint) (*TokenPair, error) {

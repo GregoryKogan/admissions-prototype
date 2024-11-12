@@ -18,6 +18,7 @@ type UsersHandler interface {
 	Register(c echo.Context) error
 	Login(c echo.Context) error
 	Refresh(c echo.Context) error
+	Logout(c echo.Context) error
 	GetMe(c echo.Context) error
 }
 
@@ -45,10 +46,10 @@ func NewUsersHandler(storage datastore.Storage) server.Handler {
 func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	usersGroup := g.Group("/users")
 
-	authGroup := usersGroup.Group("/auth")
-	authGroup.POST("/register", h.Register)
-	authGroup.POST("/login", h.Login)
-	authGroup.POST("/refresh", h.Refresh)
+	publicGroup := usersGroup.Group("")
+	publicGroup.POST("/register", h.Register)
+	publicGroup.POST("/login", h.Login)
+	publicGroup.POST("/refresh", h.Refresh)
 
 	restrictedGroup := usersGroup.Group("")
 	if err := h.authService.AddAuthMiddleware(restrictedGroup); err != nil {
@@ -58,6 +59,7 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 		panic(err)
 	}
 
+	restrictedGroup.POST("/logout", h.Logout)
 	restrictedGroup.GET("/me", h.GetMe)
 }
 
@@ -128,6 +130,12 @@ func (h *UsersHandlerImpl) Login(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, tokenPair)
+}
+
+func (h *UsersHandlerImpl) Logout(c echo.Context) error {
+	user := c.Get("currentUser").(*User)
+	h.authService.Logout(user.ID)
+	return c.JSON(http.StatusOK, "logged out")
 }
 
 func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
