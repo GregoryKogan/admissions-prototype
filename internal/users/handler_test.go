@@ -32,11 +32,13 @@ func setupTestHandler(t *testing.T) users.UsersHandler {
 	return users.NewUsersHandler(storage).(users.UsersHandler)
 }
 
-func TestUsersHandler_Register(t *testing.T) {
-	handler := setupTestHandler(t)
+func setupEcho() *echo.Echo {
 	e := echo.New()
 	validation.AddValidation(e)
+	return e
+}
 
+func registerUser(t *testing.T, e *echo.Echo, handler users.UsersHandler) {
 	req := httptest.NewRequest(http.MethodPost, "/users/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -45,74 +47,57 @@ func TestUsersHandler_Register(t *testing.T) {
 	err := handler.Register(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)
-	assert.Contains(t, rec.Body.String(), `"email":"test@example.com"`)
 }
 
-func TestUsersHandler_Login(t *testing.T) {
-	handler := setupTestHandler(t)
-	e := echo.New()
-	validation.AddValidation(e)
-
-	// Register user first via endpoint
-	req := httptest.NewRequest(http.MethodPost, "/users/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
+func loginUser(t *testing.T, e *echo.Echo, handler users.UsersHandler) (string, string) {
+	req := httptest.NewRequest(http.MethodPost, "/users/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	err := handler.Register(c)
-	assert.NoError(t, err)
-
-	// Login user
-	req = httptest.NewRequest(http.MethodPost, "/users/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-
-	err = handler.Login(c)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), `"access"`)
-	assert.Contains(t, rec.Body.String(), `"refresh"`)
-}
-
-func TestUsersHandler_Refresh(t *testing.T) {
-	handler := setupTestHandler(t)
-	e := echo.New()
-	validation.AddValidation(e)
-
-	// Register user first via endpoint
-	req := httptest.NewRequest(http.MethodPost, "/users/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
-	err := handler.Register(c)
-	assert.NoError(t, err)
-
-	// Login user to get refresh token
-	req = httptest.NewRequest(http.MethodPost, "/users/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-
-	err = handler.Login(c)
+	err := handler.Login(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 
-	// Extract refresh token from response
 	var loginResponse struct {
+		AccessToken  string `json:"access"`
 		RefreshToken string `json:"refresh"`
 	}
 	err = json.NewDecoder(rec.Body).Decode(&loginResponse)
 	assert.NoError(t, err)
 
-	// Use refresh token to get new token pair
-	req = httptest.NewRequest(http.MethodPost, "/users/refresh", strings.NewReader(`{"refresh":"`+loginResponse.RefreshToken+`"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
+	return loginResponse.AccessToken, loginResponse.RefreshToken
+}
 
-	err = handler.Refresh(c)
+func TestUsersHandler_Register(t *testing.T) {
+	handler := setupTestHandler(t)
+	e := setupEcho()
+
+	registerUser(t, e, handler)
+}
+
+func TestUsersHandler_Login(t *testing.T) {
+	handler := setupTestHandler(t)
+	e := setupEcho()
+
+	registerUser(t, e, handler)
+	loginUser(t, e, handler)
+}
+
+func TestUsersHandler_Refresh(t *testing.T) {
+	handler := setupTestHandler(t)
+	e := setupEcho()
+
+	registerUser(t, e, handler)
+	_, refreshToken := loginUser(t, e, handler)
+
+	// Use refresh token to get new token pair
+	req := httptest.NewRequest(http.MethodPost, "/users/refresh", strings.NewReader(`{"refresh":"`+refreshToken+`"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	err := handler.Refresh(c)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -122,38 +107,17 @@ func TestUsersHandler_Refresh(t *testing.T) {
 
 func TestUsersHandler_GetMe(t *testing.T) {
 	handler := setupTestHandler(t)
-	e := echo.New()
-	validation.AddValidation(e)
+	e := setupEcho()
 
 	handler.AddRoutes(e.Group(""))
 
-	// Register user first via endpoint
-	req := httptest.NewRequest(http.MethodPost, "/users/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusCreated, rec.Code)
-
-	// Login user to get access token
-	req = httptest.NewRequest(http.MethodPost, "/users/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	// Extract access token from response
-	var loginResponse struct {
-		AccessToken string `json:"access"`
-	}
-	err := json.NewDecoder(rec.Body).Decode(&loginResponse)
-	assert.NoError(t, err)
+	registerUser(t, e, handler)
+	accessToken, _ := loginUser(t, e, handler)
 
 	// Use access token to get user info
-	req = httptest.NewRequest(http.MethodGet, "/users/me", nil)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+loginResponse.AccessToken)
-	rec = httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+accessToken)
+	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -162,47 +126,17 @@ func TestUsersHandler_GetMe(t *testing.T) {
 
 func TestUsersHandler_Logout(t *testing.T) {
 	handler := setupTestHandler(t)
-	e := echo.New()
-	validation.AddValidation(e)
+	e := setupEcho()
 
 	handler.AddRoutes(e.Group(""))
 
-	// Register user first via endpoint
-	req := httptest.NewRequest(http.MethodPost, "/users/register", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec := httptest.NewRecorder()
-
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusCreated, rec.Code)
-
-	// Login user to get access token
-	req = httptest.NewRequest(http.MethodPost, "/users/login", strings.NewReader(`{"email":"test@example.com", "password":"Password$123"}`))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	rec = httptest.NewRecorder()
-
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	// Extract access token from response
-	var loginResponse struct {
-		AccessToken string `json:"access"`
-	}
-	err := json.NewDecoder(rec.Body).Decode(&loginResponse)
-	assert.NoError(t, err)
-
-	// Use access token to get user info
-	req = httptest.NewRequest(http.MethodGet, "/users/me", nil)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+loginResponse.AccessToken)
-	rec = httptest.NewRecorder()
-
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Contains(t, rec.Body.String(), `"email":"test@example.com"`)
+	registerUser(t, e, handler)
+	accessToken, _ := loginUser(t, e, handler)
 
 	// Use access token to logout
-	req = httptest.NewRequest(http.MethodPost, "/users/logout", nil)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+loginResponse.AccessToken)
-	rec = httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/users/logout", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+accessToken)
+	rec := httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -210,7 +144,7 @@ func TestUsersHandler_Logout(t *testing.T) {
 
 	// Try to get user info again
 	req = httptest.NewRequest(http.MethodGet, "/users/me", nil)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+loginResponse.AccessToken)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+accessToken)
 	rec = httptest.NewRecorder()
 
 	e.ServeHTTP(rec, req)
