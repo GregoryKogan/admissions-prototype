@@ -8,17 +8,17 @@
         </v-btn>
         <h1 class="text-center flex-grow-1">Вход</h1>
       </v-card-title>
-      <v-form @submit.prevent="handleSubmit">
+      <v-form @submit.prevent="handleSubmit" ref="form">
         <v-text-field
-          v-model="email"
-          label="Электронная почта"
-          required
+          v-model="login"
+          label="Логин"
+          :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
           v-model="password"
           label="Пароль"
           type="password"
-          required
+          :rules="[rules.required]"
         ></v-text-field>
         <v-btn color="primary" type="submit" class="mt-4 mx-auto d-block"
           >Войти</v-btn
@@ -27,7 +27,7 @@
       <v-btn
         color="secondary"
         to="/register"
-        class="mt-4 mx-auto d-block"
+        class="mt-4 mx-auto"
         variant="text"
         >Нет аккаунта? Зарегистрироваться</v-btn
       >
@@ -37,18 +37,25 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { VForm } from 'vuetify/components'
 
 export default defineComponent({
   data() {
     return {
-      email: '',
+      login: '',
       password: '',
+      rules: {
+        required: (v: string) => !!v || 'Обязательное поле',
+      },
     }
   },
   methods: {
-    handleSubmit() {
+    async handleSubmit() {
+      const isValid = await (this.$refs.form as VForm).validate()
+      if (!isValid.valid) return
+
       console.log({
-        email: this.email,
+        email: this.login,
         password: this.password,
       })
     },

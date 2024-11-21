@@ -15,8 +15,8 @@
         <h2>Приемная комиссия</h2>
       </v-col>
       <v-col cols="12" class="d-flex justify-center">
-        <v-btn color="primary" to="/register" class="mx-auto sized-button"
-          >Регистрация</v-btn
+        <v-btn color="primary" to="/login" class="mx-auto sized-button"
+          >Войти</v-btn
         >
       </v-col>
     </v-row>

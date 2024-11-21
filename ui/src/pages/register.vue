@@ -1,6 +1,6 @@
 <template>
   <v-container class="fill-height d-flex align-center justify-center">
-    <v-card class="pa-5" max-width="500">
+    <v-card class="pa-5" width="700">
       <v-card-title>
         <v-btn icon color="grey" to="/" variant="text">
           <v-icon>mdi-arrow-left</v-icon>
@@ -8,55 +8,161 @@
         </v-btn>
         <h1 class="text-center flex-grow-1">Регистрация</h1>
       </v-card-title>
-      <v-form @submit.prevent="handleSubmit">
-        <v-text-field
-          v-model="username"
-          label="Имя пользователя"
-          required
-        ></v-text-field>
+      <v-form @submit.prevent="handleSubmit" ref="form">
         <v-text-field
           v-model="email"
           label="Электронная почта"
+          :rules="[rules.required, rules.email]"
           required
         ></v-text-field>
         <v-text-field
-          v-model="password"
-          label="Пароль"
-          type="password"
+          v-model="first_name"
+          label="Имя"
+          :rules="[rules.required]"
           required
         ></v-text-field>
+        <v-text-field
+          v-model="last_name"
+          label="Фамилия"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-text-field
+          v-model="patronymic"
+          label="Отчество"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-select
+          v-model="gender"
+          :items="['Мужской', 'Женский']"
+          label="Пол"
+          :rules="[rules.required]"
+          required
+        ></v-select>
+        <v-date-picker
+          v-model="birth_date"
+          title="Дата рождения"
+          :rules="[rules.required]"
+          required
+        ></v-date-picker>
+        <v-select
+          v-model="grade"
+          :items="[6, 7, 8, 9, 10, 11]"
+          label="Класс поступления"
+          :rules="[rules.required]"
+          required
+        ></v-select>
+        <v-text-field
+          v-model="school"
+          label="Предыдущая школа"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-text-field
+          v-model="parent_first_name"
+          label="Имя родителя"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-text-field
+          v-model="parent_last_name"
+          label="Фамилия родителя"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-text-field
+          v-model="parent_patronymic"
+          label="Отчество родителя"
+          :rules="[rules.required]"
+          required
+        ></v-text-field>
+        <v-text-field
+          v-model="parent_phone"
+          label="Телефон родителя"
+          :rules="[rules.required, rules.phone]"
+          required
+        ></v-text-field>
+        <v-checkbox
+          v-model="june_exam"
+          label="Буду сдавать экзамен в июне"
+          :rules="[rules.required]"
+          required
+        ></v-checkbox>
+        <v-checkbox v-model="vmsh" label="Учился в ВМШ"></v-checkbox>
+        <v-textarea
+          v-model="source"
+          label="Откуда узнали о лицее?"
+          :rules="[rules.required]"
+          required
+        ></v-textarea>
         <v-btn color="primary" type="submit" class="mt-4 mx-auto d-block"
           >Зарегистрироваться</v-btn
         >
       </v-form>
-      <v-btn
-        color="secondary"
-        to="/login"
-        class="mt-4 mx-auto d-block"
-        variant="text"
-        >Уже есть аккаунт? Войти</v-btn
-      >
+      <div class="d-flex justify-end">
+        <v-btn color="secondary" to="/login" class="mt-4" variant="text"
+          >Уже есть аккаунт? Войти</v-btn
+        >
+      </div>
     </v-card>
   </v-container>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { VForm } from 'vuetify/components'
 
 export default defineComponent({
   data() {
     return {
-      username: '',
       email: '',
-      password: '',
+      first_name: '',
+      last_name: '',
+      patronymic: '',
+      gender: '', // 'Мужской' or 'Женский'
+      birth_date: new Date(),
+      grade: 0, // 6, 7, 8, 9, 10, 11
+      school: '',
+      parent_first_name: '',
+      parent_last_name: '',
+      parent_patronymic: '',
+      parent_phone: '',
+      june_exam: false,
+      vmsh: false,
+      source: '',
+      menu: false,
+      rules: {
+        required: (value: string) => !!value || 'Обязательное поле.',
+        email: (value: string) =>
+          /.+@.+\..+/.test(value) || 'Некорректный email.',
+        phone: (value: string) =>
+          /^((8|\+7)[- ]?)?(\(?\d{3}\)?[- ]?)?[\d\- ]{7,10}$/.test(value) ||
+          'Некорректный номер телефона.',
+      },
     }
   },
   methods: {
-    handleSubmit() {
+    async handleSubmit() {
+      const isValid = await (this.$refs.form as VForm).validate()
+      if (!isValid.valid) return
+
       console.log({
-        username: this.username,
         email: this.email,
-        password: this.password,
+        first_name: this.first_name,
+        last_name: this.last_name,
+        patronymic: this.patronymic,
+        gender: this.gender,
+        birth_date: this.birth_date,
+        grade: this.grade,
+        school: this.school,
+        parent_first_name: this.parent_first_name,
+        parent_last_name: this.parent_last_name,
+        parent_patronymic: this.parent_patronymic,
+        parent_phone: this.parent_phone,
+        june_exam: this.june_exam,
+        vmsh: this.vmsh,
+        source: this.source,
       })
     },
   },

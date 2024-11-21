@@ -8,6 +8,9 @@
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
+// Locales
+import { ru } from 'vuetify/locale'
+
 // Composables
 import { createVuetify } from 'vuetify'
 
@@ -15,5 +18,10 @@ import { createVuetify } from 'vuetify'
 export default createVuetify({
   theme: {
     defaultTheme: 'light',
+  },
+  locale: {
+    locale: 'ru',
+    fallback: 'en',
+    messages: { ru },
   },
 })
