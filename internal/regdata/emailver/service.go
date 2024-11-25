@@ -21,7 +21,7 @@ func (s *EmailVerificationServiceImpl) SendVerificationEmail(email string, regis
 		return err
 	}
 
-	err = mailing.SendEmailConfirmation(email, token)
+	err = mailing.SendVerificationEmail(email, token)
 	if err != nil {
 		return err
 	}
