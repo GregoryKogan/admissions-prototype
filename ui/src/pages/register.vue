@@ -13,88 +13,69 @@
           v-model="email"
           label="Электронная почта"
           :rules="[rules.required, rules.email]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="first_name"
           label="Имя"
           :rules="[rules.required]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="last_name"
           label="Фамилия"
           :rules="[rules.required]"
-          required
         ></v-text-field>
-        <v-text-field
-          v-model="patronymic"
-          label="Отчество"
-          :rules="[rules.required]"
-          required
-        ></v-text-field>
+        <v-text-field v-model="patronymic" label="Отчество"></v-text-field>
         <v-select
           v-model="gender"
           :items="['Мужской', 'Женский']"
           label="Пол"
           :rules="[rules.required]"
-          required
         ></v-select>
         <v-date-picker
           v-model="birth_date"
           title="Дата рождения"
           :rules="[rules.required]"
-          required
         ></v-date-picker>
         <v-select
           v-model="grade"
           :items="[6, 7, 8, 9, 10, 11]"
           label="Класс поступления"
           :rules="[rules.required]"
-          required
         ></v-select>
         <v-text-field
           v-model="school"
           label="Предыдущая школа"
           :rules="[rules.required]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="parent_first_name"
           label="Имя родителя"
           :rules="[rules.required]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="parent_last_name"
           label="Фамилия родителя"
           :rules="[rules.required]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="parent_patronymic"
           label="Отчество родителя"
-          :rules="[rules.required]"
-          required
         ></v-text-field>
         <v-text-field
           v-model="parent_phone"
           label="Телефон родителя"
           :rules="[rules.required, rules.phone]"
-          required
         ></v-text-field>
         <v-checkbox
           v-model="june_exam"
           label="Буду сдавать экзамен в июне"
           :rules="[rules.required]"
-          required
         ></v-checkbox>
         <v-checkbox v-model="vmsh" label="Учился в ВМШ"></v-checkbox>
         <v-textarea
           v-model="source"
           label="Откуда узнали о лицее?"
           :rules="[rules.required]"
-          required
         ></v-textarea>
         <v-btn color="primary" type="submit" class="mt-4 mx-auto d-block"
           >Зарегистрироваться</v-btn
