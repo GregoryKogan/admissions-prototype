@@ -8,7 +8,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users"
-	"github.com/jackc/pgx/pgtype"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,22 +27,22 @@ func TestMain(m *testing.M) {
 
 	secrets.SetMockSecret("jwt_key", "test_key")
 
+	roles.NewRolesService(roles.NewRolesRepo(storage)).CreateDefaultRoles()
+
 	code := m.Run()
 
 	secrets.ClearMockSecrets()
+	if err := storage.DB.Exec("DELETE FROM roles").Error; err != nil {
+		panic(err)
+	}
 	cleanup()
+
 	os.Exit(code)
 }
 
 func setupTestRepo(t *testing.T) users.UsersRepo {
 	t.Cleanup(func() {
 		err := storage.DB.Exec("DELETE FROM users").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM roles").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM passwords").Error
 		assert.NoError(t, err)
 
 		err = storage.Cache.FlushDB(context.Background()).Err()
@@ -52,56 +52,10 @@ func setupTestRepo(t *testing.T) users.UsersRepo {
 	return users.NewUsersRepo(storage)
 }
 
-func TestCreateRole(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{
-		Title:       "test_role",
-		Permissions: pgtype.JSONB{Bytes: []byte(`{"read": true}`), Status: pgtype.Present},
-	}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	exists, err := repo.RoleExists("test_role")
-	assert.NoError(t, err)
-	assert.True(t, exists)
-}
-
-func TestRoleExists(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	exists, err := repo.RoleExists("test_role")
-	assert.NoError(t, err)
-	assert.True(t, exists)
-
-	exists, err = repo.RoleExists("non_existent_role")
-	assert.NoError(t, err)
-	assert.False(t, exists)
-}
-
-func TestGetRoleByTitle(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	result, err := repo.GetRoleByTitle("test_role")
-	assert.NoError(t, err)
-	assert.Equal(t, "test_role", result.Title)
-}
-
 func TestCreateUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
+	user := &users.User{Email: "test@example.com", RoleID: 1}
 	err := repo.CreateUser(user)
 	assert.NoError(t, err)
 
@@ -113,10 +67,7 @@ func TestCreateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
+	user := &users.User{Email: "test@example.com", RoleID: 1}
 	err := repo.CreateUser(user)
 	assert.NoError(t, err)
 
@@ -131,27 +82,19 @@ func TestDeleteUser(t *testing.T) {
 func TestGetByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID}
-	err = repo.CreateUser(user)
+	user := &users.User{Email: "test@example.com", RoleID: 1}
+	err := repo.CreateUser(user)
 	assert.NoError(t, err)
 
 	result, err := repo.GetByID(user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, "test@example.com", result.Email)
-	assert.Equal(t, "test_role", result.Role.Title)
 }
 
 func TestUserExistsByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
+	user := &users.User{Email: "test@example.com", RoleID: 1}
 	err := repo.CreateUser(user)
 	assert.NoError(t, err)
 
@@ -167,10 +110,7 @@ func TestUserExistsByID(t *testing.T) {
 func TestGetByEmail(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
+	user := &users.User{Email: "test@example.com", RoleID: 1}
 	err := repo.CreateUser(user)
 	assert.NoError(t, err)
 

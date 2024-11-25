@@ -3,7 +3,7 @@ package users
 import (
 	"errors"
 
-	"github.com/jackc/pgx/pgtype"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -17,14 +17,15 @@ type UsersService interface {
 }
 
 type UsersServiceImpl struct {
-	repo UsersRepo
+	repo         UsersRepo
+	rolesService roles.RolesService
 }
 
 var ErrUserAlreadyExists = errors.New("user with the same email already exists")
 
-func NewUsersService(repo UsersRepo) UsersService {
-	service := &UsersServiceImpl{repo: repo}
-	err := service.createDefaultRoles()
+func NewUsersService(repo UsersRepo, rolesService roles.RolesService) UsersService {
+	service := &UsersServiceImpl{repo: repo, rolesService: rolesService}
+	err := rolesService.CreateDefaultRoles()
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +52,7 @@ func (s *UsersServiceImpl) Create(email string) (*User, error) {
 	}
 
 	// Get default role
-	role, err := s.repo.GetRoleByTitle("user")
+	role, err := s.rolesService.GetRoleByTitle("user")
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to get default role"), err)
 	}
@@ -79,43 +80,6 @@ func (s *UsersServiceImpl) Delete(userID uint) error {
 	}
 	if exists {
 		return s.repo.DeleteUser(userID)
-	}
-
-	return nil
-}
-
-func (s *UsersServiceImpl) createDefaultRoles() error {
-	roles := []Role{
-		{
-			Title: "admin",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": true}`),
-				Status: pgtype.Present,
-			},
-		},
-		{
-			Title: "user",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": false}`),
-				Status: pgtype.Present,
-			},
-		},
-	}
-
-	for _, role := range roles {
-		exists, err := s.repo.RoleExists(role.Title)
-		if err != nil {
-			return errors.Join(errors.New("failed to check if role exists"), err)
-		}
-
-		if exists {
-			continue
-		}
-
-		err = s.repo.CreateRole(&role)
-		if err != nil {
-			return errors.Join(errors.New("failed to create role"), err)
-		}
 	}
 
 	return nil

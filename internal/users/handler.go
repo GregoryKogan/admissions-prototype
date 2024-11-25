@@ -9,6 +9,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -28,8 +29,10 @@ type UsersHandlerImpl struct {
 }
 
 func NewUsersHandler(storage datastore.Storage) server.Handler {
+	rolesRepo := roles.NewRolesRepo(storage)
+	rolesService := roles.NewRolesService(rolesRepo)
 	usersRepo := NewUsersRepo(storage)
-	usersService := NewUsersService(usersRepo)
+	usersService := NewUsersService(usersRepo, rolesService)
 
 	passwordsRepo := passwords.NewPasswordsRepo(storage)
 	passwordsService := passwords.NewPasswordsService(passwordsRepo)

@@ -22,9 +22,6 @@ func setupTestHandler(t *testing.T) users.UsersHandler {
 		err = storage.DB.Exec("DELETE FROM users").Error
 		assert.NoError(t, err)
 
-		err = storage.DB.Exec("DELETE FROM roles").Error
-		assert.NoError(t, err)
-
 		err = storage.Cache.FlushDB(context.Background()).Err()
 		assert.NoError(t, err)
 	})

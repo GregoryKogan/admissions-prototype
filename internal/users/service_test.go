@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/users"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -17,17 +18,12 @@ func setupTestService(t *testing.T) users.UsersService {
 		err := storage.DB.Exec("DELETE FROM users").Error
 		assert.NoError(t, err)
 
-		err = storage.DB.Exec("DELETE FROM roles").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
 		err = storage.Cache.FlushDB(context.Background()).Err()
 		assert.NoError(t, err)
 	})
 
-	return users.NewUsersService(repo)
+	rolesService := roles.NewRolesService(roles.NewRolesRepo(storage))
+	return users.NewUsersService(repo, rolesService)
 }
 
 func TestUsersService_CreateUser(t *testing.T) {
