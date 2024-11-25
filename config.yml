@@ -23,3 +23,6 @@ auth:
   access_lifetime: 15m
   refresh_lifetime: 720h
   auto_logout: 24h
+
+email_verification:
+  token_lifetime: 30m
