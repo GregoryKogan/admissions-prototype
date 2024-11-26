@@ -57,6 +57,19 @@ func setupTestRepo(t *testing.T) users.UsersRepo {
 		ParentPhone:     "+79999999999",
 	})
 	assert.NoError(t, err)
+	err = regdataService.CreateRegistrationData(&regdata.RegistrationData{
+		Email:           "test2@mail.org",
+		FirstName:       "Test",
+		LastName:        "User2",
+		Gender:          "F",
+		BirthDate:       time.Date(2005, 1, 1, 0, 0, 0, 0, time.UTC),
+		Grade:           6,
+		OldSchool:       "Test School 2",
+		ParentFirstName: "Test",
+		ParentLastName:  "Parent2",
+		ParentPhone:     "+79999999999",
+	})
+	assert.NoError(t, err)
 	return users.NewUsersRepo(storage)
 }
 
@@ -100,6 +113,8 @@ func TestGetByID(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.Role.ID)
 }
 
 func TestUserExistsByID(t *testing.T) {
@@ -131,6 +146,8 @@ func TestGetByRegistrationID(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.Role.ID)
 }
 
 func TestGetByLogin(t *testing.T) {
@@ -146,4 +163,6 @@ func TestGetByLogin(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.Role.ID)
 }
