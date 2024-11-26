@@ -12,7 +12,7 @@ import (
 )
 
 func setupTestHandler() ping.PingHandler {
-	return ping.NewPingHandler(datastore.Storage{}).(ping.PingHandler)
+	return ping.NewPingHandler(datastore.StorageImpl{}).(ping.PingHandler)
 }
 
 func TestPingHandler(t *testing.T) {

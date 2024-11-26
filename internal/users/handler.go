@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
@@ -16,10 +15,9 @@ import (
 
 type UsersHandler interface {
 	server.Handler
-	Register(c echo.Context) error
 	Login(c echo.Context) error
-	Refresh(c echo.Context) error
 	Logout(c echo.Context) error
+	Refresh(c echo.Context) error
 	GetMe(c echo.Context) error
 }
 
@@ -50,7 +48,6 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	usersGroup := g.Group("/users")
 
 	publicGroup := usersGroup.Group("")
-	publicGroup.POST("/register", h.Register)
 	publicGroup.POST("/login", h.Login)
 	publicGroup.POST("/refresh", h.Refresh)
 
@@ -66,47 +63,9 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	restrictedGroup.GET("/me", h.GetMe)
 }
 
-func (h *UsersHandlerImpl) Register(c echo.Context) error {
-	registerRequest := new(struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
-	})
-
-	if err := c.Bind(registerRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if err := c.Validate(registerRequest); err != nil {
-		return err
-	}
-
-	if err := h.authService.ValidatePassword(registerRequest.Password); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	user, err := h.usersService.Create(registerRequest.Email)
-	if err != nil && errors.Is(err, ErrUserAlreadyExists) {
-		return echo.NewHTTPError(http.StatusConflict, "user already exists")
-	} else if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	err = h.authService.Register(user.ID, registerRequest.Password)
-	if err != nil {
-		slog.Error("failed to register user password, deleting user", slog.Uint64("user_id", uint64(user.ID)), slog.Any("error", err))
-		if innerErr := h.usersService.Delete(user.ID); innerErr != nil {
-			slog.Error("failed to delete user", slog.Uint64("user_id", uint64(user.ID)), slog.Any("error", innerErr))
-		}
-
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusCreated, user)
-}
-
 func (h *UsersHandlerImpl) Login(c echo.Context) error {
 	loginRequest := new(struct {
-		Email    string `json:"email" validate:"required,email"`
+		Login    string `json:"login" validate:"required"`
 		Password string `json:"password" validate:"required"`
 	})
 
@@ -118,16 +77,16 @@ func (h *UsersHandlerImpl) Login(c echo.Context) error {
 		return err
 	}
 
-	user, err := h.usersService.GetByEmail(loginRequest.Email)
+	user, err := h.usersService.GetByLogin(loginRequest.Login)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		return echo.NewHTTPError(http.StatusUnauthorized, "invalid email or password")
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid login or password")
 	} else if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	tokenPair, err := h.authService.Login(user.ID, loginRequest.Password)
 	if err != nil && errors.Is(err, auth.ErrInvalidPassword) {
-		return echo.NewHTTPError(http.StatusUnauthorized, "invalid email or password")
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid login or password")
 	} else if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

@@ -9,7 +9,7 @@ import (
 type RegistrationData struct {
 	gorm.Model
 	Email            string    `json:"email" gorm:"unique;not null" validate:"required,email"`
-	EmailVerified    bool      `json:"email_verified" gorm:"not null" default:"false"`
+	EmailVerified    bool      `json:"email_verified" gorm:"not null;default:false"`
 	FirstName        string    `json:"first_name" gorm:"not null" validate:"required"`
 	LastName         string    `json:"last_name" gorm:"not null" validate:"required"`
 	Patronymic       string    `json:"patronymic"`
@@ -21,7 +21,7 @@ type RegistrationData struct {
 	ParentLastName   string    `json:"parent_last_name" gorm:"not null" validate:"required"`
 	ParentPatronymic string    `json:"parent_patronymic"`
 	ParentPhone      string    `json:"parent_phone" gorm:"not null" validate:"required,e164"`
-	JuneExam         bool      `json:"june_exam" gorm:"not null" default:"false" validate:"required"`
-	VMSH             bool      `json:"vmsh" gorm:"not null" default:"false" validate:"required"`
+	JuneExam         bool      `json:"june_exam" gorm:"not null;default:false"`
+	VMSH             bool      `json:"vmsh" gorm:"not null;default:false"`
 	Source           string    `json:"source"`
 }

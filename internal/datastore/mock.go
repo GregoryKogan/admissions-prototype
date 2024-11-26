@@ -12,6 +12,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type MockStorage interface {
+	Storage
+	Flush() error
+}
+
+type MockStorageImpl struct {
+	StorageImpl
+}
+
+func NewMockStorage(db *gorm.DB, cache *redis.Client) MockStorage {
+	return &MockStorageImpl{
+		StorageImpl: StorageImpl{
+			db:    db,
+			cache: cache,
+		},
+	}
+}
+
 func setupDatabase(pool *dockertest.Pool) (*gorm.DB, *dockertest.Resource) {
 	// Start PostgreSQL container
 	postgresResource, err := pool.RunWithOptions(&dockertest.RunOptions{
@@ -81,7 +99,7 @@ func setupCache(pool *dockertest.Pool) (*redis.Client, *dockertest.Resource) {
 	return cache, redisResource
 }
 
-func SetupMockStorage() (storage Storage, cleanup func()) {
+func InitMockStorage() (mockStorage MockStorage, cleanup func()) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not connect to docker: %s", err)
@@ -91,7 +109,7 @@ func SetupMockStorage() (storage Storage, cleanup func()) {
 	db, postgresResource := setupDatabase(pool)
 	cache, redisResource := setupCache(pool)
 
-	storage = NewStorage(db, cache)
+	mockStorage = NewMockStorage(db, cache)
 
 	cleanup = func() {
 		if err := pool.Purge(postgresResource); err != nil {
@@ -103,4 +121,23 @@ func SetupMockStorage() (storage Storage, cleanup func()) {
 	}
 
 	return
+}
+
+func (m *MockStorageImpl) Flush() error {
+	tables, err := m.DB().Migrator().GetTables()
+	if err != nil {
+		return err
+	}
+
+	for _, table := range tables {
+		if err := m.DB().Migrator().DropTable(table); err != nil {
+			return err
+		}
+	}
+
+	if err := m.Cache().FlushDB(context.Background()).Err(); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -11,8 +11,9 @@ type UsersRepo interface {
 	CreateUser(user *User) error
 	DeleteUser(userID uint) error
 	GetByID(userID uint) (*User, error)
+	GetByRegistrationID(registrationID uint) (*User, error)
+	GetByLogin(login string) (*User, error)
 	UserExistsByID(userID uint) (bool, error)
-	GetByEmail(email string) (*User, error)
 }
 
 type UsersRepoImpl struct {
@@ -20,14 +21,14 @@ type UsersRepoImpl struct {
 }
 
 func NewUsersRepo(storage datastore.Storage) UsersRepo {
-	if err := storage.DB.AutoMigrate(&User{}); err != nil {
+	if err := storage.DB().AutoMigrate(&User{}); err != nil {
 		panic(err)
 	}
 	return &UsersRepoImpl{storage: storage}
 }
 
 func (r *UsersRepoImpl) CreateUser(user *User) error {
-	err := r.storage.DB.Create(user).Error
+	err := r.storage.DB().Create(user).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to create user"), err)
 	}
@@ -36,7 +37,7 @@ func (r *UsersRepoImpl) CreateUser(user *User) error {
 }
 
 func (r *UsersRepoImpl) DeleteUser(userID uint) error {
-	err := r.storage.DB.Delete(&User{}, userID).Error
+	err := r.storage.DB().Delete(&User{}, userID).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to delete user"), err)
 	}
@@ -46,7 +47,27 @@ func (r *UsersRepoImpl) DeleteUser(userID uint) error {
 
 func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 	var user User
-	err := r.storage.DB.Preload("Role").First(&user, userID).Error
+	err := r.storage.DB().Preload("Role").Preload("RegistrationData").First(&user, userID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UsersRepoImpl) GetByRegistrationID(registrationID uint) (*User, error) {
+	var user User
+	err := r.storage.DB().Where("registration_data_id = ?", registrationID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UsersRepoImpl) GetByLogin(login string) (*User, error) {
+	var user User
+	err := r.storage.DB().Where("login = ?", login).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +85,4 @@ func (r *UsersRepoImpl) UserExistsByID(userID uint) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (r *UsersRepoImpl) GetByEmail(email string) (*User, error) {
-	var user User
-	err := r.storage.DB.Where("email = ?", email).First(&user).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
 }

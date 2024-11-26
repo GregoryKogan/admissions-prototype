@@ -16,10 +16,10 @@ func setupTestService(t *testing.T) auth.AuthService {
 	authRepo := auth.NewAuthRepo(storage)
 
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM passwords").Error
+		err := storage.DB().Exec("DELETE FROM passwords").Error
 		assert.NoError(t, err)
 
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err = storage.Cache().FlushDB(context.Background()).Err()
 		assert.NoError(t, err)
 	})
 

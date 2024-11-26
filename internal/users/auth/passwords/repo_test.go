@@ -17,7 +17,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	s, cleanup := datastore.SetupMockStorage()
+	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
 	code := m.Run()
@@ -28,10 +28,10 @@ func TestMain(m *testing.M) {
 
 func setupTestRepo(t *testing.T) passwords.PasswordsRepo {
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM passwords").Error
+		err := storage.DB().Exec("DELETE FROM passwords").Error
 		assert.NoError(t, err)
 
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err = storage.Cache().FlushDB(context.Background()).Err()
 		assert.NoError(t, err)
 	})
 

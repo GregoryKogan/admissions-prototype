@@ -30,7 +30,7 @@ func (r *EmailVerificationRepoImpl) CreateVerificationToken(registrationID uint)
 	if token == "" {
 		return "", errors.New("failed to generate verification token")
 	}
-	err := r.storage.Cache.Set(
+	err := r.storage.Cache().Set(
 		context.Background(),
 		fmt.Sprintf("email-token:%s", token),
 		registrationID,
@@ -45,7 +45,7 @@ func (r *EmailVerificationRepoImpl) CreateVerificationToken(registrationID uint)
 }
 
 func (r *EmailVerificationRepoImpl) GetRegistrationIDByToken(token string) (uint, error) {
-	registrationIDString, err := r.storage.Cache.Get(
+	registrationIDString, err := r.storage.Cache().Get(
 		context.Background(),
 		fmt.Sprintf("email-token:%s", token),
 	).Result()
@@ -62,7 +62,7 @@ func (r *EmailVerificationRepoImpl) GetRegistrationIDByToken(token string) (uint
 }
 
 func (r *EmailVerificationRepoImpl) DeleteToken(token string) error {
-	err := r.storage.Cache.Del(
+	err := r.storage.Cache().Del(
 		context.Background(),
 		fmt.Sprintf("email-token:%s", token),
 	).Err()

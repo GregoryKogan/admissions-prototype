@@ -10,9 +10,9 @@ import (
 
 type UsersService interface {
 	AddUserPreloadMiddleware(g *echo.Group) error
-	GetByEmail(email string) (*User, error)
 	GetByID(userID uint) (*User, error)
-	Create(email string) (*User, error)
+	GetByLogin(login string) (*User, error)
+	Create(registrationID uint, login string) (*User, error)
 	Delete(userID uint) error
 }
 
@@ -33,19 +33,19 @@ func NewUsersService(repo UsersRepo, rolesService roles.RolesService) UsersServi
 	return service
 }
 
-func (s *UsersServiceImpl) GetByEmail(email string) (*User, error) {
-	return s.repo.GetByEmail(email)
-}
-
 func (s *UsersServiceImpl) GetByID(userID uint) (*User, error) {
 	return s.repo.GetByID(userID)
 }
 
-func (s *UsersServiceImpl) Create(email string) (*User, error) {
-	// Check if user with the same email already exists
-	user, err := s.GetByEmail(email)
+func (s *UsersServiceImpl) GetByLogin(login string) (*User, error) {
+	return s.repo.GetByLogin(login)
+}
+
+func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, error) {
+	// Check if user with the same registration id already exists
+	user, err := s.getByRegistrationID(registrationID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.Join(errors.New("failed to get user by email"), err)
+		return nil, errors.Join(errors.New("failed to get user by registration id"), err)
 	}
 	if user != nil {
 		return nil, ErrUserAlreadyExists
@@ -59,9 +59,9 @@ func (s *UsersServiceImpl) Create(email string) (*User, error) {
 
 	// Create user object
 	newUser := &User{
-		Email:  email,
-		RoleID: role.ID,
-		Role:   *role,
+		Login:              login,
+		RegistrationDataID: registrationID,
+		RoleID:             role.ID,
 	}
 
 	// Create user
@@ -83,4 +83,8 @@ func (s *UsersServiceImpl) Delete(userID uint) error {
 	}
 
 	return nil
+}
+
+func (s *UsersServiceImpl) getByRegistrationID(registrationID uint) (*User, error) {
+	return s.repo.GetByRegistrationID(registrationID)
 }

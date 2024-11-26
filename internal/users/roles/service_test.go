@@ -10,7 +10,7 @@ import (
 )
 
 func setupTestService(t *testing.T) roles.RolesService {
-	storage, cleanup := datastore.SetupMockStorage()
+	storage, cleanup := datastore.InitMockStorage()
 	t.Cleanup(cleanup)
 
 	repo := roles.NewRolesRepo(storage)

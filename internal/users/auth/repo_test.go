@@ -18,7 +18,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	s, cleanup := datastore.SetupMockStorage()
+	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
 	viper.Set("auth.access_lifetime", "15m")
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 func setupTestRepo(t *testing.T) auth.AuthRepo {
 	t.Cleanup(func() {
-		err := storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Cache().FlushDB(context.Background()).Err()
 		assert.NoError(t, err)
 	})
 
