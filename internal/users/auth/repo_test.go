@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 )
 
 var (
-	storage datastore.Storage
+	storage datastore.MockStorage
 )
 
 func TestMain(m *testing.M) {
@@ -36,7 +35,7 @@ func TestMain(m *testing.M) {
 
 func setupTestRepo(t *testing.T) auth.AuthRepo {
 	t.Cleanup(func() {
-		err := storage.Cache().FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	storage datastore.Storage
+	storage datastore.MockStorage
 )
 
 func TestMain(m *testing.M) {
@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 func setupTestRepo(t *testing.T) roles.RolesRepo {
 	t.Cleanup(func() {
-		err := storage.DB().Exec("DELETE FROM roles").Error
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

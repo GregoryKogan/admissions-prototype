@@ -3,15 +3,16 @@ package roles_test
 import (
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/jackc/pgx/pgtype"
 	"github.com/stretchr/testify/assert"
 )
 
 func setupTestService(t *testing.T) roles.RolesService {
-	storage, cleanup := datastore.InitMockStorage()
-	t.Cleanup(cleanup)
+	t.Cleanup(func() {
+		err := storage.Flush()
+		assert.NoError(t, err)
+	})
 
 	repo := roles.NewRolesRepo(storage)
 	return roles.NewRolesService(repo)
