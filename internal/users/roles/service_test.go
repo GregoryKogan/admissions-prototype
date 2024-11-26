@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +20,7 @@ func setupTestService(t *testing.T) roles.RolesService {
 func TestCreateRoleService(t *testing.T) {
 	service := setupTestService(t)
 
-	role := &roles.Role{
-		Title:       "test_role",
-		Permissions: pgtype.JSONB{Bytes: []byte(`{"read": true}`), Status: pgtype.Present},
-	}
+	role := &roles.Role{Title: "test_role"}
 	err := service.CreateRole(role)
 	assert.NoError(t, err)
 
@@ -46,6 +42,14 @@ func TestCreateDefaultRolesService(t *testing.T) {
 	userExists, err := service.RoleExists("user")
 	assert.NoError(t, err)
 	assert.True(t, userExists)
+
+	interviewerExists, err := service.RoleExists("interviewer")
+	assert.NoError(t, err)
+	assert.True(t, interviewerExists)
+
+	principalExists, err := service.RoleExists("principal")
+	assert.NoError(t, err)
+	assert.True(t, principalExists)
 }
 
 func TestRoleExistsService(t *testing.T) {

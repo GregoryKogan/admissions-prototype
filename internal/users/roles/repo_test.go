@@ -6,7 +6,6 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,10 +35,7 @@ func setupTestRepo(t *testing.T) roles.RolesRepo {
 func TestCreateRole(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	role := &roles.Role{
-		Title:       "test_role",
-		Permissions: pgtype.JSONB{Bytes: []byte(`{"read": true}`), Status: pgtype.Present},
-	}
+	role := &roles.Role{Title: "test_role"}
 	err := repo.CreateRole(role)
 	assert.NoError(t, err)
 

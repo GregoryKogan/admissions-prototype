@@ -2,8 +2,6 @@ package roles
 
 import (
 	"errors"
-
-	"github.com/jackc/pgx/pgtype"
 )
 
 type RolesService interface {
@@ -34,18 +32,28 @@ func (s *RolesServiceImpl) CreateRole(role *Role) error {
 func (s *RolesServiceImpl) CreateDefaultRoles() error {
 	roles := []Role{
 		{
-			Title: "admin",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": true}`),
-				Status: pgtype.Present,
-			},
+			Title:        "user",
+			Admin:        false,
+			WriteGeneral: false,
+			AIAccess:     false,
 		},
 		{
-			Title: "user",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": false}`),
-				Status: pgtype.Present,
-			},
+			Title:        "admin",
+			Admin:        true,
+			WriteGeneral: true,
+			AIAccess:     false,
+		},
+		{
+			Title:        "interviewer",
+			Admin:        true,
+			WriteGeneral: false,
+			AIAccess:     true,
+		},
+		{
+			Title:        "principal",
+			Admin:        true,
+			WriteGeneral: true,
+			AIAccess:     true,
 		},
 	}
 

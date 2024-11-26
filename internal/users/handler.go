@@ -26,7 +26,7 @@ type UsersHandlerImpl struct {
 	authService  auth.AuthService
 }
 
-func NewUsersHandler(storage datastore.Storage) server.Handler {
+func NewUsersHandler(storage datastore.Storage, _ server.AdminMiddlewareService) server.Handler {
 	rolesRepo := roles.NewRolesRepo(storage)
 	rolesService := roles.NewRolesService(rolesRepo)
 	usersRepo := NewUsersRepo(storage)
