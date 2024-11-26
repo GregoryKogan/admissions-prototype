@@ -34,7 +34,7 @@ func NewRegistrationDataHandler(storage datastore.Storage) server.Handler {
 func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	regDataGroup := g.Group("/regdata")
 	regDataGroup.POST("", h.Register)
-	regDataGroup.POST("verify/:verification_token", h.VerifyEmail)
+	regDataGroup.GET("verify/:verification_token", h.VerifyEmail)
 }
 
 func (h *RegistrationDataHandlerImpl) Register(c echo.Context) error {
