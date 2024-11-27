@@ -57,9 +57,12 @@ func (r *RegistrationDataRepoImpl) ExistsByEmailNameAndGrade(email, name string,
 }
 
 func (r *RegistrationDataRepoImpl) SetEmailVerified(registrationID uint) error {
-	err := r.storage.DB().First(&RegistrationData{}, registrationID).Update("email_verified", true).Error
-	if err != nil {
-		return err
+	result := r.storage.DB().Model(&RegistrationData{}).Where("id = ?", registrationID).Update("email_verified", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("record not found")
 	}
 
 	return nil

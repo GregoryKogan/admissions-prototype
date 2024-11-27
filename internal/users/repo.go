@@ -8,12 +8,12 @@ import (
 )
 
 type UsersRepo interface {
-	CreateUser(user *User) error
-	DeleteUser(userID uint) error
+	Create(user *User) error
+	Delete(userID uint) error
 	GetByID(userID uint) (*User, error)
 	GetByRegistrationID(registrationID uint) (*User, error)
 	GetByLogin(login string) (*User, error)
-	UserExistsByID(userID uint) (bool, error)
+	ExistsByID(userID uint) (bool, error)
 }
 
 type UsersRepoImpl struct {
@@ -27,16 +27,21 @@ func NewUsersRepo(storage datastore.Storage) UsersRepo {
 	return &UsersRepoImpl{storage: storage}
 }
 
-func (r *UsersRepoImpl) CreateUser(user *User) error {
+func (r *UsersRepoImpl) Create(user *User) error {
 	err := r.storage.DB().Create(user).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to create user"), err)
 	}
 
+	// Ensure the ID field is set correctly
+	if user.ID == 0 {
+		return errors.New("user creation failed: user ID is not set")
+	}
+
 	return nil
 }
 
-func (r *UsersRepoImpl) DeleteUser(userID uint) error {
+func (r *UsersRepoImpl) Delete(userID uint) error {
 	err := r.storage.DB().Delete(&User{}, userID).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to delete user"), err)
@@ -75,7 +80,7 @@ func (r *UsersRepoImpl) GetByLogin(login string) (*User, error) {
 	return &user, nil
 }
 
-func (r *UsersRepoImpl) UserExistsByID(userID uint) (bool, error) {
+func (r *UsersRepoImpl) ExistsByID(userID uint) (bool, error) {
 	user, err := r.GetByID(userID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, err

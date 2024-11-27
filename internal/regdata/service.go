@@ -91,10 +91,10 @@ func (s *RegistrationDataServiceImpl) Accept(id uint) (*users.User, error) {
 	err = s.authService.Register(user.ID, password)
 	if err != nil {
 		slog.Info("Failed to register user, deleting user", slog.Any("user_id", user.ID))
-		err = s.usersService.Delete(user.ID)
-		if err != nil {
+		delErr := s.usersService.Delete(user.ID)
+		if delErr != nil {
 			slog.Error("Failed to delete user", slog.Any("user_id", user.ID), slog.Any("err", err))
-			return nil, err
+			return nil, delErr
 		}
 		return nil, err
 	}

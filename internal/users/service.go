@@ -41,7 +41,7 @@ func (s *UsersServiceImpl) GetByLogin(login string) (*User, error) {
 
 func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, error) {
 	// Check if user with the same registration id already exists
-	user, err := s.getByRegistrationID(registrationID)
+	user, err := s.repo.GetByRegistrationID(registrationID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Join(errors.New("failed to get user by registration id"), err)
 	}
@@ -63,26 +63,28 @@ func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, err
 	}
 
 	// Create user
-	err = s.repo.CreateUser(newUser)
+	err = s.repo.Create(newUser)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to create user"), err)
 	}
 
-	return newUser, nil
+	// Verify that the user was created successfully
+	createdUser, err := s.repo.GetByID(newUser.ID)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to retrieve created user"), err)
+	}
+
+	return createdUser, nil
 }
 
 func (s *UsersServiceImpl) Delete(userID uint) error {
-	exists, err := s.repo.UserExistsByID(userID)
+	exists, err := s.repo.ExistsByID(userID)
 	if err != nil {
 		return errors.Join(errors.New("failed to check if user exists"), err)
 	}
 	if exists {
-		return s.repo.DeleteUser(userID)
+		return s.repo.Delete(userID)
 	}
 
 	return nil
-}
-
-func (s *UsersServiceImpl) getByRegistrationID(registrationID uint) (*User, error) {
-	return s.repo.GetByRegistrationID(registrationID)
 }

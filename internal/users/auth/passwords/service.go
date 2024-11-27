@@ -131,34 +131,39 @@ func (s *PasswordsServiceImpl) Verify(userID uint, password string) (bool, error
 }
 
 func (s *PasswordsServiceImpl) Generate() string {
-	lowerCase := "abcdefghijklmnopqrstuvwxyz"
-	upperCase := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers := "0123456789"
-	specialChar := "!@#$%^&*()_-+={}[/?]"
+	const (
+		lowerChars   = "abcdefghijklmnopqrstuvwxyz"
+		upperChars   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		numberChars  = "0123456789"
+		specialChars = "!@#$%^&*()_+{}|:<>?~[]"
+	)
 
-	pwGenLen := viper.GetInt("auth.passwords.gen_length")
-	password := make([]byte, pwGenLen)
+	length := viper.GetInt("auth.passwords.gen_length")
+	if length < 4 { // Ensure minimum length for all character types
+		length = 4
+	}
 
-	source := rand.NewSource(uint64(time.Now().UnixNano()))
-	rng := rand.New(source)
+	seed := uint64(time.Now().UnixNano())
+	rng := rand.New(rand.NewSource(seed))
 
-	for i := 0; i < pwGenLen; i++ {
-		randNum := rng.Intn(4)
+	// Initialize with one character from each required set
+	password := []byte{
+		lowerChars[rng.Intn(len(lowerChars))],
+		upperChars[rng.Intn(len(upperChars))],
+		numberChars[rng.Intn(len(numberChars))],
+		specialChars[rng.Intn(len(specialChars))],
+	}
 
-		switch randNum {
-		case 0:
-			randCharNum := rng.Intn(len(lowerCase))
-			password[i] = lowerCase[randCharNum]
-		case 1:
-			randCharNum := rng.Intn(len(upperCase))
-			password[i] = upperCase[randCharNum]
-		case 2:
-			randCharNum := rng.Intn(len(numbers))
-			password[i] = numbers[randCharNum]
-		case 3:
-			randCharNum := rng.Intn(len(specialChar))
-			password[i] = specialChar[randCharNum]
-		}
+	// Fill the rest with random characters from all sets
+	allChars := lowerChars + upperChars + numberChars + specialChars
+	for i := 4; i < length; i++ {
+		password = append(password, allChars[rng.Intn(len(allChars))])
+	}
+
+	// Shuffle the password
+	for i := len(password) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		password[i], password[j] = password[j], password[i]
 	}
 
 	return string(password)
