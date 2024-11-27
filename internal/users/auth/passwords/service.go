@@ -7,11 +7,12 @@ import (
 	"unicode"
 
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
+	"github.com/spf13/viper"
 	"golang.org/x/exp/rand"
 )
 
 var (
-	ErrPasswordTooShort  = errors.New("password must be at least 8 characters long")
+	ErrPasswordTooShort  = fmt.Errorf("password must be at least %d characters long", viper.GetInt("auth.passwords.min_length"))
 	ErrPasswordNoNumber  = errors.New("password must contain at least one number")
 	ErrPasswordNoUpper   = errors.New("password must contain at least one uppercase letter")
 	ErrPasswordNoLower   = errors.New("password must contain at least one lowercase letter")
@@ -69,8 +70,7 @@ func (s *PasswordsServiceImpl) Create(userID uint, password string) error {
 }
 
 func (s *PasswordsServiceImpl) Validate(password string) error {
-	// TODO: put password length in config
-	if len(password) < 8 {
+	if len(password) < viper.GetInt("auth.passwords.min_length") {
 		return ErrPasswordTooShort
 	}
 
@@ -136,14 +136,13 @@ func (s *PasswordsServiceImpl) Generate() string {
 	numbers := "0123456789"
 	specialChar := "!@#$%^&*()_-+={}[/?]"
 
-	// TODO: put password length in config
-	password := make([]byte, 12)
+	pwGenLen := viper.GetInt("auth.passwords.gen_length")
+	password := make([]byte, pwGenLen)
 
 	source := rand.NewSource(uint64(time.Now().UnixNano()))
 	rng := rand.New(source)
 
-	// TODO: put password length in config
-	for i := 0; i < 12; i++ {
+	for i := 0; i < pwGenLen; i++ {
 		randNum := rng.Intn(4)
 
 		switch randNum {

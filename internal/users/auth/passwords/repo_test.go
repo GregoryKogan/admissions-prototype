@@ -7,6 +7,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,6 +17,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	viper.Set("auth.passwords.min_length", 8)
+
 	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
