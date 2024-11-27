@@ -19,9 +19,8 @@ services:
       - mail_api_key
     develop:
       watch:
-        - action: sync
-          path: ./ui/dist
-          target: /ui/dist
+        - action: rebuild
+          path: ./ui
         - action: rebuild
           path: ./cmd
         - action: rebuild
