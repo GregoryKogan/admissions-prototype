@@ -66,6 +66,10 @@ func SendLoginAndPassword(email, login, password string) error {
 }
 
 func sendEmail(templateID string, request *emailRequest) error {
+	if !viper.GetBool("mailing.enabled") {
+		return nil
+	}
+
 	apiBase := viper.GetString("mailing.api_base")
 	apiKey := viper.GetString("secrets.mail_api_key")
 

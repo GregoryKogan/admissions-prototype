@@ -30,4 +30,5 @@ auth:
     token_lifetime: 30m
 
 mailing:
+  enabled: false
   api_base: https://api.notisend.ru/v1
