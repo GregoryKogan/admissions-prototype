@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
@@ -55,11 +55,7 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	restrictedGroup := usersGroup.Group("")
 
 	middlewareService := NewUsersMiddlewareService(h.usersService, h.authService)
-	if jwtKey, err := secrets.ReadSecret("jwt_key"); err != nil {
-		panic(err)
-	} else {
-		middlewareService.AddAuthMiddleware(restrictedGroup, jwtKey)
-	}
+	middlewareService.AddAuthMiddleware(restrictedGroup, viper.GetString("secrets.jwt_key"))
 	middlewareService.AddUserPreloadMiddleware(restrictedGroup)
 
 	restrictedGroup.POST("/logout", h.Logout)

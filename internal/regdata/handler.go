@@ -7,13 +7,13 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/regdata/emailver"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/viper"
 )
 
 type RegistrationDataHandler interface {
@@ -67,12 +67,8 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 
 	usersMiddlewareService := users.NewUsersMiddlewareService(h.usersService, h.authService)
 
-	jwtKey, err := secrets.ReadSecret("jwt_key")
-	if err != nil {
-		panic(err)
-	} else {
-		usersMiddlewareService.AddAuthMiddleware(adminGroup, jwtKey)
-	}
+	jwtKey := viper.GetString("secrets.jwt_key")
+	usersMiddlewareService.AddAuthMiddleware(adminGroup, jwtKey)
 	usersMiddlewareService.AddUserPreloadMiddleware(adminGroup)
 	usersMiddlewareService.AddAdminMiddleware(adminGroup, roles.Role{WriteGeneral: true})
 

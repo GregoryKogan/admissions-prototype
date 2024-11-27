@@ -3,7 +3,6 @@ package datastore
 import (
 	"fmt"
 
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
@@ -13,11 +12,7 @@ import (
 
 func InitDBConnection() *gorm.DB {
 	dbConfig := viper.Sub("database")
-	db_password, err := secrets.ReadSecret("db_password")
-	if err != nil {
-		slog.Error("Failed to connect to the database", slog.Any("error", err))
-		panic(err)
-	}
+	db_password := viper.GetString("secrets.db_password")
 
 	db, err := gorm.Open(
 		postgres.Open(fmt.Sprintf(

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -43,11 +42,7 @@ func (s *JWTServiceImpl) NewRefreshToken(userID uint) (string, error) {
 
 func (s *JWTServiceImpl) ParseToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		jwtKey, err := secrets.ReadSecret("jwt_key")
-		if err != nil {
-			return nil, errors.Join(errors.New("failed to read jwt_key secret"), err)
-		}
-		return []byte(jwtKey), nil
+		return []byte(viper.GetString("secrets.jwt_key")), nil
 	})
 
 	if err != nil {
@@ -62,11 +57,7 @@ func (s *JWTServiceImpl) ParseToken(tokenString string) (*JWTClaims, error) {
 
 func newSignedJWT(claims jwt.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwtKey, err := secrets.ReadSecret("jwt_key")
-	if err != nil {
-		return "", errors.Join(errors.New("failed to read jwt_key secret"), err)
-	}
-	return token.SignedString([]byte(jwtKey))
+	return token.SignedString([]byte(viper.GetString("secrets.jwt_key")))
 }
 
 func newAccessJWTClaims(userID uint) *JWTClaims {

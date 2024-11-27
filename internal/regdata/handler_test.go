@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/regdata"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 	"github.com/labstack/echo/v4"
@@ -162,9 +161,6 @@ func TestAccept(t *testing.T) {
 	var respData regdata.RegistrationData
 	err = json.Unmarshal(rec.Body.Bytes(), &respData)
 	require.NoError(t, err)
-
-	// Mock JWT key for admin authentication
-	secrets.SetMockSecret("jwt_key", "test-key")
 
 	// Test accepting unverified registration
 	req = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/regdata/admin/accept/%d", respData.ID), nil)

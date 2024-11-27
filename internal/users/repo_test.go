@@ -7,7 +7,6 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/regdata"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
@@ -27,12 +26,10 @@ func TestMain(m *testing.M) {
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
 	viper.Set("auth.auto_logout", "24h")
-
-	secrets.SetMockSecret("jwt_key", "test_key")
+	viper.Set("secrets.jwt_key", "test_key")
 
 	code := m.Run()
 
-	secrets.ClearMockSecrets()
 	cleanup()
 
 	os.Exit(code)

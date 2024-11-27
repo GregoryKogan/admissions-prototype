@@ -3,22 +3,16 @@ package authjwt_test
 import (
 	"testing"
 
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/authjwt"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestJWTService(t *testing.T) authjwt.JWTService {
+func setupTestJWTService(_ *testing.T) authjwt.JWTService {
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
 	viper.Set("auth.auto_logout", "24h")
-
-	secrets.SetMockSecret("jwt_key", "testkey")
-
-	t.Cleanup(func() {
-		secrets.ClearMockSecrets()
-	})
+	viper.Set("secrets.jwt_key", "test_key")
 
 	return authjwt.NewJWTService()
 }
