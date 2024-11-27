@@ -34,7 +34,7 @@ func (r *EmailVerificationRepoImpl) CreateVerificationToken(registrationID uint)
 		context.Background(),
 		fmt.Sprintf("email-token:%s", token),
 		registrationID,
-		viper.GetDuration("email_verification.token_lifetime"),
+		viper.GetDuration("auth.email_verification.token_lifetime"),
 	).Err()
 
 	if err != nil {

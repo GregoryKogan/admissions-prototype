@@ -26,6 +26,5 @@ auth:
   passwords:
     min_length: 8
     gen_length: 12
-
-email_verification:
-  token_lifetime: 30m
+  email_verification:
+    token_lifetime: 30m

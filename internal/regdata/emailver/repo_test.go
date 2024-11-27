@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
-	viper.Set("email_verification.token_lifetime", "15m")
+	viper.Set("auth.email_verification.token_lifetime", "15m")
 
 	code := m.Run()
 
