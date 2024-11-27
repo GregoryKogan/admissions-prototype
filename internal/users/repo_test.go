@@ -9,6 +9,8 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/regdata"
 	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +45,20 @@ func setupTestRepo(t *testing.T) users.UsersRepo {
 	})
 
 	roles.NewRolesService(roles.NewRolesRepo(storage)).CreateDefaultRoles()
-	regdataService := regdata.NewRegistrationDataService(regdata.NewRegistrationDataRepo(storage))
+
+	rolesRepo := roles.NewRolesRepo(storage)
+	rolesService := roles.NewRolesService(rolesRepo)
+	usersRepo := users.NewUsersRepo(storage)
+	usersService := users.NewUsersService(usersRepo, rolesService)
+
+	passwordsRepo := passwords.NewPasswordsRepo(storage)
+	passwordsService := passwords.NewPasswordsService(passwordsRepo)
+	authRepo := auth.NewAuthRepo(storage)
+	authService := auth.NewAuthService(authRepo, passwordsService)
+
+	repo := regdata.NewRegistrationDataRepo(storage)
+
+	regdataService := regdata.NewRegistrationDataService(repo, usersService, authService, passwordsService)
 	err := regdataService.CreateRegistrationData(&regdata.RegistrationData{
 		Email:           "test@mail.org",
 		FirstName:       "Test",
@@ -113,7 +128,7 @@ func TestGetByID(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
-	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
 	assert.Equal(t, uint(1), result.Role.ID)
 }
 
@@ -146,7 +161,7 @@ func TestGetByRegistrationID(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
-	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
 	assert.Equal(t, uint(1), result.Role.ID)
 }
 
@@ -163,6 +178,6 @@ func TestGetByLogin(t *testing.T) {
 	assert.Equal(t, user.Login, result.Login)
 	assert.Equal(t, user.RoleID, result.RoleID)
 	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
-	assert.Equal(t, "Test", result.RegistrationData.FirstName)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
 	assert.Equal(t, uint(1), result.Role.ID)
 }

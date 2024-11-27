@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
@@ -26,7 +27,7 @@ type UsersHandlerImpl struct {
 	authService  auth.AuthService
 }
 
-func NewUsersHandler(storage datastore.Storage, _ server.AdminMiddlewareService) server.Handler {
+func NewUsersHandler(storage datastore.Storage) server.Handler {
 	rolesRepo := roles.NewRolesRepo(storage)
 	rolesService := roles.NewRolesService(rolesRepo)
 	usersRepo := NewUsersRepo(storage)
@@ -52,12 +53,14 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 	publicGroup.POST("/refresh", h.Refresh)
 
 	restrictedGroup := usersGroup.Group("")
-	if err := h.authService.AddAuthMiddleware(restrictedGroup); err != nil {
+
+	middlewareService := NewUsersMiddlewareService(h.usersService, h.authService)
+	if jwtKey, err := secrets.ReadSecret("jwt_key"); err != nil {
 		panic(err)
+	} else {
+		middlewareService.AddAuthMiddleware(restrictedGroup, jwtKey)
 	}
-	if err := h.usersService.AddUserPreloadMiddleware(restrictedGroup); err != nil {
-		panic(err)
-	}
+	middlewareService.AddUserPreloadMiddleware(restrictedGroup)
 
 	restrictedGroup.POST("/logout", h.Logout)
 	restrictedGroup.GET("/me", h.GetMe)

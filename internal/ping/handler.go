@@ -15,7 +15,7 @@ type PingHandler interface {
 
 type PingHandlerImpl struct{}
 
-func NewPingHandler(_ datastore.Storage, _ server.AdminMiddlewareService) server.Handler {
+func NewPingHandler(_ datastore.Storage) server.Handler {
 	return &PingHandlerImpl{}
 }
 

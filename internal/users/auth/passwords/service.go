@@ -3,9 +3,11 @@ package passwords
 import (
 	"errors"
 	"fmt"
+	"time"
 	"unicode"
 
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
+	"golang.org/x/exp/rand"
 )
 
 var (
@@ -14,6 +16,7 @@ var (
 	ErrPasswordNoUpper   = errors.New("password must contain at least one uppercase letter")
 	ErrPasswordNoLower   = errors.New("password must contain at least one lowercase letter")
 	ErrPasswordNoSpecial = errors.New("password must contain at least one special character")
+	ErrFailedToGenerate  = errors.New("failed to generate password")
 )
 
 type PasswordsService interface {
@@ -21,6 +24,7 @@ type PasswordsService interface {
 	Create(userID uint, password string) error
 	Validate(password string) error
 	Verify(userID uint, password string) (bool, error)
+	Generate() string
 }
 
 type PasswordsServiceImpl struct {
@@ -65,6 +69,7 @@ func (s *PasswordsServiceImpl) Create(userID uint, password string) error {
 }
 
 func (s *PasswordsServiceImpl) Validate(password string) error {
+	// TODO: put password length in config
 	if len(password) < 8 {
 		return ErrPasswordTooShort
 	}
@@ -123,4 +128,39 @@ func (s *PasswordsServiceImpl) Verify(userID uint, password string) (bool, error
 	}
 
 	return match, nil
+}
+
+func (s *PasswordsServiceImpl) Generate() string {
+	lowerCase := "abcdefghijklmnopqrstuvwxyz"
+	upperCase := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numbers := "0123456789"
+	specialChar := "!@#$%^&*()_-+={}[/?]"
+
+	// TODO: put password length in config
+	password := make([]byte, 12)
+
+	source := rand.NewSource(uint64(time.Now().UnixNano()))
+	rng := rand.New(source)
+
+	// TODO: put password length in config
+	for i := 0; i < 12; i++ {
+		randNum := rng.Intn(4)
+
+		switch randNum {
+		case 0:
+			randCharNum := rng.Intn(len(lowerCase))
+			password[i] = lowerCase[randCharNum]
+		case 1:
+			randCharNum := rng.Intn(len(upperCase))
+			password[i] = upperCase[randCharNum]
+		case 2:
+			randCharNum := rng.Intn(len(numbers))
+			password[i] = numbers[randCharNum]
+		case 3:
+			randCharNum := rng.Intn(len(specialChar))
+			password[i] = specialChar[randCharNum]
+		}
+	}
+
+	return string(password)
 }

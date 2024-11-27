@@ -4,12 +4,10 @@ import (
 	"errors"
 
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
-	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
 type UsersService interface {
-	AddUserPreloadMiddleware(g *echo.Group) error
 	GetByID(userID uint) (*User, error)
 	GetByLogin(login string) (*User, error)
 	Create(registrationID uint, login string) (*User, error)

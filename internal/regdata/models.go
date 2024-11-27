@@ -3,6 +3,7 @@ package regdata
 import (
 	"time"
 
+	"github.com/L2SH-Dev/admissions/internal/users"
 	"gorm.io/gorm"
 )
 
@@ -24,4 +25,5 @@ type RegistrationData struct {
 	JuneExam         bool      `json:"june_exam" gorm:"not null;default:false"`
 	VMSH             bool      `json:"vmsh" gorm:"not null;default:false"`
 	Source           string    `json:"source"`
+	User             users.User
 }

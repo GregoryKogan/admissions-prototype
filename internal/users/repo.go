@@ -47,7 +47,7 @@ func (r *UsersRepoImpl) DeleteUser(userID uint) error {
 
 func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 	var user User
-	err := r.storage.DB().Preload("Role").Preload("RegistrationData").First(&user, userID).Error
+	err := r.storage.DB().Preload("Role").First(&user, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 
 func (r *UsersRepoImpl) GetByRegistrationID(registrationID uint) (*User, error) {
 	var user User
-	err := r.storage.DB().Where("registration_data_id = ?", registrationID).Preload("Role").Preload("RegistrationData").First(&user).Error
+	err := r.storage.DB().Where("registration_data_id = ?", registrationID).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (r *UsersRepoImpl) GetByRegistrationID(registrationID uint) (*User, error) 
 
 func (r *UsersRepoImpl) GetByLogin(login string) (*User, error) {
 	var user User
-	err := r.storage.DB().Where("login = ?", login).Preload("Role").Preload("RegistrationData").First(&user).Error
+	err := r.storage.DB().Where("login = ?", login).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}

@@ -7,13 +7,12 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/ping"
-	"github.com/L2SH-Dev/admissions/internal/server/admin"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func setupTestHandler() ping.PingHandler {
-	return ping.NewPingHandler(datastore.StorageImpl{}, &admin.AdminMiddlewareServiceImpl{}).(ping.PingHandler)
+	return ping.NewPingHandler(datastore.StorageImpl{}).(ping.PingHandler)
 }
 
 func TestPingHandler(t *testing.T) {

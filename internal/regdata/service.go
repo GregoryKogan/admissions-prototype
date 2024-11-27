@@ -2,27 +2,46 @@ package regdata
 
 import (
 	"errors"
+	"log/slog"
 
+	"github.com/L2SH-Dev/admissions/internal/users"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/validation"
 )
 
 var (
-	ErrRegistrationDataInvalid  = errors.New("registration data is invalid")
-	ErrorRegistrationDataExists = errors.New("registration data with the same email, first name, and grade already exists")
+	ErrRegistrationDataInvalid = errors.New("registration data is invalid")
+	ErrRegistrationDataExists  = errors.New("registration data with the same email, first name, and grade already exists")
+	ErrorEmailNotVerified      = errors.New("email is not verified")
 )
 
 type RegistrationDataService interface {
 	CreateRegistrationData(data *RegistrationData) error
 	GetByID(id uint) (*RegistrationData, error)
 	SetEmailVerified(registrationID uint) error
+	Accept(id uint) (*users.User, error)
 }
 
 type RegistrationDataServiceImpl struct {
-	repo RegistrationDataRepo
+	repo             RegistrationDataRepo
+	usersService     users.UsersService
+	authService      auth.AuthService
+	passwordsService passwords.PasswordsService
 }
 
-func NewRegistrationDataService(repo RegistrationDataRepo) RegistrationDataService {
-	return &RegistrationDataServiceImpl{repo: repo}
+func NewRegistrationDataService(
+	repo RegistrationDataRepo,
+	usersService users.UsersService,
+	authService auth.AuthService,
+	passwordsService passwords.PasswordsService,
+) RegistrationDataService {
+	return &RegistrationDataServiceImpl{
+		repo:             repo,
+		usersService:     usersService,
+		authService:      authService,
+		passwordsService: passwordsService,
+	}
 }
 
 func (s *RegistrationDataServiceImpl) CreateRegistrationData(data *RegistrationData) error {
@@ -37,7 +56,7 @@ func (s *RegistrationDataServiceImpl) CreateRegistrationData(data *RegistrationD
 		return err
 	}
 	if exists {
-		return ErrorRegistrationDataExists
+		return ErrRegistrationDataExists
 	}
 
 	return s.repo.CreateRegistrationData(data)
@@ -51,6 +70,43 @@ func (s *RegistrationDataServiceImpl) SetEmailVerified(registrationID uint) erro
 	return s.repo.SetEmailVerified(registrationID)
 }
 
+func (s *RegistrationDataServiceImpl) Accept(id uint) (*users.User, error) {
+	regData, err := s.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !regData.EmailVerified {
+		return nil, ErrorEmailNotVerified
+	}
+
+	login := generateLogin(regData)
+	user, err := s.usersService.Create(id, login)
+	if err != nil {
+		return nil, err
+	}
+
+	password := s.passwordsService.Generate()
+	err = s.authService.Register(user.ID, password)
+	if err != nil {
+		slog.Info("Failed to register user, deleting user", slog.Any("user_id", user.ID))
+		err = s.usersService.Delete(user.ID)
+		if err != nil {
+			slog.Error("Failed to delete user", slog.Any("user_id", user.ID), slog.Any("err", err))
+			return nil, err
+		}
+		return nil, err
+	}
+
+	// TODO: send login and password to user's email
+
+	return user, nil
+}
+
 func (s *RegistrationDataServiceImpl) existsByEmailNameAndGrade(email, name string, grade uint) (bool, error) {
 	return s.repo.ExistsByEmailNameAndGrade(email, name, grade)
+}
+
+func generateLogin(regData *RegistrationData) string {
+	return regData.FirstName + " " + regData.LastName
 }

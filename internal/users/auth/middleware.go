@@ -4,20 +4,13 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/authjwt"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
-func (s *AuthServiceImpl) AddAuthMiddleware(g *echo.Group) error {
-	jwtKey, err := secrets.ReadSecret("jwt_key")
-	if err != nil {
-		slog.Error("failed to add JWT middleware", slog.Any("error", err))
-		return err
-	}
-
+func (s *AuthServiceImpl) AddAuthMiddleware(g *echo.Group, jwtKey string) {
 	g.Use(
 		echojwt.WithConfig(
 			echojwt.Config{
@@ -29,8 +22,6 @@ func (s *AuthServiceImpl) AddAuthMiddleware(g *echo.Group) error {
 
 		s.validateJWTMiddleware(),
 	)
-
-	return nil
 }
 
 func (s *AuthServiceImpl) validateJWTMiddleware() echo.MiddlewareFunc {

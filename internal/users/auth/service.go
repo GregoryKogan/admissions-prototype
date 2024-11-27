@@ -11,7 +11,7 @@ import (
 var ErrInvalidToken = errors.New("invalid token")
 
 type AuthService interface {
-	AddAuthMiddleware(g *echo.Group) error
+	AddAuthMiddleware(g *echo.Group, jwtKey string)
 	ValidatePassword(password string) error
 	IsTokenCached(claims *authjwt.JWTClaims) (bool, error)
 	Register(userID uint, password string) error
