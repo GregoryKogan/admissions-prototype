@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/L2SH-Dev/admissions/internal/mailing"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
@@ -98,7 +99,11 @@ func (s *RegistrationDataServiceImpl) Accept(id uint) (*users.User, error) {
 		return nil, err
 	}
 
-	// TODO: send login and password to user's email
+	err = mailing.SendLoginAndPassword(regData.Email, login, password)
+	if err != nil {
+		slog.Error("Failed to send login and password", slog.Any("email", regData.Email), slog.Any("err", err))
+		return nil, err
+	}
 
 	return user, nil
 }
