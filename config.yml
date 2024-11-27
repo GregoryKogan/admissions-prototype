@@ -1,6 +1,7 @@
 server:
   host: localhost
   port: 8888
+  protocol: http
 
 database:
   user: l2sh
@@ -30,5 +31,5 @@ auth:
     token_lifetime: 30m
 
 mailing:
-  enabled: false
+  enabled: true
   api_base: https://api.notisend.ru/v1

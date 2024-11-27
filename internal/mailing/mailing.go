@@ -28,12 +28,13 @@ type loginCredentialsParams struct {
 }
 
 func SendVerificationEmail(email string, token string) error {
+	protocol := viper.GetString("server.protocol")
 	host := viper.GetString("server.host")
 	port := viper.GetString("server.port")
 
 	params := &verificationParams{
 		Email:            email,
-		VerificationLink: fmt.Sprintf("https://%s:%s/api/regdata/verify/%s", host, port, token),
+		VerificationLink: fmt.Sprintf("%s://%s:%s/verification?token=%s", protocol, host, port, token),
 	}
 
 	request := &emailRequest{
