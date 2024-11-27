@@ -15,9 +15,9 @@ func Init() {
 		Level: getLogLevel(),
 	}
 
-	mode := viper.GetString("mode")
+	mode := viper.GetString("logging.mode")
 	var handler slog.Handler = slog.NewTextHandler(os.Stdout, opts)
-	if mode == "production" {
+	if mode == "json" {
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	}
 
