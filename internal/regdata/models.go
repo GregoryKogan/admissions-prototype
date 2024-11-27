@@ -9,7 +9,7 @@ import (
 
 type RegistrationData struct {
 	gorm.Model
-	Email            string    `json:"email" gorm:"unique;not null" validate:"required,email"`
+	Email            string    `json:"email" gorm:"not null" validate:"required,email"`
 	EmailVerified    bool      `json:"email_verified" gorm:"not null;default:false"`
 	FirstName        string    `json:"first_name" gorm:"not null" validate:"required"`
 	LastName         string    `json:"last_name" gorm:"not null" validate:"required"`
