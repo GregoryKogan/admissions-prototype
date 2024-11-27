@@ -92,10 +92,10 @@ func TestCreateUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 }
@@ -104,13 +104,13 @@ func TestDeleteUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	err = repo.DeleteUser(user.ID)
+	err = repo.Delete(user.ID)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.False(t, exists)
 }
@@ -119,7 +119,7 @@ func TestGetByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
 	result, err := repo.GetByID(user.ID)
@@ -136,14 +136,14 @@ func TestUserExistsByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	exists, err = repo.UserExistsByID(999)
+	exists, err = repo.ExistsByID(999)
 	assert.NoError(t, err)
 	assert.False(t, exists)
 }
@@ -152,7 +152,7 @@ func TestGetByRegistrationID(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
 	result, err := repo.GetByRegistrationID(user.RegistrationDataID)
@@ -169,7 +169,7 @@ func TestGetByLogin(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
-	err := repo.CreateUser(user)
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
 	result, err := repo.GetByLogin(user.Login)
