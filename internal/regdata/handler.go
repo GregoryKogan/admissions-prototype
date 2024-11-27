@@ -23,6 +23,7 @@ type RegistrationDataHandler interface {
 
 	// Admin endpoints
 	Accept(c echo.Context) error
+	ListAll(c echo.Context) error
 }
 
 type RegistrationDataHandlerImpl struct {
@@ -73,6 +74,7 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	usersMiddlewareService.AddAdminMiddleware(adminGroup, roles.Role{WriteGeneral: true})
 
 	adminGroup.POST("accept/:id", h.Accept)
+	adminGroup.GET("", h.ListAll)
 }
 
 func (h *RegistrationDataHandlerImpl) Register(c echo.Context) error {
@@ -134,4 +136,12 @@ func (h *RegistrationDataHandlerImpl) Accept(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, user)
+}
+
+func (h *RegistrationDataHandlerImpl) ListAll(c echo.Context) error {
+	registrations, err := h.service.GetAll()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, registrations)
 }

@@ -12,6 +12,7 @@ type RegistrationDataRepo interface {
 	GetByID(id uint) (*RegistrationData, error)
 	ExistsByEmailNameAndGrade(email, name string, grade uint) (bool, error)
 	SetEmailVerified(registrationID uint) error
+	GetAll() ([]*RegistrationData, error)
 }
 
 type RegistrationDataRepoImpl struct {
@@ -66,4 +67,13 @@ func (r *RegistrationDataRepoImpl) SetEmailVerified(registrationID uint) error {
 	}
 
 	return nil
+}
+
+func (r *RegistrationDataRepoImpl) GetAll() ([]*RegistrationData, error) {
+	var registrations []*RegistrationData
+	err := r.storage.DB().Find(&registrations).Error
+	if err != nil {
+		return nil, err
+	}
+	return registrations, nil
 }

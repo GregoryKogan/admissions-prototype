@@ -194,3 +194,44 @@ func TestAccept(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid registration data ID")
 }
+
+func TestListAll(t *testing.T) {
+	setupTestHandler(t)
+
+	// Create test data
+	data := regdata.RegistrationData{
+		Email:           "test@example.com",
+		FirstName:       "Test",
+		LastName:        "User",
+		Gender:          "M",
+		BirthDate:       time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
+		Grade:           9,
+		OldSchool:       "Previous School",
+		ParentFirstName: "Parent",
+		ParentLastName:  "Test",
+		ParentPhone:     "+1234567890",
+	}
+
+	jsonData, err := json.Marshal(data)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/regdata", bytes.NewBuffer(jsonData))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	require.NoError(t, h.Register(c))
+
+	// Test listing registrations
+	req = httptest.NewRequest(http.MethodGet, "/regdata/admin", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+
+	assert.NoError(t, h.ListAll(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var registrations []*regdata.RegistrationData
+	err = json.Unmarshal(rec.Body.Bytes(), &registrations)
+	require.NoError(t, err)
+	assert.Len(t, registrations, 1)
+	assert.Equal(t, data.Email, registrations[0].Email)
+}
