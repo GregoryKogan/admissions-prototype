@@ -1,4 +1,5 @@
 server:
+  host: localhost
   port: 8888
 
 database:
@@ -27,3 +28,6 @@ auth:
     gen_length: 12
   email_verification:
     token_lifetime: 30m
+
+mailing:
+  api_base: https://api.notisend.ru/v1
