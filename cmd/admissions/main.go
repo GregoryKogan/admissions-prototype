@@ -17,7 +17,7 @@ func main() {
 
 	storage := datastore.InitStorage()
 
-	srv.AddFrontend("ui/dist", "ui/dist/index.html")
+	srv.AddFrontend("ui/dist")
 	srv.AddHandlers(
 		storage,
 		ping.NewPingHandler,

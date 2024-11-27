@@ -14,7 +14,7 @@ import (
 
 type Server interface {
 	Start()
-	AddFrontend(static string, index string)
+	AddFrontend(static string)
 	AddHandlers(
 		storage datastore.Storage,
 		handlers ...func(storage datastore.Storage) Handler,
@@ -45,9 +45,11 @@ func (s *server) Start() {
 	s.Echo.Logger.Fatal(s.Echo.Start(fmt.Sprintf(":%s", port)))
 }
 
-func (s *server) AddFrontend(static string, index string) {
-	s.Echo.Static("/", static)
-	s.Echo.File("/", index)
+func (s *server) AddFrontend(static string) {
+	s.Echo.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:  static,
+		HTML5: true,
+	}))
 }
 
 func (s *server) AddHandlers(
@@ -69,9 +71,24 @@ func (s *server) addGeneralMiddleware() {
 	s.Echo.Use(middleware.Recover())
 	s.Echo.Use(middleware.Secure())
 
-	port := viper.GetString("server.port")
+	// Configure CORS to allow frontend requests
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{fmt.Sprintf("http://localhost:%s", port)},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		AllowOrigins: []string{
+			"http://localhost:3000", // Dev frontend
+			fmt.Sprintf("http://localhost:%s", viper.GetString("server.port")), // Prod frontend
+		},
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+		},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
+		AllowCredentials: true,
 	}))
 }
