@@ -92,7 +92,7 @@ func sendEmail(templateID string, request *emailRequest) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
