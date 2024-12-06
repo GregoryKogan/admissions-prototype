@@ -56,7 +56,7 @@ func setupTestRepo(t *testing.T) users.UsersRepo {
 	repo := regdata.NewRegistrationDataRepo(storage)
 
 	regdataService := regdata.NewRegistrationDataService(repo, usersService, authService, passwordsService)
-	err := regdataService.CreateRegistrationData(&regdata.RegistrationData{
+	err := regdataService.Create(&regdata.RegistrationData{
 		Email:           "test@mail.org",
 		FirstName:       "Test",
 		LastName:        "User",
@@ -69,7 +69,7 @@ func setupTestRepo(t *testing.T) users.UsersRepo {
 		ParentPhone:     "+79999999999",
 	})
 	assert.NoError(t, err)
-	err = regdataService.CreateRegistrationData(&regdata.RegistrationData{
+	err = regdataService.Create(&regdata.RegistrationData{
 		Email:           "test2@mail.org",
 		FirstName:       "Test",
 		LastName:        "User2",

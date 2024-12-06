@@ -37,7 +37,7 @@ func setupTestRepo(t *testing.T) regdata.RegistrationDataRepo {
 	return regdata.NewRegistrationDataRepo(storage)
 }
 
-func TestCreateRegistrationData(t *testing.T) {
+func TestCreate(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	data := &regdata.RegistrationData{
@@ -53,7 +53,7 @@ func TestCreateRegistrationData(t *testing.T) {
 		ParentPhone:     "+1234567890",
 	}
 
-	err := repo.CreateRegistrationData(data)
+	err := repo.Create(data)
 	assert.NoError(t, err)
 	assert.NotZero(t, data.ID)
 
@@ -85,7 +85,7 @@ func TestGetByID(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = repo.CreateRegistrationData(data)
+	err = repo.Create(data)
 	require.NoError(t, err)
 
 	// Test getting existing record
@@ -117,7 +117,7 @@ func TestExistsByEmailNameAndGrade(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = repo.CreateRegistrationData(data)
+	err = repo.Create(data)
 	require.NoError(t, err)
 
 	// Test existing record
@@ -146,7 +146,7 @@ func TestSetEmailVerified(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = repo.CreateRegistrationData(data)
+	err = repo.Create(data)
 	require.NoError(t, err)
 
 	// Test setting email verified
@@ -196,7 +196,7 @@ func TestGetAll(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		err = repo.CreateRegistrationData(data)
+		err = repo.Create(data)
 		require.NoError(t, err)
 	}
 

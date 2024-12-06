@@ -87,7 +87,7 @@ func (h *RegistrationDataHandlerImpl) Register(c echo.Context) error {
 		return err
 	}
 
-	err := h.service.CreateRegistrationData(data)
+	err := h.service.Create(data)
 	if err != nil && errors.Is(err, ErrRegistrationDataInvalid) {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	} else if err != nil && errors.Is(err, ErrRegistrationDataExists) {

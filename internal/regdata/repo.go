@@ -8,7 +8,7 @@ import (
 )
 
 type RegistrationDataRepo interface {
-	CreateRegistrationData(data *RegistrationData) error
+	Create(data *RegistrationData) error
 	GetByID(id uint) (*RegistrationData, error)
 	ExistsByEmailNameAndGrade(email, name string, grade uint) (bool, error)
 	SetEmailVerified(registrationID uint) error
@@ -26,7 +26,7 @@ func NewRegistrationDataRepo(storage datastore.Storage) RegistrationDataRepo {
 	return &RegistrationDataRepoImpl{storage: storage}
 }
 
-func (r *RegistrationDataRepoImpl) CreateRegistrationData(data *RegistrationData) error {
+func (r *RegistrationDataRepoImpl) Create(data *RegistrationData) error {
 	err := r.storage.DB().Create(data).Error
 	if err != nil {
 		return err

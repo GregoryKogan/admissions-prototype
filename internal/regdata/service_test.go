@@ -36,7 +36,7 @@ func setupTestService(t *testing.T) regdata.RegistrationDataService {
 	return regdata.NewRegistrationDataService(repo, usersService, authService, passwordsService)
 }
 
-func TestCreateRegistrationDataService(t *testing.T) {
+func TestCreateService(t *testing.T) {
 	service := setupTestService(t)
 
 	// Test valid registration data
@@ -52,7 +52,7 @@ func TestCreateRegistrationDataService(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err := service.CreateRegistrationData(data)
+	err := service.Create(data)
 	assert.NoError(t, err)
 	assert.NotZero(t, data.ID)
 
@@ -60,7 +60,7 @@ func TestCreateRegistrationDataService(t *testing.T) {
 	invalidData := &regdata.RegistrationData{
 		Email: "test@example.com",
 	}
-	err = service.CreateRegistrationData(invalidData)
+	err = service.Create(invalidData)
 	assert.ErrorIs(t, err, regdata.ErrRegistrationDataInvalid)
 
 	// Test duplicate registration data
@@ -76,7 +76,7 @@ func TestCreateRegistrationDataService(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = service.CreateRegistrationData(duplicateData)
+	err = service.Create(duplicateData)
 	assert.ErrorIs(t, err, regdata.ErrRegistrationDataExists)
 }
 
@@ -100,7 +100,7 @@ func TestGetByIDService(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = service.CreateRegistrationData(data)
+	err = service.Create(data)
 	require.NoError(t, err)
 
 	// Test getting existing record
@@ -126,7 +126,7 @@ func TestSetEmailVerifiedService(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err := service.CreateRegistrationData(data)
+	err := service.Create(data)
 	require.NoError(t, err)
 
 	// Test setting email verified
@@ -163,7 +163,7 @@ func TestAcceptService(t *testing.T) {
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
 	}
-	err = service.CreateRegistrationData(data)
+	err = service.Create(data)
 	require.NoError(t, err)
 
 	// Test accepting unverified email
@@ -218,7 +218,7 @@ func TestGetAllService(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		err = service.CreateRegistrationData(data)
+		err = service.Create(data)
 		require.NoError(t, err)
 	}
 

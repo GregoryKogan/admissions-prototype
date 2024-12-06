@@ -18,7 +18,7 @@ var (
 )
 
 type RegistrationDataService interface {
-	CreateRegistrationData(data *RegistrationData) error
+	Create(data *RegistrationData) error
 	GetByID(id uint) (*RegistrationData, error)
 	SetEmailVerified(registrationID uint) error
 	Accept(id uint) (*users.User, error)
@@ -46,7 +46,7 @@ func NewRegistrationDataService(
 	}
 }
 
-func (s *RegistrationDataServiceImpl) CreateRegistrationData(data *RegistrationData) error {
+func (s *RegistrationDataServiceImpl) Create(data *RegistrationData) error {
 	validator := validation.NewCustomValidator()
 	err := validator.Validate(data)
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *RegistrationDataServiceImpl) CreateRegistrationData(data *RegistrationD
 		return ErrRegistrationDataExists
 	}
 
-	return s.repo.CreateRegistrationData(data)
+	return s.repo.Create(data)
 }
 
 func (s *RegistrationDataServiceImpl) GetByID(id uint) (*RegistrationData, error) {
