@@ -32,11 +32,11 @@
       <v-card v-else elevation="0">
         <v-card-title>Почта не подтверждена</v-card-title>
         <v-card-text>
-          <v-alert
-            text="Подтвердите почту, перейдя по ссылке из письма"
-            variant="tonal"
-            type="error"
-          ></v-alert>
+          <v-alert variant="tonal" type="error">
+            Некорректный токен верификации.
+            <br />
+            Перейдите по ссылке из последнего письма.
+          </v-alert>
         </v-card-text>
       </v-card>
     </div>
