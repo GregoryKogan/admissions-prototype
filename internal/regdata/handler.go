@@ -61,7 +61,7 @@ func NewRegistrationDataHandler(storage datastore.Storage) server.Handler {
 func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	regDataGroup := g.Group("/regdata")
 	regDataGroup.POST("", h.Register)
-	regDataGroup.GET("verify/:verification_token", h.VerifyEmail)
+	regDataGroup.GET("/verify", h.VerifyEmail)
 
 	// Admin endpoints
 	adminGroup := regDataGroup.Group("/admin")
@@ -73,7 +73,7 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	usersMiddlewareService.AddUserPreloadMiddleware(adminGroup)
 	usersMiddlewareService.AddAdminMiddleware(adminGroup, roles.Role{WriteGeneral: true})
 
-	adminGroup.POST("accept/:id", h.Accept)
+	adminGroup.POST("/accept/:id", h.Accept)
 	adminGroup.GET("", h.ListAll)
 }
 
@@ -105,7 +105,7 @@ func (h *RegistrationDataHandlerImpl) Register(c echo.Context) error {
 }
 
 func (h *RegistrationDataHandlerImpl) VerifyEmail(c echo.Context) error {
-	verificationToken := c.Param("verification_token")
+	verificationToken := c.QueryParam("token")
 	if verificationToken == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "verification token is required")
 	}
@@ -120,7 +120,7 @@ func (h *RegistrationDataHandlerImpl) VerifyEmail(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusOK, map[string]bool{"verified": true})
 }
 
 func (h *RegistrationDataHandlerImpl) Accept(c echo.Context) error {
