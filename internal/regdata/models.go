@@ -14,7 +14,7 @@ type RegistrationData struct {
 	FirstName        string    `json:"first_name" gorm:"not null" validate:"required"`
 	LastName         string    `json:"last_name" gorm:"not null" validate:"required"`
 	Patronymic       string    `json:"patronymic"`
-	Gender           string    `json:"gender" gorm:"varchar(1)" validate:"required,oneof=M F"`
+	Gender           string    `json:"gender" gorm:"varchar(1)" validate:"required,oneof=M F N"`
 	BirthDate        time.Time `json:"birth_date" gorm:"not null" validate:"required"`
 	Grade            uint      `json:"grade" gorm:"not null" validate:"required,min=6,max=11"`
 	OldSchool        string    `json:"old_school" gorm:"not null" validate:"required"`
