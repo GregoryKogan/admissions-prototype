@@ -33,6 +33,9 @@
       >
     </v-card>
   </v-container>
+  <v-snackbar :timeout="5000" v-model="errorSnackbar" color="error">
+    {{ errorText }}
+  </v-snackbar>
 </template>
 
 <script lang="ts">
@@ -47,6 +50,8 @@ export default defineComponent({
       rules: {
         required: (v: string) => !!v || 'Обязательное поле',
       },
+      errorSnackbar: false,
+      errorText: '',
     }
   },
   methods: {
@@ -54,10 +59,27 @@ export default defineComponent({
       const isValid = await (this.$refs.form as VForm).validate()
       if (!isValid.valid) return
 
-      console.log({
-        email: this.login,
-        password: this.password,
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          login: this.login,
+          password: this.password,
+        }),
       })
+
+      const responseText = await response.text()
+      const responseBody = JSON.parse(responseText)
+
+      if (response.ok) {
+        console.log(responseBody)
+        this.$router.push('/')
+      } else {
+        this.errorText = responseBody.message
+        this.errorSnackbar = true
+      }
     },
   },
 })
