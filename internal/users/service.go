@@ -11,6 +11,7 @@ type UsersService interface {
 	GetByID(userID uint) (*User, error)
 	GetByLogin(login string) (*User, error)
 	Create(registrationID uint, login string) (*User, error)
+	CreateDefaultAdmin(registrationID uint) (*User, error)
 	Delete(userID uint) error
 }
 
@@ -58,6 +59,44 @@ func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, err
 	// Create user object
 	newUser := &User{
 		Login:              login,
+		RegistrationDataID: registrationID,
+		RoleID:             role.ID,
+	}
+
+	// Create user
+	err = s.repo.Create(newUser)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to create user"), err)
+	}
+
+	// Verify that the user was created successfully
+	createdUser, err := s.repo.GetByID(newUser.ID)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to retrieve created user"), err)
+	}
+
+	return createdUser, nil
+}
+
+func (s *UsersServiceImpl) CreateDefaultAdmin(registrationID uint) (*User, error) {
+	// Check if user with the same registration id already exists
+	user, err := s.repo.GetByRegistrationID(registrationID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.Join(errors.New("failed to get user by registration id"), err)
+	}
+	if user != nil {
+		return nil, ErrUserAlreadyExists
+	}
+
+	// Get default role
+	role, err := s.rolesService.GetRoleByTitle("admin")
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to get default role"), err)
+	}
+
+	// Create user object
+	newUser := &User{
+		Login:              "admin",
 		RegistrationDataID: registrationID,
 		RoleID:             role.ID,
 	}

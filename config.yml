@@ -33,3 +33,6 @@ auth:
 mailing:
   enabled: true
   api_base: https://api.notisend.ru/v1
+
+admin:
+  email: admin@l2sh-admissions.ru

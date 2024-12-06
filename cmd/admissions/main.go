@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/L2SH-Dev/admissions/internal/admin"
 	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/logging"
@@ -25,6 +26,8 @@ func main() {
 		users.NewUsersHandler,
 		regdata.NewRegistrationDataHandler,
 	)
+
+	admin.CreateDefaultAdmin(storage)
 
 	srv.Start()
 }

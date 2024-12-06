@@ -17,6 +17,7 @@ services:
       - db_password
       - jwt_key
       - mail_api_key
+      - admin_password
     develop:
       watch:
         - action: rebuild
@@ -90,6 +91,8 @@ secrets:
     file: ./secrets/jwt_key.txt
   mail_api_key:
     file: ./secrets/mail_api_key.txt
+  admin_password:
+    file: ./secrets/admin_password.txt
 
 volumes:
   pgadmin:
