@@ -21,11 +21,12 @@
       <v-card v-else-if="success" elevation="0">
         <v-card-title>Почта подтверждена</v-card-title>
         <v-card-text>
-          <v-alert
-            text="Вы сможете войти в систему когда учетная запись будет активирована администратором. Письмо с логином и паролем придет на указанную почту."
-            variant="tonal"
-            type="success"
-          ></v-alert>
+          <v-alert variant="tonal" type="success">
+            Вы сможете войти в систему когда учетная запись будет активирована
+            администратором.
+            <br />
+            Письмо с логином и паролем придет на указанную почту.
+          </v-alert>
         </v-card-text>
       </v-card>
       <v-card v-else elevation="0">
