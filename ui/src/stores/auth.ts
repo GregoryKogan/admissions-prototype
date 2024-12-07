@@ -46,5 +46,14 @@ export const useAuthStore = defineStore('auth', {
         this.isAuthInProgress = false
       }
     },
+    async me() {
+      try {
+        const response = await AuthService.me()
+        return response.data
+      } catch (e) {
+        this.isAuth = false
+        console.error('An error occurred while trying to get user info', e)
+      }
+    },
   },
 })

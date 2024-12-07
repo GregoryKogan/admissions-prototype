@@ -47,6 +47,19 @@ router.beforeEach(async (to, from, next) => {
       })
       return
     }
+
+    let isAdmin = false
+    try {
+      const me = await authStore.me()
+      if (me.role) isAdmin = me.role.admin
+    } catch {
+      isAdmin = false
+    }
+
+    if (!isAdmin) {
+      next({ path: '/' })
+      return
+    }
   }
 
   next()
