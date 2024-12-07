@@ -39,10 +39,16 @@
 </template>
 
 <script lang="ts">
+import { useAuthStore } from '@/stores/auth'
+import { AxiosError } from 'axios'
 import { defineComponent } from 'vue'
 import { VForm } from 'vuetify/components'
 
 export default defineComponent({
+  setup() {
+    const authStore = useAuthStore()
+    return { authStore }
+  },
   data() {
     return {
       login: '',
@@ -59,25 +65,25 @@ export default defineComponent({
       const isValid = await (this.$refs.form as VForm).validate()
       if (!isValid.valid) return
 
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          login: this.login,
-          password: this.password,
-        }),
-      })
-
-      const responseText = await response.text()
-      const responseBody = JSON.parse(responseText)
-
-      if (response.ok) {
-        console.log(responseBody)
-        this.$router.push('/')
-      } else {
-        this.errorText = responseBody.message
+      try {
+        await this.authStore.login(this.login, this.password)
+        if (this.$route.query.redirect) {
+          this.$router.push(this.$route.query.redirect as string)
+        } else {
+          this.$router.push('/')
+        }
+      } catch (e: unknown) {
+        const error = e as AxiosError
+        if (
+          error.response?.data &&
+          typeof error.response.data === 'object' &&
+          'message' in error.response.data
+        ) {
+          this.errorText = (error.response.data as { message: string }).message
+        } else {
+          this.errorText = 'Ошибка при входе'
+          console.error(e)
+        }
         this.errorSnackbar = true
       }
     },
