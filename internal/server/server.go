@@ -71,6 +71,14 @@ func (s *server) addGeneralMiddleware() {
 	s.Echo.Use(middleware.Recover())
 	s.Echo.Use(middleware.Secure())
 
+	s.Echo.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "cookie:_csrf",
+		CookiePath:     "/",
+		CookieSecure:   (viper.GetString("server.protocol") == "https"),
+		CookieHTTPOnly: true,
+		CookieSameSite: http.SameSiteStrictMode,
+	}))
+
 	// Configure CORS to allow frontend requests
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
