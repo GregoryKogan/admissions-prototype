@@ -3,6 +3,7 @@ package users
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/server"
@@ -90,7 +91,7 @@ func (h *UsersHandlerImpl) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, tokenPair)
+	return h.sendTokenPair(c, tokenPair)
 }
 
 func (h *UsersHandlerImpl) Logout(c echo.Context) error {
@@ -100,19 +101,12 @@ func (h *UsersHandlerImpl) Logout(c echo.Context) error {
 }
 
 func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
-	refreshRequest := new(struct {
-		RefreshToken string `json:"refresh" validate:"required"`
-	})
-
-	if err := c.Bind(refreshRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	refreshRequestCookie, err := c.Cookie("refresh")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "refresh token is required")
 	}
 
-	if err := c.Validate(refreshRequest); err != nil {
-		return err
-	}
-
-	tokenPair, err := h.authService.Refresh(refreshRequest.RefreshToken)
+	tokenPair, err := h.authService.Refresh(refreshRequestCookie.Value)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidToken) {
 			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
@@ -121,10 +115,28 @@ func (h *UsersHandlerImpl) Refresh(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusOK, tokenPair)
+	return h.sendTokenPair(c, tokenPair)
 }
 
 func (h *UsersHandlerImpl) GetMe(c echo.Context) error {
 	user := c.Get("currentUser").(*User)
 	return c.JSON(http.StatusOK, user)
+}
+
+func (h *UsersHandlerImpl) sendTokenPair(c echo.Context, tokenPair *auth.TokenPair) error {
+	// set refresh token as a http-only cookie
+	cookie := new(http.Cookie)
+	cookie.Name = "refresh"
+	cookie.Value = tokenPair.Refresh
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = (viper.GetString("server.protocol") == "https")
+	cookie.SameSite = http.SameSiteStrictMode
+	cookie.MaxAge = int(viper.GetDuration("auth.refresh_lifetime") / time.Second)
+	c.SetCookie(cookie)
+
+	// return access token
+	return c.JSON(http.StatusOK, map[string]string{
+		"access": tokenPair.Access,
+	})
 }
