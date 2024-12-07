@@ -79,11 +79,14 @@ func (s *server) addGeneralMiddleware() {
 		CookieSameSite: http.SameSiteStrictMode,
 	}))
 
+	protocol := viper.GetString("server.protocol")
+	host := viper.GetString("server.host")
+	port := viper.GetString("server.port")
+
 	// Configure CORS to allow frontend requests
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
-			"http://localhost:3000", // Dev frontend
-			fmt.Sprintf("http://localhost:%s", viper.GetString("server.port")), // Prod frontend
+			fmt.Sprintf("%s://%s:%s", protocol, host, port),
 		},
 		AllowMethods: []string{
 			http.MethodGet,
