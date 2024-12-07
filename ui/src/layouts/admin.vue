@@ -18,7 +18,7 @@
     <v-app-bar>
       <v-app-bar-title>Панель администратора</v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-btn icon="mdi-logout" variant="text"></v-btn>
+      <v-btn icon="mdi-logout" variant="text" @click="handleLogout"></v-btn>
     </v-app-bar>
 
     <v-main>
@@ -28,5 +28,14 @@
 </template>
 
 <script lang="ts" setup>
-//
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const handleLogout = async () => {
+  await auth.logout()
+  router.push('/')
+}
 </script>
