@@ -76,3 +76,8 @@ export default defineComponent({
   height: 100vh;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  layout: public
+</route>

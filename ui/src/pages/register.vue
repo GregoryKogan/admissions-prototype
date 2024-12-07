@@ -193,3 +193,8 @@ export default defineComponent({
   left: 16px;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  layout: public
+</route>
