@@ -51,7 +51,7 @@ func (h *UsersHandlerImpl) AddRoutes(g *echo.Group) {
 
 	publicGroup := usersGroup.Group("")
 	publicGroup.POST("/login", h.Login)
-	publicGroup.POST("/refresh", h.Refresh)
+	publicGroup.GET("/refresh", h.Refresh)
 
 	restrictedGroup := usersGroup.Group("")
 
