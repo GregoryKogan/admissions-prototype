@@ -22,6 +22,9 @@ type RegistrationDataHandler interface {
 	Register(c echo.Context) error
 	VerifyEmail(c echo.Context) error
 
+	// Private endpoints
+	GetMine(c echo.Context) error
+
 	// Admin endpoints
 	Accept(c echo.Context) error
 	Reject(c echo.Context) error
@@ -65,14 +68,18 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	regDataGroup.POST("", h.Register)
 	regDataGroup.GET("/verify", h.VerifyEmail)
 
-	// Admin endpoints
-	adminGroup := regDataGroup.Group("/admin")
+	// Private endpoints
+	privateGroup := regDataGroup.Group("")
 
 	usersMiddlewareService := users.NewUsersMiddlewareService(h.usersService, h.authService)
-
 	jwtKey := viper.GetString("secrets.jwt_key")
-	usersMiddlewareService.AddAuthMiddleware(adminGroup, jwtKey)
-	usersMiddlewareService.AddUserPreloadMiddleware(adminGroup)
+	usersMiddlewareService.AddAuthMiddleware(privateGroup, jwtKey)
+	usersMiddlewareService.AddUserPreloadMiddleware(privateGroup)
+
+	privateGroup.GET("/mine", h.GetMine)
+
+	// Admin endpoints
+	adminGroup := privateGroup.Group("/admin")
 	usersMiddlewareService.AddAdminMiddleware(adminGroup, roles.Role{WriteGeneral: true})
 
 	adminGroup.POST("/accept/:id", h.Accept)
@@ -124,6 +131,16 @@ func (h *RegistrationDataHandlerImpl) VerifyEmail(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]bool{"verified": true})
+}
+
+func (h *RegistrationDataHandlerImpl) GetMine(c echo.Context) error {
+	user := c.Get("currentUser").(*users.User)
+	regData, err := h.service.GetByID(user.RegistrationDataID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, regData)
 }
 
 func (h *RegistrationDataHandlerImpl) Accept(c echo.Context) error {

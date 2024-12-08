@@ -136,29 +136,8 @@
 </template>
 
 <script lang="ts" setup>
-import RegistrationService from '@/api.registration'
+import RegistrationService, { Registration } from '@/api.registration'
 import { ref } from 'vue'
-
-interface Registration {
-  ID: number
-  CreatedAt: string
-  UpdatedAt: string
-  birth_date: string
-  email: string
-  first_name: string
-  gender: string
-  grade: number
-  june_exam: boolean
-  last_name: string
-  old_school: string
-  parent_first_name: string
-  parent_last_name: string
-  parent_patronymic: string
-  parent_phone: string
-  patronymic: string
-  source: string
-  vmsh: boolean
-}
 
 const props = defineProps<{
   data: Registration

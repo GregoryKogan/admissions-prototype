@@ -1,0 +1,158 @@
+<template>
+  <v-container>
+    <v-row justify="center">
+      <v-col cols="12" md="10">
+        <v-card v-if="registration" class="elevation-3">
+          <v-card-title class="text-h4 pa-4">
+            {{ registration.last_name }} {{ registration.first_name }}
+            {{ registration.patronymic }}
+          </v-card-title>
+          <v-card-subtitle class="pb-0">
+            Регистрация: {{ createdAt }}
+          </v-card-subtitle>
+
+          <v-card-text>
+            <v-row>
+              <v-col cols="12" sm="6">
+                <v-list density="compact">
+                  <v-list-item>
+                    <v-list-item-title>{{
+                      registration.email
+                    }}</v-list-item-title>
+                    <v-list-item-subtitle>Email</v-list-item-subtitle>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>{{ formatBirthDate }}</v-list-item-title>
+                    <v-list-item-subtitle>Дата рождения</v-list-item-subtitle>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>{{
+                      registration.grade
+                    }}</v-list-item-title>
+                    <v-list-item-subtitle
+                      >Класс поступления</v-list-item-subtitle
+                    >
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>{{ formatGender }}</v-list-item-title>
+                    <v-list-item-subtitle>Пол</v-list-item-subtitle>
+                  </v-list-item>
+                </v-list>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-list density="compact">
+                  <v-list-item>
+                    <v-list-item-title>{{
+                      registration.parent_phone
+                    }}</v-list-item-title>
+                    <v-list-item-subtitle
+                      >Телефон родителя</v-list-item-subtitle
+                    >
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>
+                      {{ registration.parent_last_name }}
+                      {{ registration.parent_first_name }}
+                      {{ registration.parent_patronymic }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle>Родитель</v-list-item-subtitle>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>{{
+                      registration.old_school
+                    }}</v-list-item-title>
+                    <v-list-item-subtitle
+                      >Предыдущая школа</v-list-item-subtitle
+                    >
+                  </v-list-item>
+                </v-list>
+              </v-col>
+            </v-row>
+
+            <v-divider class="my-3"></v-divider>
+
+            <v-row align="center">
+              <v-col cols="auto">
+                <v-chip
+                  :color="registration.june_exam ? 'success' : 'grey'"
+                  class="mr-2"
+                >
+                  Экзамен в июне
+                </v-chip>
+                <v-chip :color="registration.vmsh ? 'success' : 'grey'">
+                  ВМШ
+                </v-chip>
+              </v-col>
+              <v-spacer></v-spacer>
+              <v-col cols="auto">
+                <v-btn color="error" @click="handleLogout" variant="text"
+                  >Выйти</v-btn
+                >
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <v-skeleton-loader v-else type="card" class="mt-4"></v-skeleton-loader>
+      </v-col>
+    </v-row>
+
+    <v-dialog v-model="logoutDialog" width="auto">
+      <v-card>
+        <v-card-title>Подтверждение</v-card-title>
+        <v-card-text>Вы уверены, что хотите выйти?</v-card-text>
+        <v-card-actions>
+          <v-btn color="error" @click="confirmLogout">Выйти</v-btn>
+          <v-btn color="grey" @click="logoutDialog = false">Отмена</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</template>
+
+<script lang="ts" setup>
+import RegistrationService, { Registration } from '@/api.registration'
+import { useAuthStore } from '@/stores/auth'
+import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const authStore = useAuthStore()
+const createdAt = ref('')
+const registration = ref<Registration | null>(null)
+const router = useRouter()
+const logoutDialog = ref(false)
+
+const formatBirthDate = computed(() => {
+  if (!registration.value) return ''
+  return new Date(registration.value.birth_date).toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+})
+
+const formatGender = computed(() => {
+  if (!registration.value) return ''
+  return registration.value.gender === 'M'
+    ? 'Мужской'
+    : registration.value.gender === 'F'
+    ? 'Женский'
+    : 'Не указан'
+})
+
+const handleLogout = () => {
+  logoutDialog.value = true
+}
+
+const confirmLogout = async () => {
+  await authStore.logout()
+  logoutDialog.value = false
+  router.push('/')
+}
+
+onMounted(async () => {
+  const me = await authStore.me()
+  createdAt.value = new Date(me.CreatedAt).toLocaleString('ru-RU')
+  registration.value = (await RegistrationService.mine()).data
+})
+</script>
