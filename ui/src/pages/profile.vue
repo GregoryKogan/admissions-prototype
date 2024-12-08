@@ -69,27 +69,46 @@
               </v-col>
             </v-row>
 
-            <v-divider class="my-3"></v-divider>
+            <div class="px-4 mb-6">
+              <div class="text-subtitle-1 mb-2">Пометки</div>
+              <v-chip
+                :color="registration.june_exam ? 'success' : 'grey'"
+                class="mr-2"
+              >
+                Экзамен в июне
+              </v-chip>
+              <v-chip :color="registration.vmsh ? 'success' : 'grey'">
+                ВМШ
+              </v-chip>
+            </div>
 
-            <v-row align="center">
-              <v-col cols="auto">
-                <v-chip
-                  :color="registration.june_exam ? 'success' : 'grey'"
-                  class="mr-2"
-                >
-                  Экзамен в июне
-                </v-chip>
-                <v-chip :color="registration.vmsh ? 'success' : 'grey'">
-                  ВМШ
-                </v-chip>
-              </v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
-                <v-btn color="error" @click="handleLogout" variant="text"
-                  >Выйти</v-btn
-                >
-              </v-col>
-            </v-row>
+            <v-divider class="mb-6"></v-divider>
+
+            <div class="px-4 mb-4">
+              <div class="text-subtitle-1 mb-2">Настройки</div>
+              <div class="d-flex align-center">
+                <span class="d-flex align-center">
+                  Тема оформления
+                  <v-btn
+                    :icon="
+                      theme.global.current.value.dark
+                        ? 'mdi-weather-sunny'
+                        : 'mdi-weather-night'
+                    "
+                    @click="toggleTheme"
+                    variant="text"
+                    class="ml-2"
+                  ></v-btn>
+                </span>
+              </div>
+            </div>
+
+            <div class="px-4">
+              <div class="text-subtitle-1 mb-2">Действия</div>
+              <v-btn color="error" @click="handleLogout" variant="outlined">
+                Выйти из аккаунта
+              </v-btn>
+            </div>
           </v-card-text>
         </v-card>
 
@@ -115,12 +134,14 @@ import RegistrationService, { Registration } from '@/api.registration'
 import { useAuthStore } from '@/stores/auth'
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
 
 const authStore = useAuthStore()
 const createdAt = ref('')
 const registration = ref<Registration | null>(null)
 const router = useRouter()
 const logoutDialog = ref(false)
+const theme = useTheme()
 
 const formatBirthDate = computed(() => {
   if (!registration.value) return ''
@@ -148,6 +169,11 @@ const confirmLogout = async () => {
   await authStore.logout()
   logoutDialog.value = false
   router.push('/')
+}
+
+const toggleTheme = () => {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  localStorage.setItem('theme', theme.global.name.value)
 }
 
 onMounted(async () => {
