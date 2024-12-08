@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('access', response.data.access)
         this.isAuth = true
       } catch {
-        console.error('An error occurred while trying to refresh the token')
+        console.warn('An error occurred while trying to refresh the token')
       } finally {
         this.isAuthInProgress = false
       }
@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
         this.isAuth = false
         localStorage.removeItem('access')
       } catch (e) {
-        console.error('An error occurred while trying to logout', e)
+        console.warn('An error occurred while trying to logout', e)
       } finally {
         this.isAuthInProgress = false
       }
@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', {
         return response.data
       } catch (e) {
         this.isAuth = false
-        console.error('An error occurred while trying to get user info', e)
+        console.warn('An error occurred while trying to get user info', e)
       }
     },
   },

@@ -93,7 +93,7 @@ export default defineComponent({
           this.errorText = (error.response.data as { message: string }).message
         } else {
           this.errorText = 'Ошибка при входе'
-          console.error(e)
+          console.warn(e)
         }
         this.errorSnackbar = true
       }

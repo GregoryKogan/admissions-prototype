@@ -30,7 +30,7 @@ instance.interceptors.response.use(
         localStorage.setItem('access', response.data.access)
         return instance.request(originalRequest)
       } catch {
-        console.error('An error occurred while trying to refresh the token')
+        console.warn('An error occurred while trying to refresh the token')
       }
     }
     throw error
