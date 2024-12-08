@@ -22,6 +22,7 @@ type RegistrationDataService interface {
 	GetByID(id uint) (*RegistrationData, error)
 	SetEmailVerified(registrationID uint) error
 	Accept(id uint) (*users.User, error)
+	Reject(id uint) error
 	GetPending() ([]*RegistrationData, error)
 }
 
@@ -109,6 +110,10 @@ func (s *RegistrationDataServiceImpl) Accept(id uint) (*users.User, error) {
 	return user, nil
 }
 
+func (s *RegistrationDataServiceImpl) Reject(id uint) error {
+	return s.repo.Delete(id)
+}
+
 func (s *RegistrationDataServiceImpl) GetPending() ([]*RegistrationData, error) {
 	return s.repo.GetPending()
 }
@@ -118,5 +123,6 @@ func (s *RegistrationDataServiceImpl) existsByEmailNameAndGrade(email, name stri
 }
 
 func generateLogin(regData *RegistrationData) string {
+	// TODO: Implement more complex login generation
 	return regData.FirstName + " " + regData.LastName
 }

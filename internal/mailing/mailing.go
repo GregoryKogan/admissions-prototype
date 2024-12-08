@@ -27,6 +27,11 @@ type loginCredentialsParams struct {
 	LoginLink string `json:"login_link"`
 }
 
+type rejectionParams struct {
+	Email  string `json:"email"`
+	Reason string `json:"reason"`
+}
+
 func SendVerificationEmail(email string, token string) error {
 	protocol := viper.GetString("server.protocol")
 	host := viper.GetString("server.host")
@@ -64,6 +69,21 @@ func SendLoginAndPassword(email, login, password string) error {
 	}
 
 	return sendEmail("1354145", request)
+}
+
+func SendRegistrationRejection(email, reason string) error {
+	params := &rejectionParams{
+		Email:  email,
+		Reason: reason,
+	}
+
+	request := &emailRequest{
+		To:      email,
+		Payment: "credit",
+		Params:  params,
+	}
+
+	return sendEmail("1365773", request)
 }
 
 func sendEmail(templateID string, request *emailRequest) error {

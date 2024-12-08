@@ -9,6 +9,7 @@ import (
 
 type RegistrationDataRepo interface {
 	Create(data *RegistrationData) error
+	Delete(id uint) error
 	GetByID(id uint) (*RegistrationData, error)
 	ExistsByEmailNameAndGrade(email, name string, grade uint) (bool, error)
 	SetEmailVerified(registrationID uint) error
@@ -30,6 +31,18 @@ func (r *RegistrationDataRepoImpl) Create(data *RegistrationData) error {
 	err := r.storage.DB().Create(data).Error
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *RegistrationDataRepoImpl) Delete(id uint) error {
+	result := r.storage.DB().Delete(&RegistrationData{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("record not found")
 	}
 
 	return nil

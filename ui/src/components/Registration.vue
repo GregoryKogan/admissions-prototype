@@ -136,6 +136,7 @@
 </template>
 
 <script lang="ts" setup>
+import RegistrationService from '@/api.registration'
 import { ref } from 'vue'
 
 interface Registration {
@@ -196,18 +197,13 @@ const closeRejectDialog = () => {
   rejectReason.value = ''
 }
 
-const confirmApprove = () => {
-  console.log('Approving registration:', props.data.ID)
+const confirmApprove = async () => {
   approveDialog.value = false
+  RegistrationService.accept(props.data.ID)
 }
 
 const confirmReject = () => {
-  console.log(
-    'Rejecting registration:',
-    props.data.ID,
-    'Reason:',
-    rejectReason.value
-  )
+  RegistrationService.reject(props.data.ID, rejectReason.value)
   closeRejectDialog()
 }
 </script>

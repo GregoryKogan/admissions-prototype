@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/mailing"
 	"github.com/L2SH-Dev/admissions/internal/regdata/emailver"
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users"
@@ -23,6 +24,7 @@ type RegistrationDataHandler interface {
 
 	// Admin endpoints
 	Accept(c echo.Context) error
+	Reject(c echo.Context) error
 	ListPending(c echo.Context) error
 }
 
@@ -74,6 +76,7 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	usersMiddlewareService.AddAdminMiddleware(adminGroup, roles.Role{WriteGeneral: true})
 
 	adminGroup.POST("/accept/:id", h.Accept)
+	adminGroup.POST("/reject/:id", h.Reject)
 	adminGroup.GET("/pending", h.ListPending)
 }
 
@@ -136,6 +139,44 @@ func (h *RegistrationDataHandlerImpl) Accept(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, user)
+}
+
+func (h *RegistrationDataHandlerImpl) Reject(c echo.Context) error {
+	regDataID64, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid registration data ID")
+	}
+	regDataID := uint(regDataID64)
+
+	rejectRequest := new(struct {
+		Reason string `json:"reason" validate:"required"`
+	})
+
+	if err := c.Bind(rejectRequest); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if err := c.Validate(rejectRequest); err != nil {
+		return err
+	}
+
+	regData, err := h.service.GetByID(regDataID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	email := regData.Email
+
+	err = h.service.Reject(regDataID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	err = mailing.SendRegistrationRejection(email, rejectRequest.Reason)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (h *RegistrationDataHandlerImpl) ListPending(c echo.Context) error {
