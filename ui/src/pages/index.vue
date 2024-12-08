@@ -37,7 +37,7 @@ export default defineComponent({
         try {
           const me = await authStore.me()
           if (me?.role?.admin) {
-            this.$router.push('/admin/dashboard')
+            this.$router.push('/admin/profile')
           } else {
             this.$router.push('/profile')
           }

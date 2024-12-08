@@ -78,7 +78,7 @@ export default defineComponent({
             isAdmin = false
           }
           if (isAdmin) {
-            this.$router.push('/admin/dashboard')
+            this.$router.push('/admin/profile')
           } else {
             this.$router.push('/profile')
           }
