@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app style="height: 100vh">
     <v-navigation-drawer
       v-model="drawer"
       :rail="rail"
@@ -26,7 +26,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main @click="rail = true">
+    <v-main @click="rail = true" style="overflow: auto; max-height: 100vh">
       <router-view />
     </v-main>
   </v-app>
@@ -48,3 +48,18 @@ const handleLogout = async () => {
   router.push('/')
 }
 </script>
+
+<style>
+.v-navigation-drawer__content:not(:hover)::-webkit-scrollbar {
+  display: none;
+}
+
+.v-navigation-drawer__content:not(:hover) {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.v-navigation-drawer__content:hover {
+  scrollbar-width: thin;
+}
+</style>
