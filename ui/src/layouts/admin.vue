@@ -2,9 +2,10 @@
   <v-app style="height: 100vh">
     <v-navigation-drawer
       v-model="drawer"
-      :rail="rail"
+      :rail="!mobile && rail"
       @click="rail = false"
-      permanent
+      :temporary="mobile"
+      :permanent="!mobile"
     >
       <v-list>
         <v-list-item
@@ -26,11 +27,20 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main @click="rail = true" style="overflow: auto; max-height: 100vh">
+    <v-app-bar v-if="mobile">
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>Админ панель</v-toolbar-title>
+    </v-app-bar>
+
+    <v-main
+      @click="!mobile && (rail = true)"
+      style="overflow: auto; max-height: 100vh"
+      :class="{ 'pt-15': mobile }"
+    >
       <router-view />
     </v-main>
 
-    <v-dialog v-model="logoutDialog" width="auto">
+    <v-dialog v-model="logoutDialog" :width="mobile ? '90%' : 'auto'">
       <v-card>
         <v-card-title>Подтверждение</v-card-title>
         <v-card-text> Вы уверены, что хотите выйти? </v-card-text>
@@ -47,9 +57,11 @@
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
+import { useDisplay } from 'vuetify'
 
-const drawer = ref(true)
+const drawer = ref(false)
 const rail = ref(false)
+const { mobile } = useDisplay()
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -65,6 +77,13 @@ const confirmLogout = async () => {
   logoutDialog.value = false
   router.push('/')
 }
+
+// Close drawer when route changes on mobile
+router.afterEach(() => {
+  if (mobile.value) {
+    drawer.value = false
+  }
+})
 </script>
 
 <style>

@@ -1,16 +1,18 @@
 <template>
   <v-card density="compact">
-    <v-card-title class="d-flex justify-space-between align-center">
-      <div>
+    <v-card-title
+      class="d-flex flex-column flex-sm-row justify-space-between align-center"
+    >
+      <div class="text-wrap">
         {{ props.data.last_name }} {{ props.data.first_name }}
         {{ props.data.patronymic }}
       </div>
-      <div>
+      <div class="d-flex flex-column flex-sm-row mt-2 mt-sm-0">
         <v-btn
           density="compact"
           variant="tonal"
           color="success"
-          class="mr-2"
+          class="mb-2 mb-sm-0 mr-sm-2 ml-sm-2"
           @click="handleApprove"
           >Одобрить</v-btn
         >
@@ -29,7 +31,9 @@
         <v-row dense class="ma-0">
           <v-col cols="12" sm="6" class="pa-0">
             <v-list-item>
-              <v-list-item-title>{{ props.data.email }}</v-list-item-title>
+              <template v-slot:title>
+                <div class="text-wrap text-break">{{ props.data.email }}</div>
+              </template>
               <v-list-item-subtitle>Электронная почта</v-list-item-subtitle>
             </v-list-item>
             <v-list-item>
@@ -45,7 +49,11 @@
               <v-list-item-subtitle>Пол</v-list-item-subtitle>
             </v-list-item>
             <v-list-item>
-              <v-list-item-title>{{ props.data.old_school }}</v-list-item-title>
+              <template v-slot:title>
+                <div class="text-wrap text-break">
+                  {{ props.data.old_school }}
+                </div>
+              </template>
               <v-list-item-subtitle>Предыдущая школа</v-list-item-subtitle>
             </v-list-item>
           </v-col>
@@ -89,7 +97,9 @@
           </v-col>
         </v-row>
         <v-list-item>
-          <v-list-item-title>{{ props.data.source }}</v-list-item-title>
+          <template v-slot:title>
+            <div class="text-wrap text-break">{{ props.data.source }}</div>
+          </template>
           <v-list-item-subtitle>Как узнали о Лицее</v-list-item-subtitle>
         </v-list-item>
       </v-list>

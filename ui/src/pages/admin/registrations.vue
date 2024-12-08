@@ -5,10 +5,11 @@
       <v-btn
         color="primary"
         @click="reload"
-        prepend-icon="mdi-refresh"
+        :icon="$vuetify.display.xs"
         variant="tonal"
       >
-        Обновить
+        <v-icon>mdi-refresh</v-icon>
+        <span class="d-none d-sm-inline ml-2">Обновить</span>
       </v-btn>
     </div>
 
