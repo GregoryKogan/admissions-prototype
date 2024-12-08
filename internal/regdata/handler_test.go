@@ -195,7 +195,7 @@ func TestAccept(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid registration data ID")
 }
 
-func TestListAll(t *testing.T) {
+func TestListPending(t *testing.T) {
 	setupTestHandler(t)
 
 	// Create test data
@@ -210,6 +210,7 @@ func TestListAll(t *testing.T) {
 		ParentFirstName: "Parent",
 		ParentLastName:  "Test",
 		ParentPhone:     "+1234567890",
+		EmailVerified:   true, // Verified from the start
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -226,7 +227,7 @@ func TestListAll(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 
-	assert.NoError(t, h.ListAll(c))
+	assert.NoError(t, h.ListPending(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	var registrations []*regdata.RegistrationData

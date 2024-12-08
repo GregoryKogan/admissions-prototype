@@ -7,6 +7,7 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/regdata"
+	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,6 +34,8 @@ func setupTestRepo(t *testing.T) regdata.RegistrationDataRepo {
 		err := storage.Flush()
 		assert.NoError(t, err)
 	})
+
+	users.NewUsersRepo(storage)
 
 	return regdata.NewRegistrationDataRepo(storage)
 }
@@ -159,11 +162,11 @@ func TestSetEmailVerified(t *testing.T) {
 	assert.True(t, result.EmailVerified)
 }
 
-func TestGetAll(t *testing.T) {
+func TestGetPending(t *testing.T) {
 	repo := setupTestRepo(t)
 
 	// Test empty result
-	registrations, err := repo.GetAll()
+	registrations, err := repo.GetPending()
 	assert.NoError(t, err)
 	assert.Empty(t, registrations)
 
@@ -200,10 +203,17 @@ func TestGetAll(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Test getting all records
-	registrations, err = repo.GetAll()
+	// Test getting pending records
+	registrations, err = repo.GetPending()
 	assert.NoError(t, err)
-	assert.Len(t, registrations, 2)
+	assert.Empty(t, registrations)
+
+	// Verify email and test successful acceptance
+	err = repo.SetEmailVerified(testData[0].ID)
+	require.NoError(t, err)
+
+	registrations, err = repo.GetPending()
+	assert.NoError(t, err)
+	assert.Len(t, registrations, 1)
 	assert.Equal(t, testData[0].Email, registrations[0].Email)
-	assert.Equal(t, testData[1].Email, registrations[1].Email)
 }

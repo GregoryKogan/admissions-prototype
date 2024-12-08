@@ -185,7 +185,7 @@ func TestGetAllService(t *testing.T) {
 	service := setupTestService(t)
 
 	// Test empty result
-	registrations, err := service.GetAll()
+	registrations, err := service.GetPending()
 	assert.NoError(t, err)
 	assert.Empty(t, registrations)
 
@@ -222,10 +222,17 @@ func TestGetAllService(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Test getting all records
-	registrations, err = service.GetAll()
+	// Test getting pending records
+	registrations, err = service.GetPending()
 	assert.NoError(t, err)
-	assert.Len(t, registrations, 2)
+	assert.Empty(t, registrations)
+
+	// Verify email and test successful acceptance
+	err = service.SetEmailVerified(testData[0].ID)
+	require.NoError(t, err)
+
+	registrations, err = service.GetPending()
+	assert.NoError(t, err)
+	assert.Len(t, registrations, 1)
 	assert.Equal(t, testData[0].Email, registrations[0].Email)
-	assert.Equal(t, testData[1].Email, registrations[1].Email)
 }

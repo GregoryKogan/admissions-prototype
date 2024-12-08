@@ -12,7 +12,7 @@ type RegistrationDataRepo interface {
 	GetByID(id uint) (*RegistrationData, error)
 	ExistsByEmailNameAndGrade(email, name string, grade uint) (bool, error)
 	SetEmailVerified(registrationID uint) error
-	GetAll() ([]*RegistrationData, error)
+	GetPending() ([]*RegistrationData, error)
 }
 
 type RegistrationDataRepoImpl struct {
@@ -69,9 +69,13 @@ func (r *RegistrationDataRepoImpl) SetEmailVerified(registrationID uint) error {
 	return nil
 }
 
-func (r *RegistrationDataRepoImpl) GetAll() ([]*RegistrationData, error) {
+func (r *RegistrationDataRepoImpl) GetPending() ([]*RegistrationData, error) {
 	var registrations []*RegistrationData
-	err := r.storage.DB().Find(&registrations).Error
+	// email_verified = true and no user has RegistrationDataID set to this record
+	err := r.storage.DB().Model(&RegistrationData{}).
+		Joins("LEFT JOIN users ON users.registration_data_id = registration_data.id").
+		Where("email_verified = ? AND users.id IS NULL", true).
+		Find(&registrations).Error
 	if err != nil {
 		return nil, err
 	}
