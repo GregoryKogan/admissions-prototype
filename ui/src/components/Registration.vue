@@ -197,13 +197,17 @@ const closeRejectDialog = () => {
   rejectReason.value = ''
 }
 
+const emit = defineEmits(['statusChanged'])
+
 const confirmApprove = async () => {
   approveDialog.value = false
-  RegistrationService.accept(props.data.ID)
+  await RegistrationService.accept(props.data.ID)
+  emit('statusChanged')
 }
 
-const confirmReject = () => {
-  RegistrationService.reject(props.data.ID, rejectReason.value)
+const confirmReject = async () => {
+  await RegistrationService.reject(props.data.ID, rejectReason.value)
   closeRejectDialog()
+  emit('statusChanged')
 }
 </script>
