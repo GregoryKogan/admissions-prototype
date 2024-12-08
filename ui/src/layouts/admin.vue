@@ -17,15 +17,14 @@
           prepend-icon="mdi-format-list-bulleted"
           title="Регистрации"
         />
+        <v-list-item
+          prepend-icon="mdi-logout"
+          title="Выход"
+          @click="handleLogout"
+        >
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
-
-    <v-app-bar>
-      <v-app-bar-title>Панель администратора</v-app-bar-title>
-      <template v-slot:append>
-        <v-btn icon="mdi-logout" variant="text" @click="handleLogout"></v-btn>
-      </template>
-    </v-app-bar>
 
     <v-main @click="rail = true">
       <router-view />
