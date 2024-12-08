@@ -28,8 +28,8 @@ export const useAuthStore = defineStore('auth', {
         const response = await AuthService.refresh()
         localStorage.setItem('access', response.data.access)
         this.isAuth = true
-      } catch (e) {
-        console.error('An error occurred while trying to refresh the token', e)
+      } catch {
+        console.error('An error occurred while trying to refresh the token')
       } finally {
         this.isAuthInProgress = false
       }
