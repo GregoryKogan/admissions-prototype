@@ -29,6 +29,17 @@
     <v-main @click="rail = true" style="overflow: auto; max-height: 100vh">
       <router-view />
     </v-main>
+
+    <v-dialog v-model="logoutDialog" width="auto">
+      <v-card>
+        <v-card-title>Подтверждение</v-card-title>
+        <v-card-text> Вы уверены, что хотите выйти? </v-card-text>
+        <v-card-actions>
+          <v-btn color="error" @click="confirmLogout">Выйти</v-btn>
+          <v-btn color="grey" @click="logoutDialog = false">Отмена</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -43,8 +54,15 @@ const rail = ref(false)
 const auth = useAuthStore()
 const router = useRouter()
 
-const handleLogout = async () => {
+const logoutDialog = ref(false)
+
+const handleLogout = () => {
+  logoutDialog.value = true
+}
+
+const confirmLogout = async () => {
   await auth.logout()
+  logoutDialog.value = false
   router.push('/')
 }
 </script>
