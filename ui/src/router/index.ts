@@ -60,7 +60,7 @@ router.beforeEach(async (to, from, next) => {
       next({ path: '/' })
       return
     }
-  } else if (to.meta.layout === 'default') {
+  } else if (to.meta.layout === 'user') {
     await authStore.checkAuth()
 
     if (!authStore.isAuth) {

@@ -220,3 +220,8 @@ onMounted(async () => {
   registration.value = (await RegistrationService.mine()).data
 })
 </script>
+
+<route lang="yaml">
+meta:
+  layout: user
+</route>

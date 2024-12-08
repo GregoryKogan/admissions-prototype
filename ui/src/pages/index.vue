@@ -64,8 +64,3 @@ export default defineComponent({
   width: 100%;
 }
 </style>
-
-<route lang="yaml">
-meta:
-  layout: public
-</route>
