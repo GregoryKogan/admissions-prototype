@@ -70,7 +70,18 @@ export default defineComponent({
         if (this.$route.query.redirect) {
           this.$router.push(this.$route.query.redirect as string)
         } else {
-          this.$router.push('/')
+          let isAdmin = false
+          try {
+            const me = await this.authStore.me()
+            if (me.role) isAdmin = me.role.admin
+          } catch {
+            isAdmin = false
+          }
+          if (isAdmin) {
+            this.$router.push('/admin/dashboard')
+          } else {
+            this.$router.push('/profile')
+          }
         }
       } catch (e: unknown) {
         const error = e as AxiosError
