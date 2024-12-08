@@ -23,8 +23,31 @@
   </v-container>
 </template>
 
-<script lang="ts" setup>
-//
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+export default defineComponent({
+  async mounted() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+
+    await authStore.checkAuth()
+    if (authStore.isAuth) {
+      try {
+        const me = await authStore.me()
+        if (me?.role?.admin) {
+          router.push('/admin/dashboard')
+        } else {
+          router.push('/home')
+        }
+      } catch {
+        router.push('/home')
+      }
+    }
+  },
+})
 </script>
 
 <style scoped>
