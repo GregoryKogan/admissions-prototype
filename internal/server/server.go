@@ -16,22 +16,23 @@ type Server interface {
 	Start()
 	AddFrontend(static string)
 	AddHandlers(
-		storage datastore.Storage,
 		handlers ...func(storage datastore.Storage) Handler,
 	)
 }
 
 type server struct {
-	Echo *echo.Echo
+	Echo    *echo.Echo
+	Storage datastore.Storage
 }
 
 type Handler interface {
 	AddRoutes(g *echo.Group)
 }
 
-func NewServer() Server {
+func NewServer(storage datastore.Storage) Server {
 	srv := &server{
-		Echo: echo.New(),
+		Echo:    echo.New(),
+		Storage: storage,
 	}
 
 	srv.addGeneralMiddleware()
@@ -53,11 +54,10 @@ func (s *server) AddFrontend(static string) {
 }
 
 func (s *server) AddHandlers(
-	storage datastore.Storage,
 	handlers ...func(storage datastore.Storage) Handler,
 ) {
 	for _, handler := range handlers {
-		s.addHandler(handler(storage))
+		s.addHandler(handler(s.Storage))
 	}
 }
 

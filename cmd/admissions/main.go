@@ -15,13 +15,12 @@ func main() {
 	config.Init()
 	logging.Init()
 
-	srv := server.NewServer()
-
 	storage := datastore.InitStorage()
+
+	srv := server.NewServer(storage)
 
 	srv.AddFrontend("ui/dist")
 	srv.AddHandlers(
-		storage,
 		ping.NewPingHandler,
 		users.NewUsersHandler,
 		regdata.NewRegistrationDataHandler,
