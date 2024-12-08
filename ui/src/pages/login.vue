@@ -80,7 +80,7 @@ export default defineComponent({
           if (isAdmin) {
             this.$router.push('/admin/dashboard')
           } else {
-            this.$router.push('/profile')
+            this.$router.push('/home')
           }
         }
       } catch (e: unknown) {
