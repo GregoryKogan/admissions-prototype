@@ -13,11 +13,7 @@
     </v-navigation-drawer>
 
     <v-app-bar>
-      <v-app-bar-nav-icon
-        class="d-md-none"
-        @click="drawer = !drawer"
-      ></v-app-bar-nav-icon>
-      <v-app-bar-title class="d-flex align-center">
+      <v-app-bar-title>
         <v-img
           src="@/assets/L2SH-logo.png"
           width="48"
@@ -27,12 +23,19 @@
           @click="goToIndex"
         ></v-img>
       </v-app-bar-title>
-      <v-spacer></v-spacer>
       <div class="d-none d-md-flex">
-        <v-btn to="/exams" prepend-icon="mdi-file-document">Экзамены</v-btn>
-        <v-btn to="/chat" prepend-icon="mdi-chat">Чат</v-btn>
-        <v-btn to="/profile" prepend-icon="mdi-account">Профиль</v-btn>
+        <v-btn to="/exams" prepend-icon="mdi-file-document" class="mx-2"
+          >Экзамены</v-btn
+        >
+        <v-btn to="/chat" prepend-icon="mdi-chat" class="mx-2">Чат</v-btn>
+        <v-btn to="/profile" prepend-icon="mdi-account" class="ms-2 mr-4"
+          >Профиль</v-btn
+        >
       </div>
+      <v-app-bar-nav-icon
+        class="d-md-none"
+        @click="drawer = !drawer"
+      ></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-main>
