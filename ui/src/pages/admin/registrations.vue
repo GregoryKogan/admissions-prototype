@@ -1,19 +1,26 @@
 <template>
   <v-container>
-    <v-card>
-      <v-card-title>Список регистраций</v-card-title>
-      <v-card-text>
-        <p>Здесь будет таблица с регистрациями</p>
-      </v-card-text>
-    </v-card>
+    <Registration
+      v-for="registration in registrations"
+      :key="registration"
+      :data="registration"
+      style="margin-bottom: 16px"
+    />
   </v-container>
 </template>
 
 <script lang="ts">
+import RegistrationService from '@/api.registration'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-  data: () => ({}),
+  data: () => ({
+    registrations: [],
+  }),
+  async mounted() {
+    const registrations = await RegistrationService.list()
+    this.registrations = registrations.data
+  },
 })
 </script>
 
