@@ -22,8 +22,9 @@
 
     <v-app-bar>
       <v-app-bar-title>Панель администратора</v-app-bar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon="mdi-logout" variant="text" @click="handleLogout"></v-btn>
+      <template v-slot:append>
+        <v-btn icon="mdi-logout" variant="text" @click="handleLogout"></v-btn>
+      </template>
     </v-app-bar>
 
     <v-main @click="rail = true">
