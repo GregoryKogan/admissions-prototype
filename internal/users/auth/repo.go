@@ -69,17 +69,17 @@ func (r *AuthRepoImpl) CacheTokenPair(tokenPair *TokenPair) error {
 	}
 
 	userID := accessClaims.UserID
-	return r.storage.Cache.Set(context.Background(), fmt.Sprintf("token-%d", userID), cacheJson, viper.GetDuration("auth.auto_logout")).Err()
+	return r.storage.Cache().Set(context.Background(), fmt.Sprintf("token-%d", userID), cacheJson, viper.GetDuration("auth.auto_logout")).Err()
 }
 
 func (r *AuthRepoImpl) ExtendTokenPairCacheExpiration(userID uint) {
 	go func() {
-		r.storage.Cache.Expire(context.Background(), fmt.Sprintf("token-%d", userID), viper.GetDuration("auth.auto_logout"))
+		r.storage.Cache().Expire(context.Background(), fmt.Sprintf("token-%d", userID), viper.GetDuration("auth.auto_logout"))
 	}()
 }
 
 func (r *AuthRepoImpl) IsTokenCached(claims *authjwt.JWTClaims) (bool, error) {
-	cacheJson, err := r.storage.Cache.Get(context.Background(), fmt.Sprintf("token-%d", claims.UserID)).Result()
+	cacheJson, err := r.storage.Cache().Get(context.Background(), fmt.Sprintf("token-%d", claims.UserID)).Result()
 	if err == redis.Nil {
 		return false, nil // No such key in Redis cache
 	} else if err != nil {
@@ -105,5 +105,5 @@ func (r *AuthRepoImpl) IsTokenCached(claims *authjwt.JWTClaims) (bool, error) {
 }
 
 func (r *AuthRepoImpl) DeleteTokenPair(userID uint) {
-	r.storage.Cache.Del(context.Background(), fmt.Sprintf("token-%d", userID))
+	r.storage.Cache().Del(context.Background(), fmt.Sprintf("token-%d", userID))
 }

@@ -15,7 +15,7 @@
         <h2>Приемная комиссия</h2>
       </v-col>
       <v-col cols="12" class="d-flex justify-center">
-        <v-btn color="primary" to="/login" class="mx-auto sized-button"
+        <v-btn color="primary" @click="enter" class="mx-auto sized-button"
           >Войти</v-btn
         >
       </v-col>
@@ -23,8 +23,33 @@
   </v-container>
 </template>
 
-<script lang="ts" setup>
-//
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+export default defineComponent({
+  methods: {
+    async enter() {
+      const authStore = useAuthStore()
+
+      await authStore.checkAuth()
+      if (authStore.isAuth) {
+        try {
+          const me = await authStore.me()
+          if (me?.role?.admin) {
+            this.$router.push('/admin/profile')
+          } else {
+            this.$router.push('/profile')
+          }
+        } catch {
+          this.$router.push('/profile')
+        }
+      } else {
+        this.$router.push('/login')
+      }
+    },
+  },
+})
 </script>
 
 <style scoped>

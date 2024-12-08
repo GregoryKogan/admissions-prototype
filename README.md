@@ -61,6 +61,8 @@ Secrets are stored in `secrets/` directory.
 
 - `secrets/db_password.txt` - database password
 - `secrets/jwt_key.txt` - JWT signing key
+- `secrets/mail_api_key.txt` - NotiSend API key
+- `secrets/admin_password.txt` - password for the default admin user
 
 ## Administration
 

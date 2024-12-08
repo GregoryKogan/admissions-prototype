@@ -3,17 +3,21 @@ package passwords
 import (
 	"errors"
 	"fmt"
+	"time"
 	"unicode"
 
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
+	"github.com/spf13/viper"
+	"golang.org/x/exp/rand"
 )
 
 var (
-	ErrPasswordTooShort  = errors.New("password must be at least 8 characters long")
+	ErrPasswordTooShort  = fmt.Errorf("password must be at least %d characters long", viper.GetInt("auth.passwords.min_length"))
 	ErrPasswordNoNumber  = errors.New("password must contain at least one number")
 	ErrPasswordNoUpper   = errors.New("password must contain at least one uppercase letter")
 	ErrPasswordNoLower   = errors.New("password must contain at least one lowercase letter")
 	ErrPasswordNoSpecial = errors.New("password must contain at least one special character")
+	ErrFailedToGenerate  = errors.New("failed to generate password")
 )
 
 type PasswordsService interface {
@@ -21,6 +25,7 @@ type PasswordsService interface {
 	Create(userID uint, password string) error
 	Validate(password string) error
 	Verify(userID uint, password string) (bool, error)
+	Generate() string
 }
 
 type PasswordsServiceImpl struct {
@@ -65,7 +70,7 @@ func (s *PasswordsServiceImpl) Create(userID uint, password string) error {
 }
 
 func (s *PasswordsServiceImpl) Validate(password string) error {
-	if len(password) < 8 {
+	if len(password) < viper.GetInt("auth.passwords.min_length") {
 		return ErrPasswordTooShort
 	}
 
@@ -123,4 +128,43 @@ func (s *PasswordsServiceImpl) Verify(userID uint, password string) (bool, error
 	}
 
 	return match, nil
+}
+
+func (s *PasswordsServiceImpl) Generate() string {
+	const (
+		lowerChars   = "abcdefghijklmnopqrstuvwxyz"
+		upperChars   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		numberChars  = "0123456789"
+		specialChars = "!@#$%^&*()_+{}|:<>?~[]"
+	)
+
+	length := viper.GetInt("auth.passwords.gen_length")
+	if length < 4 { // Ensure minimum length for all character types
+		length = 4
+	}
+
+	seed := uint64(time.Now().UnixNano())
+	rng := rand.New(rand.NewSource(seed))
+
+	// Initialize with one character from each required set
+	password := []byte{
+		lowerChars[rng.Intn(len(lowerChars))],
+		upperChars[rng.Intn(len(upperChars))],
+		numberChars[rng.Intn(len(numberChars))],
+		specialChars[rng.Intn(len(specialChars))],
+	}
+
+	// Fill the rest with random characters from all sets
+	allChars := lowerChars + upperChars + numberChars + specialChars
+	for i := 4; i < length; i++ {
+		password = append(password, allChars[rng.Intn(len(allChars))])
+	}
+
+	// Shuffle the password
+	for i := len(password) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		password[i], password[j] = password[j], password[i]
+	}
+
+	return string(password)
 }

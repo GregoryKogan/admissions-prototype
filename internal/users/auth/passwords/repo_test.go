@@ -1,23 +1,25 @@
 package passwords_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords/crypto"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	storage datastore.Storage
+	storage datastore.MockStorage
 )
 
 func TestMain(m *testing.M) {
-	s, cleanup := datastore.SetupMockStorage()
+	viper.Set("auth.passwords.min_length", 8)
+
+	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
 	code := m.Run()
@@ -28,10 +30,7 @@ func TestMain(m *testing.M) {
 
 func setupTestRepo(t *testing.T) passwords.PasswordsRepo {
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

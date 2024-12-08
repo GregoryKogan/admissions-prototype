@@ -3,28 +3,28 @@ package users
 import (
 	"errors"
 
-	"github.com/jackc/pgx/pgtype"
-	"github.com/labstack/echo/v4"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"gorm.io/gorm"
 )
 
 type UsersService interface {
-	AddUserPreloadMiddleware(g *echo.Group) error
-	GetByEmail(email string) (*User, error)
 	GetByID(userID uint) (*User, error)
-	Create(email string) (*User, error)
+	GetByLogin(login string) (*User, error)
+	Create(registrationID uint, login string) (*User, error)
+	CreateDefaultAdmin(registrationID uint) (*User, error)
 	Delete(userID uint) error
 }
 
 type UsersServiceImpl struct {
-	repo UsersRepo
+	repo         UsersRepo
+	rolesService roles.RolesService
 }
 
 var ErrUserAlreadyExists = errors.New("user with the same email already exists")
 
-func NewUsersService(repo UsersRepo) UsersService {
-	service := &UsersServiceImpl{repo: repo}
-	err := service.createDefaultRoles()
+func NewUsersService(repo UsersRepo, rolesService roles.RolesService) UsersService {
+	service := &UsersServiceImpl{repo: repo, rolesService: rolesService}
+	err := rolesService.CreateDefaultRoles()
 	if err != nil {
 		panic(err)
 	}
@@ -32,90 +32,97 @@ func NewUsersService(repo UsersRepo) UsersService {
 	return service
 }
 
-func (s *UsersServiceImpl) GetByEmail(email string) (*User, error) {
-	return s.repo.GetByEmail(email)
-}
-
 func (s *UsersServiceImpl) GetByID(userID uint) (*User, error) {
 	return s.repo.GetByID(userID)
 }
 
-func (s *UsersServiceImpl) Create(email string) (*User, error) {
-	// Check if user with the same email already exists
-	user, err := s.GetByEmail(email)
+func (s *UsersServiceImpl) GetByLogin(login string) (*User, error) {
+	return s.repo.GetByLogin(login)
+}
+
+func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, error) {
+	// Check if user with the same registration id already exists
+	user, err := s.repo.GetByRegistrationID(registrationID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.Join(errors.New("failed to get user by email"), err)
+		return nil, errors.Join(errors.New("failed to get user by registration id"), err)
 	}
 	if user != nil {
 		return nil, ErrUserAlreadyExists
 	}
 
 	// Get default role
-	role, err := s.repo.GetRoleByTitle("user")
+	role, err := s.rolesService.GetRoleByTitle("user")
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to get default role"), err)
 	}
 
 	// Create user object
 	newUser := &User{
-		Email:  email,
-		RoleID: role.ID,
-		Role:   *role,
+		Login:              login,
+		RegistrationDataID: registrationID,
+		RoleID:             role.ID,
 	}
 
 	// Create user
-	err = s.repo.CreateUser(newUser)
+	err = s.repo.Create(newUser)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to create user"), err)
 	}
 
-	return newUser, nil
+	// Verify that the user was created successfully
+	createdUser, err := s.repo.GetByID(newUser.ID)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to retrieve created user"), err)
+	}
+
+	return createdUser, nil
+}
+
+func (s *UsersServiceImpl) CreateDefaultAdmin(registrationID uint) (*User, error) {
+	// Check if user with the same registration id already exists
+	user, err := s.repo.GetByRegistrationID(registrationID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.Join(errors.New("failed to get user by registration id"), err)
+	}
+	if user != nil {
+		return nil, ErrUserAlreadyExists
+	}
+
+	// Get default role
+	role, err := s.rolesService.GetRoleByTitle("admin")
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to get default role"), err)
+	}
+
+	// Create user object
+	newUser := &User{
+		Login:              "admin",
+		RegistrationDataID: registrationID,
+		RoleID:             role.ID,
+	}
+
+	// Create user
+	err = s.repo.Create(newUser)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to create user"), err)
+	}
+
+	// Verify that the user was created successfully
+	createdUser, err := s.repo.GetByID(newUser.ID)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to retrieve created user"), err)
+	}
+
+	return createdUser, nil
 }
 
 func (s *UsersServiceImpl) Delete(userID uint) error {
-	exists, err := s.repo.UserExistsByID(userID)
+	exists, err := s.repo.ExistsByID(userID)
 	if err != nil {
 		return errors.Join(errors.New("failed to check if user exists"), err)
 	}
 	if exists {
-		return s.repo.DeleteUser(userID)
-	}
-
-	return nil
-}
-
-func (s *UsersServiceImpl) createDefaultRoles() error {
-	roles := []Role{
-		{
-			Title: "admin",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": true}`),
-				Status: pgtype.Present,
-			},
-		},
-		{
-			Title: "user",
-			Permissions: pgtype.JSONB{
-				Bytes:  []byte(`{"admin": false}`),
-				Status: pgtype.Present,
-			},
-		},
-	}
-
-	for _, role := range roles {
-		exists, err := s.repo.RoleExists(role.Title)
-		if err != nil {
-			return errors.Join(errors.New("failed to check if role exists"), err)
-		}
-
-		if exists {
-			continue
-		}
-
-		err = s.repo.CreateRole(&role)
-		if err != nil {
-			return errors.Join(errors.New("failed to create role"), err)
-		}
+		return s.repo.Delete(userID)
 	}
 
 	return nil

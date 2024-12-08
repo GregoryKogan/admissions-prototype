@@ -14,8 +14,11 @@ import (
 
 type Server interface {
 	Start()
-	AddFrontend(static string, index string)
-	AddHandlers(storage datastore.Storage, handlers ...func(storage datastore.Storage) Handler)
+	AddFrontend(static string)
+	AddHandlers(
+		storage datastore.Storage,
+		handlers ...func(storage datastore.Storage) Handler,
+	)
 }
 
 type server struct {
@@ -31,7 +34,7 @@ func NewServer() Server {
 		Echo: echo.New(),
 	}
 
-	srv.addMiddleware()
+	srv.addGeneralMiddleware()
 	validation.AddValidation(srv.Echo)
 
 	return srv
@@ -42,12 +45,17 @@ func (s *server) Start() {
 	s.Echo.Logger.Fatal(s.Echo.Start(fmt.Sprintf(":%s", port)))
 }
 
-func (s *server) AddFrontend(static string, index string) {
-	s.Echo.Static("/", static)
-	s.Echo.File("/", index)
+func (s *server) AddFrontend(static string) {
+	s.Echo.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:  static,
+		HTML5: true,
+	}))
 }
 
-func (s *server) AddHandlers(storage datastore.Storage, handlers ...func(storage datastore.Storage) Handler) {
+func (s *server) AddHandlers(
+	storage datastore.Storage,
+	handlers ...func(storage datastore.Storage) Handler,
+) {
 	for _, handler := range handlers {
 		s.addHandler(handler(storage))
 	}
@@ -57,15 +65,41 @@ func (s *server) addHandler(h Handler) {
 	h.AddRoutes(s.Echo.Group("/api"))
 }
 
-func (s *server) addMiddleware() {
+func (s *server) addGeneralMiddleware() {
 	logging.AddMiddleware(s.Echo)
 
 	s.Echo.Use(middleware.Recover())
 	s.Echo.Use(middleware.Secure())
 
+	s.Echo.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup:    "cookie:_csrf",
+		CookiePath:     "/",
+		CookieSecure:   (viper.GetString("server.protocol") == "https"),
+		CookieHTTPOnly: true,
+		CookieSameSite: http.SameSiteStrictMode,
+	}))
+
+	protocol := viper.GetString("server.protocol")
+	host := viper.GetString("server.host")
 	port := viper.GetString("server.port")
+
+	// Configure CORS to allow frontend requests
 	s.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{fmt.Sprintf("http://localhost:%s", port)},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		AllowOrigins: []string{
+			fmt.Sprintf("%s://%s:%s", protocol, host, port),
+		},
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+		},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
+		AllowCredentials: true,
 	}))
 }

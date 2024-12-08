@@ -1,7 +1,6 @@
 package passwords_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
@@ -13,10 +12,7 @@ func setupTestService(t *testing.T) passwords.PasswordsService {
 	repo := setupTestRepo(t)
 
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

@@ -8,15 +8,12 @@ import (
 )
 
 type UsersRepo interface {
-	CreateRole(role *Role) error
-	RoleExists(title string) (bool, error)
-	GetRoleByTitle(title string) (*Role, error)
-
-	CreateUser(user *User) error
-	DeleteUser(userID uint) error
+	Create(user *User) error
+	Delete(userID uint) error
 	GetByID(userID uint) (*User, error)
-	UserExistsByID(userID uint) (bool, error)
-	GetByEmail(email string) (*User, error)
+	GetByRegistrationID(registrationID uint) (*User, error)
+	GetByLogin(login string) (*User, error)
+	ExistsByID(userID uint) (bool, error)
 }
 
 type UsersRepoImpl struct {
@@ -24,54 +21,28 @@ type UsersRepoImpl struct {
 }
 
 func NewUsersRepo(storage datastore.Storage) UsersRepo {
-	if err := storage.DB.AutoMigrate(&User{}, &Role{}); err != nil {
+	if err := storage.DB().AutoMigrate(&User{}); err != nil {
 		panic(err)
 	}
 	return &UsersRepoImpl{storage: storage}
 }
 
-func (r *UsersRepoImpl) CreateRole(role *Role) error {
-	err := r.storage.DB.Create(role).Error
-	if err != nil {
-		return errors.Join(errors.New("failed to create role"), err)
-	}
-
-	return nil
-}
-
-func (r *UsersRepoImpl) RoleExists(title string) (bool, error) {
-	var role Role
-	err := r.storage.DB.Where("title = ?", title).First(&role).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, err
-	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (r *UsersRepoImpl) GetRoleByTitle(title string) (*Role, error) {
-	var role Role
-	err := r.storage.DB.Where("title = ?", title).First(&role).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &role, nil
-}
-
-func (r *UsersRepoImpl) CreateUser(user *User) error {
-	err := r.storage.DB.Create(user).Error
+func (r *UsersRepoImpl) Create(user *User) error {
+	err := r.storage.DB().Create(user).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to create user"), err)
 	}
 
+	// Ensure the ID field is set correctly
+	if user.ID == 0 {
+		return errors.New("user creation failed: user ID is not set")
+	}
+
 	return nil
 }
 
-func (r *UsersRepoImpl) DeleteUser(userID uint) error {
-	err := r.storage.DB.Delete(&User{}, userID).Error
+func (r *UsersRepoImpl) Delete(userID uint) error {
+	err := r.storage.DB().Delete(&User{}, userID).Error
 	if err != nil {
 		return errors.Join(errors.New("failed to delete user"), err)
 	}
@@ -81,7 +52,7 @@ func (r *UsersRepoImpl) DeleteUser(userID uint) error {
 
 func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 	var user User
-	err := r.storage.DB.Preload("Role").First(&user, userID).Error
+	err := r.storage.DB().Preload("Role").First(&user, userID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +60,27 @@ func (r *UsersRepoImpl) GetByID(userID uint) (*User, error) {
 	return &user, nil
 }
 
-func (r *UsersRepoImpl) UserExistsByID(userID uint) (bool, error) {
+func (r *UsersRepoImpl) GetByRegistrationID(registrationID uint) (*User, error) {
+	var user User
+	err := r.storage.DB().Where("registration_data_id = ?", registrationID).Preload("Role").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UsersRepoImpl) GetByLogin(login string) (*User, error) {
+	var user User
+	err := r.storage.DB().Where("login = ?", login).Preload("Role").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UsersRepoImpl) ExistsByID(userID uint) (bool, error) {
 	user, err := r.GetByID(userID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, err
@@ -99,14 +90,4 @@ func (r *UsersRepoImpl) UserExistsByID(userID uint) (bool, error) {
 	}
 
 	return true, nil
-}
-
-func (r *UsersRepoImpl) GetByEmail(email string) (*User, error) {
-	var user User
-	err := r.storage.DB.Where("email = ?", email).First(&user).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
 }

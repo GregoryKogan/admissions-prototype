@@ -16,11 +16,12 @@ services:
     secrets:
       - db_password
       - jwt_key
+      - mail_api_key
+      - admin_password
     develop:
       watch:
-        - action: sync
-          path: ./ui/dist
-          target: /ui/dist
+        - action: rebuild
+          path: ./ui
         - action: rebuild
           path: ./cmd
         - action: rebuild
@@ -88,6 +89,10 @@ secrets:
     file: ./secrets/db_password.txt
   jwt_key:
     file: ./secrets/jwt_key.txt
+  mail_api_key:
+    file: ./secrets/mail_api_key.txt
+  admin_password:
+    file: ./secrets/admin_password.txt
 
 volumes:
   pgadmin:

@@ -20,7 +20,7 @@ type PasswordsRepoImpl struct {
 }
 
 func NewPasswordsRepo(storage datastore.Storage) PasswordsRepo {
-	if err := storage.DB.AutoMigrate(&Password{}); err != nil {
+	if err := storage.DB().AutoMigrate(&Password{}); err != nil {
 		panic(err)
 	}
 	return &PasswordsRepoImpl{storage: storage}
@@ -34,7 +34,7 @@ func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *crypto.HashedPas
 		Algorithm: hashedPassword.Algorithm,
 	}
 
-	if err := r.storage.DB.Create(&record).Error; err != nil {
+	if err := r.storage.DB().Create(&record).Error; err != nil {
 		return fmt.Errorf("failed to create password record: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func (r *PasswordsRepoImpl) Create(userID uint, hashedPassword *crypto.HashedPas
 
 func (r *PasswordsRepoImpl) GetByUserID(userID uint) (*Password, error) {
 	var record Password
-	if err := r.storage.DB.Where("user_id = ?", userID).First(&record).Error; err != nil {
+	if err := r.storage.DB().Where("user_id = ?", userID).First(&record).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("password not found for user ID %d", userID)
 		}
@@ -55,7 +55,7 @@ func (r *PasswordsRepoImpl) GetByUserID(userID uint) (*Password, error) {
 
 func (r *PasswordsRepoImpl) ExistsByUserID(userID uint) (bool, error) {
 	var count int64
-	if err := r.storage.DB.Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+	if err := r.storage.DB().Model(&Password{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check existence for user ID %d: %w", userID, err)
 	}
 	return count > 0, nil

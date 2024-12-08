@@ -33,13 +33,22 @@
       >
     </v-card>
   </v-container>
+  <v-snackbar :timeout="5000" v-model="errorSnackbar" color="error">
+    {{ errorText }}
+  </v-snackbar>
 </template>
 
 <script lang="ts">
+import { useAuthStore } from '@/stores/auth'
+import { AxiosError } from 'axios'
 import { defineComponent } from 'vue'
 import { VForm } from 'vuetify/components'
 
 export default defineComponent({
+  setup() {
+    const authStore = useAuthStore()
+    return { authStore }
+  },
   data() {
     return {
       login: '',
@@ -47,6 +56,8 @@ export default defineComponent({
       rules: {
         required: (v: string) => !!v || 'Обязательное поле',
       },
+      errorSnackbar: false,
+      errorText: '',
     }
   },
   methods: {
@@ -54,10 +65,38 @@ export default defineComponent({
       const isValid = await (this.$refs.form as VForm).validate()
       if (!isValid.valid) return
 
-      console.log({
-        email: this.login,
-        password: this.password,
-      })
+      try {
+        await this.authStore.login(this.login, this.password)
+        if (this.$route.query.redirect) {
+          this.$router.push(this.$route.query.redirect as string)
+        } else {
+          let isAdmin = false
+          try {
+            const me = await this.authStore.me()
+            if (me.role) isAdmin = me.role.admin
+          } catch {
+            isAdmin = false
+          }
+          if (isAdmin) {
+            this.$router.push('/admin/profile')
+          } else {
+            this.$router.push('/profile')
+          }
+        }
+      } catch (e: unknown) {
+        const error = e as AxiosError
+        if (
+          error.response?.data &&
+          typeof error.response.data === 'object' &&
+          'message' in error.response.data
+        ) {
+          this.errorText = (error.response.data as { message: string }).message
+        } else {
+          this.errorText = 'Ошибка при входе'
+          console.warn(e)
+        }
+        this.errorSnackbar = true
+      }
     },
   },
 })

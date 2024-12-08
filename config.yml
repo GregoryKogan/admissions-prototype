@@ -1,8 +1,7 @@
-# available modes: development, production
-mode: development
-
 server:
+  host: localhost
   port: 8888
+  protocol: http
 
 database:
   user: l2sh
@@ -17,9 +16,23 @@ cache:
   port: 6379
 
 logging:
+  # available modes: text, json
+  mode: text
   level: debug
 
 auth:
   access_lifetime: 15m
   refresh_lifetime: 720h
   auto_logout: 24h
+  passwords:
+    min_length: 8
+    gen_length: 12
+  email_verification:
+    token_lifetime: 30m
+
+mailing:
+  enabled: true
+  api_base: https://api.notisend.ru/v1
+
+admin:
+  email: admin@l2sh-admissions.ru

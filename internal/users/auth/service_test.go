@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
@@ -16,10 +15,7 @@ func setupTestService(t *testing.T) auth.AuthService {
 	authRepo := auth.NewAuthRepo(storage)
 
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

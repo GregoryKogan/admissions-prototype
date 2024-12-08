@@ -1,102 +1,120 @@
 package users_test
 
 import (
-	"context"
-	"errors"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/users"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
 func setupTestService(t *testing.T) users.UsersService {
-	repo := setupTestRepo(t)
-
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM users").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM roles").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 
-	return users.NewUsersService(repo)
+	repo := setupTestRepo(t)
+	rolesService := roles.NewRolesService(roles.NewRolesRepo(storage))
+	return users.NewUsersService(repo, rolesService)
 }
 
 func TestUsersService_CreateUser(t *testing.T) {
 	service := setupTestService(t)
 
-	// Create default roles
-	createdUser, err := service.Create("test@example.com")
+	createdUser, err := service.Create(1, "test_login")
 	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", createdUser.Email)
+	assert.Equal(t, "test_login", createdUser.Login)
 
 	// Check if user was created
-	user, err := service.GetByEmail("test@example.com")
+	user, err := service.GetByLogin("test_login")
 	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", user.Email)
+	assert.Equal(t, "test_login", user.Login)
+
+	// Check if user has default role
+	assert.Equal(t, "user", user.Role.Title)
+
+	// Create second user
+	_, err = service.Create(2, "test2_login")
+	assert.NoError(t, err)
 }
 
-func TestUsersService_CreateUserAlreadyExists(t *testing.T) {
+func TestUsersService_CreateUserLoginExists(t *testing.T) {
 	service := setupTestService(t)
 
-	// Create default roles
-	_, err := service.Create("test@example.com")
+	_, err := service.Create(1, "test_login")
 	assert.NoError(t, err)
 
-	// Try to create the same user again
-	_, err = service.Create("test@example.com")
+	_, err = service.Create(2, "test_login")
 	assert.Error(t, err)
-	assert.Equal(t, users.ErrUserAlreadyExists, err)
+}
+
+func TestUsersService_CreateUserRegistrationDataExists(t *testing.T) {
+	service := setupTestService(t)
+
+	_, err := service.Create(1, "test_login")
+	assert.NoError(t, err)
+
+	_, err = service.Create(1, "test2_login")
+	assert.Error(t, err)
 }
 
 func TestUsersService_DeleteUser(t *testing.T) {
 	service := setupTestService(t)
 
-	// Create user
-	user, err := service.Create("test@example.com")
+	createdUser, err := service.Create(1, "test_login")
 	assert.NoError(t, err)
 
-	// Delete user
-	err = service.Delete(user.ID)
+	err = service.Delete(createdUser.ID)
 	assert.NoError(t, err)
 
-	// Check if user was deleted
-	_, err = service.GetByID(user.ID)
+	_, err = service.GetByLogin("test_login")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound))
-}
-
-func TestUsersService_GetByEmail(t *testing.T) {
-	service := setupTestService(t)
-
-	// Create user
-	_, err := service.Create("test@example.com")
-	assert.NoError(t, err)
-
-	// Get user by email
-	user, err := service.GetByEmail("test@example.com")
-	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", user.Email)
+	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }
 
 func TestUsersService_GetByID(t *testing.T) {
 	service := setupTestService(t)
 
-	// Create user
-	createdUser, err := service.Create("test@example.com")
+	createdUser, err := service.Create(1, "test_login")
 	assert.NoError(t, err)
 
-	// Get user with details by ID
 	user, err := service.GetByID(createdUser.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", user.Email)
-	assert.Equal(t, "user", user.Role.Title)
+	assert.Equal(t, "test_login", user.Login)
+}
+
+func TestUsersService_GetByIDNotFound(t *testing.T) {
+	service := setupTestService(t)
+
+	_, err := service.Create(1, "test_login")
+	assert.NoError(t, err)
+
+	_, err = service.GetByID(999)
+	assert.Error(t, err)
+	assert.Equal(t, gorm.ErrRecordNotFound, err)
+}
+
+func TestUsersService_GetByLogin(t *testing.T) {
+	service := setupTestService(t)
+
+	createdUser, err := service.Create(1, "test_login")
+	assert.NoError(t, err)
+
+	user, err := service.GetByLogin("test_login")
+	assert.NoError(t, err)
+	assert.Equal(t, createdUser.ID, user.ID)
+	assert.Equal(t, "test_login", user.Login)
+}
+
+func TestUsersService_GetByLoginNotFound(t *testing.T) {
+	service := setupTestService(t)
+
+	_, err := service.Create(1, "test_login")
+	assert.NoError(t, err)
+
+	_, err = service.GetByLogin("not_found")
+	assert.Error(t, err)
+	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }

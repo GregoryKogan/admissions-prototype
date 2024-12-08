@@ -1,12 +1,10 @@
 package auth_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/authjwt"
 	"github.com/spf13/viper"
@@ -14,29 +12,27 @@ import (
 )
 
 var (
-	storage datastore.Storage
+	storage datastore.MockStorage
 )
 
 func TestMain(m *testing.M) {
-	s, cleanup := datastore.SetupMockStorage()
+	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
 	viper.Set("auth.auto_logout", "24h")
-
-	secrets.SetMockSecret("jwt_key", "testkey")
+	viper.Set("secrets.jwt_key", "test_key")
 
 	code := m.Run()
 
-	secrets.ClearMockSecrets()
 	cleanup()
 	os.Exit(code)
 }
 
 func setupTestRepo(t *testing.T) auth.AuthRepo {
 	t.Cleanup(func() {
-		err := storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 

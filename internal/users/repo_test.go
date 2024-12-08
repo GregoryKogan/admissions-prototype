@@ -1,111 +1,98 @@
 package users_test
 
 import (
-	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"github.com/L2SH-Dev/admissions/internal/secrets"
+	"github.com/L2SH-Dev/admissions/internal/regdata"
 	"github.com/L2SH-Dev/admissions/internal/users"
-	"github.com/jackc/pgx/pgtype"
+	"github.com/L2SH-Dev/admissions/internal/users/auth"
+	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
+	"github.com/L2SH-Dev/admissions/internal/users/roles"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	storage datastore.Storage
+	storage datastore.MockStorage
 )
 
 func TestMain(m *testing.M) {
-	s, cleanup := datastore.SetupMockStorage()
+	s, cleanup := datastore.InitMockStorage()
 	storage = s
 
 	viper.Set("auth.access_lifetime", "15m")
 	viper.Set("auth.refresh_lifetime", "720h")
 	viper.Set("auth.auto_logout", "24h")
-
-	secrets.SetMockSecret("jwt_key", "test_key")
+	viper.Set("secrets.jwt_key", "test_key")
 
 	code := m.Run()
 
-	secrets.ClearMockSecrets()
 	cleanup()
+
 	os.Exit(code)
 }
 
 func setupTestRepo(t *testing.T) users.UsersRepo {
 	t.Cleanup(func() {
-		err := storage.DB.Exec("DELETE FROM users").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM roles").Error
-		assert.NoError(t, err)
-
-		err = storage.DB.Exec("DELETE FROM passwords").Error
-		assert.NoError(t, err)
-
-		err = storage.Cache.FlushDB(context.Background()).Err()
+		err := storage.Flush()
 		assert.NoError(t, err)
 	})
 
+	roles.NewRolesService(roles.NewRolesRepo(storage)).CreateDefaultRoles()
+
+	rolesRepo := roles.NewRolesRepo(storage)
+	rolesService := roles.NewRolesService(rolesRepo)
+	usersRepo := users.NewUsersRepo(storage)
+	usersService := users.NewUsersService(usersRepo, rolesService)
+
+	passwordsRepo := passwords.NewPasswordsRepo(storage)
+	passwordsService := passwords.NewPasswordsService(passwordsRepo)
+	authRepo := auth.NewAuthRepo(storage)
+	authService := auth.NewAuthService(authRepo, passwordsService)
+
+	repo := regdata.NewRegistrationDataRepo(storage)
+
+	regdataService := regdata.NewRegistrationDataService(repo, usersService, authService, passwordsService)
+	err := regdataService.Create(&regdata.RegistrationData{
+		Email:           "test@mail.org",
+		FirstName:       "Test",
+		LastName:        "User",
+		Gender:          "M",
+		BirthDate:       time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
+		Grade:           8,
+		OldSchool:       "Test School",
+		ParentFirstName: "Test",
+		ParentLastName:  "Parent",
+		ParentPhone:     "+79999999999",
+	})
+	assert.NoError(t, err)
+	err = regdataService.Create(&regdata.RegistrationData{
+		Email:           "test2@mail.org",
+		FirstName:       "Test",
+		LastName:        "User2",
+		Gender:          "F",
+		BirthDate:       time.Date(2005, 1, 1, 0, 0, 0, 0, time.UTC),
+		Grade:           6,
+		OldSchool:       "Test School 2",
+		ParentFirstName: "Test",
+		ParentLastName:  "Parent2",
+		ParentPhone:     "+79999999999",
+	})
+	assert.NoError(t, err)
 	return users.NewUsersRepo(storage)
-}
-
-func TestCreateRole(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{
-		Title:       "test_role",
-		Permissions: pgtype.JSONB{Bytes: []byte(`{"read": true}`), Status: pgtype.Present},
-	}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	exists, err := repo.RoleExists("test_role")
-	assert.NoError(t, err)
-	assert.True(t, exists)
-}
-
-func TestRoleExists(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	exists, err := repo.RoleExists("test_role")
-	assert.NoError(t, err)
-	assert.True(t, exists)
-
-	exists, err = repo.RoleExists("non_existent_role")
-	assert.NoError(t, err)
-	assert.False(t, exists)
-}
-
-func TestGetRoleByTitle(t *testing.T) {
-	repo := setupTestRepo(t)
-
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	result, err := repo.GetRoleByTitle("test_role")
-	assert.NoError(t, err)
-	assert.Equal(t, "test_role", result.Title)
 }
 
 func TestCreateUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
-	err := repo.CreateUser(user)
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 }
@@ -113,17 +100,14 @@ func TestCreateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
-	err := repo.CreateUser(user)
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	err = repo.DeleteUser(user.ID)
+	err = repo.Delete(user.ID)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.False(t, exists)
 }
@@ -131,50 +115,66 @@ func TestDeleteUser(t *testing.T) {
 func TestGetByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	role := &users.Role{Title: "test_role"}
-	err := repo.CreateRole(role)
-	assert.NoError(t, err)
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID}
-	err = repo.CreateUser(user)
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
 	result, err := repo.GetByID(user.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", result.Email)
-	assert.Equal(t, "test_role", result.Role.Title)
+	assert.Equal(t, user.ID, result.ID)
+	assert.Equal(t, user.Login, result.Login)
+	assert.Equal(t, user.RoleID, result.RoleID)
+	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.Role.ID)
 }
 
 func TestUserExistsByID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
-	err := repo.CreateUser(user)
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	exists, err := repo.UserExistsByID(user.ID)
+	exists, err := repo.ExistsByID(user.ID)
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	exists, err = repo.UserExistsByID(999)
+	exists, err = repo.ExistsByID(999)
 	assert.NoError(t, err)
 	assert.False(t, exists)
 }
 
-func TestGetByEmail(t *testing.T) {
+func TestGetByRegistrationID(t *testing.T) {
 	repo := setupTestRepo(t)
 
-	repo.CreateRole(&users.Role{Title: "test_role"})
-	role, _ := repo.GetRoleByTitle("test_role")
-
-	user := &users.User{Email: "test@example.com", RoleID: role.ID, Role: *role}
-	err := repo.CreateUser(user)
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
 	assert.NoError(t, err)
 
-	result, err := repo.GetByEmail("test@example.com")
+	result, err := repo.GetByRegistrationID(user.RegistrationDataID)
 	assert.NoError(t, err)
-	assert.Equal(t, "test@example.com", result.Email)
+	assert.Equal(t, user.ID, result.ID)
+	assert.Equal(t, user.Login, result.Login)
+	assert.Equal(t, user.RoleID, result.RoleID)
+	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.Role.ID)
+}
+
+func TestGetByLogin(t *testing.T) {
+	repo := setupTestRepo(t)
+
+	user := &users.User{Login: "test_login", RoleID: 1, RegistrationDataID: 1}
+	err := repo.Create(user)
+	assert.NoError(t, err)
+
+	result, err := repo.GetByLogin(user.Login)
+	assert.NoError(t, err)
+	assert.Equal(t, user.ID, result.ID)
+	assert.Equal(t, user.Login, result.Login)
+	assert.Equal(t, user.RoleID, result.RoleID)
+	assert.Equal(t, user.RegistrationDataID, result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.RegistrationDataID)
+	assert.Equal(t, uint(1), result.Role.ID)
 }
