@@ -60,6 +60,16 @@ router.beforeEach(async (to, from, next) => {
       next({ path: '/' })
       return
     }
+  } else if (to.meta.layout === 'default') {
+    await authStore.checkAuth()
+
+    if (!authStore.isAuth) {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath },
+      })
+      return
+    }
   }
 
   next()
