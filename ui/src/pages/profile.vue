@@ -1,32 +1,38 @@
 <template>
-  <v-container>
+  <v-container class="pa-2 pa-sm-4">
     <v-row justify="center">
-      <v-col cols="12" md="10">
+      <v-col cols="12" sm="11" md="10" lg="8">
         <v-card v-if="registration" class="elevation-3">
-          <v-card-title class="text-h4 pa-4">
+          <v-card-title class="text-h5 text-sm-h4 pa-3 pa-sm-4 text-wrap">
             {{ registration.last_name }} {{ registration.first_name }}
             {{ registration.patronymic }}
           </v-card-title>
-          <v-card-subtitle class="pb-0">
+          <v-card-subtitle class="px-3 px-sm-4 pb-0">
             Регистрация: {{ createdAt }}
           </v-card-subtitle>
 
           <v-card-text>
-            <v-row>
+            <v-row dense>
               <v-col cols="12" sm="6">
-                <v-list density="compact">
+                <v-list
+                  :density="
+                    $vuetify.display.smAndDown ? 'compact' : 'comfortable'
+                  "
+                >
                   <v-list-item>
-                    <v-list-item-title>{{
+                    <v-list-item-title class="text-wrap">{{
                       registration.email
                     }}</v-list-item-title>
                     <v-list-item-subtitle>Email</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>{{ formatBirthDate }}</v-list-item-title>
+                    <v-list-item-title class="text-wrap">{{
+                      formatBirthDate
+                    }}</v-list-item-title>
                     <v-list-item-subtitle>Дата рождения</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>{{
+                    <v-list-item-title class="text-wrap">{{
                       registration.grade
                     }}</v-list-item-title>
                     <v-list-item-subtitle
@@ -34,15 +40,21 @@
                     >
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>{{ formatGender }}</v-list-item-title>
+                    <v-list-item-title class="text-wrap">{{
+                      formatGender
+                    }}</v-list-item-title>
                     <v-list-item-subtitle>Пол</v-list-item-subtitle>
                   </v-list-item>
                 </v-list>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-list density="compact">
+                <v-list
+                  :density="
+                    $vuetify.display.smAndDown ? 'compact' : 'comfortable'
+                  "
+                >
                   <v-list-item>
-                    <v-list-item-title>{{
+                    <v-list-item-title class="text-wrap">{{
                       registration.parent_phone
                     }}</v-list-item-title>
                     <v-list-item-subtitle
@@ -50,7 +62,7 @@
                     >
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>
+                    <v-list-item-title class="text-wrap">
                       {{ registration.parent_last_name }}
                       {{ registration.parent_first_name }}
                       {{ registration.parent_patronymic }}
@@ -58,7 +70,7 @@
                     <v-list-item-subtitle>Родитель</v-list-item-subtitle>
                   </v-list-item>
                   <v-list-item>
-                    <v-list-item-title>{{
+                    <v-list-item-title class="text-wrap">{{
                       registration.old_school
                     }}</v-list-item-title>
                     <v-list-item-subtitle
@@ -69,26 +81,28 @@
               </v-col>
             </v-row>
 
-            <div class="px-4 mb-6">
+            <div class="px-3 px-sm-4 mb-4 mb-sm-6">
               <div class="text-subtitle-1 mb-2">Пометки</div>
-              <v-chip
-                :color="registration.june_exam ? 'success' : 'grey'"
-                class="mr-2"
-              >
-                Экзамен в июне
-              </v-chip>
-              <v-chip :color="registration.vmsh ? 'success' : 'grey'">
-                ВМШ
-              </v-chip>
+              <div class="d-flex flex-wrap gap-2">
+                <v-chip
+                  :color="registration.june_exam ? 'success' : 'grey'"
+                  class="mr-2"
+                >
+                  Экзамен в июне
+                </v-chip>
+                <v-chip :color="registration.vmsh ? 'success' : 'grey'">
+                  ВМШ
+                </v-chip>
+              </div>
             </div>
 
-            <v-divider class="mb-6"></v-divider>
+            <v-divider class="mb-4 mb-sm-6"></v-divider>
 
-            <div class="px-4 mb-4">
+            <div class="px-3 px-sm-4 mb-4">
               <div class="text-subtitle-1 mb-2">Настройки</div>
-              <div class="d-flex align-center">
+              <div class="d-flex flex-wrap align-center gap-4">
                 <span class="d-flex align-center">
-                  Тема оформления
+                  <span class="text-body-1">Тема оформления</span>
                   <v-btn
                     :icon="
                       theme.global.current.value.dark
@@ -98,14 +112,20 @@
                     @click="toggleTheme"
                     variant="text"
                     class="ml-2"
+                    size="small"
                   ></v-btn>
                 </span>
               </div>
             </div>
 
-            <div class="px-4">
+            <div class="px-3 px-sm-4">
               <div class="text-subtitle-1 mb-2">Действия</div>
-              <v-btn color="error" @click="handleLogout" variant="outlined">
+              <v-btn
+                color="error"
+                @click="handleLogout"
+                variant="outlined"
+                :size="$vuetify.display.smAndDown ? 'small' : 'default'"
+              >
                 Выйти из аккаунта
               </v-btn>
             </div>
@@ -116,13 +136,31 @@
       </v-col>
     </v-row>
 
-    <v-dialog v-model="logoutDialog" width="auto">
+    <v-dialog
+      v-model="logoutDialog"
+      :width="$vuetify.display.smAndDown ? '90%' : 'auto'"
+      :fullscreen="$vuetify.display.xs"
+    >
       <v-card>
-        <v-card-title>Подтверждение</v-card-title>
+        <v-card-title class="text-body-1 text-sm-h6"
+          >Подтверждение</v-card-title
+        >
         <v-card-text>Вы уверены, что хотите выйти?</v-card-text>
-        <v-card-actions>
-          <v-btn color="error" @click="confirmLogout">Выйти</v-btn>
-          <v-btn color="grey" @click="logoutDialog = false">Отмена</v-btn>
+        <v-card-actions class="gap-2">
+          <v-btn
+            color="error"
+            @click="confirmLogout"
+            :size="$vuetify.display.smAndDown ? 'small' : 'default'"
+          >
+            Выйти
+          </v-btn>
+          <v-btn
+            color="grey"
+            @click="logoutDialog = false"
+            :size="$vuetify.display.smAndDown ? 'small' : 'default'"
+          >
+            Отмена
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
