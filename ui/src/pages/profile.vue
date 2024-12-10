@@ -16,6 +16,7 @@
               <v-icon
                 :size="$vuetify.display.smAndDown ? 80 : 112"
                 color="grey-darken-2"
+                disabled
               >
                 mdi-account-circle
               </v-icon>
@@ -25,6 +26,7 @@
               variant="outlined"
               prepend-icon="mdi-camera"
               rounded
+              disabled
               class="px-4"
             >
               Изменить фото
