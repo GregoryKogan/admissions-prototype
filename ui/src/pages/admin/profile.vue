@@ -63,7 +63,6 @@
     <v-dialog
       v-model="logoutDialog"
       :width="$vuetify.display.smAndDown ? '90%' : 'auto'"
-      :fullscreen="$vuetify.display.xs"
     >
       <v-card>
         <v-card-title class="text-body-1 text-sm-h6"
