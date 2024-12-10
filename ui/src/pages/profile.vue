@@ -7,6 +7,30 @@
             {{ registration.last_name }} {{ registration.first_name }}
             {{ registration.patronymic }}
           </v-card-title>
+
+          <div class="px-3 px-sm-4 pb-4 d-flex flex-column align-center">
+            <v-avatar
+              :size="$vuetify.display.smAndDown ? 100 : 140"
+              class="mb-3 elevation-2"
+            >
+              <v-icon
+                :size="$vuetify.display.smAndDown ? 80 : 112"
+                color="grey-darken-2"
+              >
+                mdi-account-circle
+              </v-icon>
+            </v-avatar>
+            <v-btn
+              size="small"
+              variant="outlined"
+              prepend-icon="mdi-camera"
+              rounded
+              class="px-4"
+            >
+              Изменить фото
+            </v-btn>
+          </div>
+
           <v-card-subtitle class="px-3 px-sm-4 pb-0">
             Регистрация: {{ createdAt }}
           </v-card-subtitle>
