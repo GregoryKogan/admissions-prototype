@@ -2,13 +2,16 @@ package regdata
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/L2SH-Dev/admissions/internal/mailing"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
 	"github.com/L2SH-Dev/admissions/internal/users/auth/passwords"
 	"github.com/L2SH-Dev/admissions/internal/validation"
+	"github.com/essentialkaos/translit/v3"
 )
 
 var (
@@ -123,6 +126,12 @@ func (s *RegistrationDataServiceImpl) existsByEmailNameAndGrade(email, name stri
 }
 
 func generateLogin(regData *RegistrationData) string {
-	// TODO: Implement more complex login generation
-	return regData.FirstName + " " + regData.LastName
+	transliterator := translit.ICAO
+	tFirstName := transliterator(strings.ToLower(regData.FirstName))[:1]
+	tLastName := transliterator(strings.ToLower(regData.LastName))
+
+	regIdStr := "00000" + fmt.Sprint(regData.ID)
+	regIdStr = regIdStr[len(regIdStr)-5:]
+
+	return fmt.Sprintf("%s.%s-%s", tFirstName, tLastName, regIdStr)
 }
