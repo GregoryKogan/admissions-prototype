@@ -12,7 +12,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar>
+    <v-app-bar style="position: fixed">
       <v-app-bar-title>
         <v-img
           src="@/assets/L2SH-logo.png"

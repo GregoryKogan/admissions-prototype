@@ -21,7 +21,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar v-if="mobile">
+    <v-app-bar v-if="mobile" position="fixed">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Админ панель</v-toolbar-title>
     </v-app-bar>
