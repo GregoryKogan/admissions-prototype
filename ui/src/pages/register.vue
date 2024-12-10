@@ -15,13 +15,13 @@
           :rules="[rules.required, rules.email]"
         ></v-text-field>
         <v-text-field
-          v-model="first_name"
-          label="Имя"
+          v-model="last_name"
+          label="Фамилия"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="last_name"
-          label="Фамилия"
+          v-model="first_name"
+          label="Имя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field v-model="patronymic" label="Отчество"></v-text-field>
@@ -48,13 +48,13 @@
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="parent_first_name"
-          label="Имя родителя"
+          v-model="parent_last_name"
+          label="Фамилия родителя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="parent_last_name"
-          label="Фамилия родителя"
+          v-model="parent_first_name"
+          label="Имя родителя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
@@ -89,7 +89,7 @@
       <v-card-title>Вы успешно заполнили анкету</v-card-title>
       <v-card-text>
         <v-alert
-          text="Для завершения регистрации подтвердите почту, перейдя по ссылке из письма"
+          text="Для завершения регистрации подтвердите почту, перейдя по ссылке из письма. Проверьте папку «Спам», если письмо не пришло."
           variant="tonal"
           type="success"
         ></v-alert>
