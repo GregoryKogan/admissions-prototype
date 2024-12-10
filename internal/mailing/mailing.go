@@ -52,6 +52,7 @@ func SendVerificationEmail(email string, token string) error {
 }
 
 func SendLoginAndPassword(email, login, password string) error {
+	protocol := viper.GetString("server.protocol")
 	host := viper.GetString("server.host")
 	port := viper.GetString("server.port")
 
@@ -59,7 +60,7 @@ func SendLoginAndPassword(email, login, password string) error {
 		Email:     email,
 		Login:     login,
 		Password:  password,
-		LoginLink: fmt.Sprintf("https://%s:%s/login", host, port),
+		LoginLink: fmt.Sprintf("%s://%s:%s/login", protocol, host, port),
 	}
 
 	request := &emailRequest{
