@@ -61,3 +61,18 @@ users:
         admin: true
         write_general: true
         ai_access: true
+
+exams:
+  types:
+    - title: "письменная математика"
+      order: 1
+      dismissing: true
+      has_points: true
+    - title: "устная математика"
+      order: 2
+      dismissing: true
+      has_points: true
+    - title: "русский язык"
+      order: 3
+      dismissing: true
+      has_points: false
