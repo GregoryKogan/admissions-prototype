@@ -4,6 +4,7 @@ import (
 	"github.com/L2SH-Dev/admissions/internal/admin"
 	"github.com/L2SH-Dev/admissions/internal/config"
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/exams"
 	"github.com/L2SH-Dev/admissions/internal/logging"
 	"github.com/L2SH-Dev/admissions/internal/ping"
 	"github.com/L2SH-Dev/admissions/internal/regdata"
@@ -24,6 +25,7 @@ func main() {
 		ping.NewPingHandler,
 		users.NewUsersHandler,
 		regdata.NewRegistrationDataHandler,
+		exams.NewExamsHandler,
 	)
 
 	admin.CreateDefaultAdmin(storage)
