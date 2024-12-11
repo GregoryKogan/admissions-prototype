@@ -22,6 +22,7 @@ type ExamsHandler interface {
 	ListAvailable(c echo.Context) error
 	Register(c echo.Context) error
 	Allocation(c echo.Context) error
+	Mine(c echo.Context) error
 
 	// admin endpoints
 	List(c echo.Context) error
@@ -75,6 +76,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 	privateGroup.GET("/available", h.ListAvailable)
 	privateGroup.POST("/register/:examID", h.Register)
 	privateGroup.GET("/allocation/:examID", h.Allocation)
+	privateGroup.GET("/mine", h.Mine)
 
 	// admin endpoints
 	adminGroup := privateGroup.Group("/admin")
@@ -125,6 +127,16 @@ func (h *ExamsHandlerImpl) Allocation(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, allocation)
+}
+
+func (h *ExamsHandlerImpl) Mine(c echo.Context) error {
+	user := c.Get("currentUser").(*users.User)
+	exams, err := h.service.ListUserExams(user)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, exams)
 }
 
 func (h *ExamsHandlerImpl) List(c echo.Context) error {

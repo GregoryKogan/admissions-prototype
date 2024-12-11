@@ -9,6 +9,10 @@ const ExamsService = {
   types: async () => await instance.get('/exams/admin/types'),
   allocation: async (examId: number) =>
     await instance.get(`/exams/allocation/${examId}`),
+  available: async () => await instance.get('/exams/available'),
+  register: async (examId: number) =>
+    await instance.post(`/exams/register/${examId}`),
+  mine: async () => await instance.get('/exams/mine'),
 }
 
 export default ExamsService

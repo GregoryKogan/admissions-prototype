@@ -12,6 +12,7 @@ type ExamsRepo interface {
 	CreateExamType(examType *ExamType) error
 	List() ([]*Exam, error)
 	ListAvailable(grade uint) ([]*Exam, error)
+	ListUserExams(userID uint) ([]*Exam, error)
 	GetByID(examID uint) (*Exam, error)
 	CreateRegistration(userID, examID uint) error
 	IsRegistered(userID, examID uint) (bool, error)
@@ -79,6 +80,16 @@ func (r *ExamsRepoImpl) List() ([]*Exam, error) {
 func (r *ExamsRepoImpl) ListAvailable(grade uint) ([]*Exam, error) {
 	var exams []*Exam
 	err := r.storage.DB().Preload("ExamType").Where("grade = ?", grade).Find(&exams).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return exams, nil
+}
+
+func (r *ExamsRepoImpl) ListUserExams(userID uint) ([]*Exam, error) {
+	var exams []*Exam
+	err := r.storage.DB().Preload("ExamType").Joins("JOIN exam_registrations ON exams.id = exam_registrations.exam_id").Where("exam_registrations.user_id = ?", userID).Find(&exams).Error
 	if err != nil {
 		return nil, err
 	}

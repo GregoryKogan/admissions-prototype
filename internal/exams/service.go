@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	ErrAlreadyRegistered      = errors.New("user is already registered for this exam")
 	ErrRegistrationNotAllowed = errors.New("registration is not allowed")
 )
 
@@ -25,6 +24,7 @@ type ExamsService interface {
 	CreateDefaultExamTypes() error
 	List() ([]*Exam, error)
 	ListAvailable(*users.User) ([]*Exam, error)
+	ListUserExams(user *users.User) ([]*Exam, error)
 	Register(user *users.User, examID uint) error
 	ListTypes() ([]*ExamType, error)
 	Allocation(examID uint) (*allocation, error)
@@ -105,6 +105,10 @@ func (s *ExamsServiceImpl) ListAvailable(user *users.User) ([]*Exam, error) {
 	return availableExams, nil
 }
 
+func (s *ExamsServiceImpl) ListUserExams(user *users.User) ([]*Exam, error) {
+	return s.repo.ListUserExams(user.ID)
+}
+
 func (s *ExamsServiceImpl) Register(user *users.User, examID uint) error {
 	exam, err := s.repo.GetByID(examID)
 	if err != nil {
@@ -146,7 +150,7 @@ func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bo
 		return false, err
 	}
 	if registered {
-		return false, ErrAlreadyRegistered
+		return false, nil
 	}
 
 	regData, err := s.regDataService.GetByID(user.RegistrationDataID)
