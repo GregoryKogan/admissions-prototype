@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import RegistrationService from '@/api.registration'
+import RegistrationService from '@/api/api.registration'
 import { defineComponent } from 'vue'
 
 export default defineComponent({

@@ -193,7 +193,7 @@
 </template>
 
 <script lang="ts" setup>
-import RegistrationService, { Registration } from '@/api.registration'
+import RegistrationService, { Registration } from '@/api/api.registration'
 import { useAuthStore } from '@/stores/auth'
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'

@@ -1,4 +1,4 @@
-import { instance } from '@/api.config'
+import { instance } from '@/api/api.config'
 
 const AuthService = {
   login: async (login: string, password: string) =>

@@ -146,7 +146,7 @@
 </template>
 
 <script lang="ts" setup>
-import RegistrationService, { Registration } from '@/api.registration'
+import RegistrationService, { Registration } from '@/api/api.registration'
 import { ref } from 'vue'
 
 const props = defineProps<{
