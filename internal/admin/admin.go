@@ -29,7 +29,7 @@ func CreateDefaultAdmin(storage datastore.Storage) {
 	)
 
 	// Check if admin already exists
-	admin, err := usersService.GetByLogin("admin")
+	admin, err := usersService.GetByLogin(viper.GetString("users.default_admin.login"))
 	if err == nil && admin != nil {
 		return
 	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -37,7 +37,7 @@ func CreateDefaultAdmin(storage datastore.Storage) {
 	}
 
 	registrationData := regdata.RegistrationData{
-		Email:           viper.GetString("admin.email"),
+		Email:           viper.GetString("users.default_admin.email"),
 		EmailVerified:   true,
 		FirstName:       "Админ",
 		LastName:        "Админов",

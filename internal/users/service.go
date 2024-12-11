@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +52,7 @@ func (s *UsersServiceImpl) Create(registrationID uint, login string) (*User, err
 	}
 
 	// Get default role
-	role, err := s.rolesService.GetRoleByTitle("user")
+	role, err := s.rolesService.GetRoleByTitle(viper.GetString("users.default_role"))
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to get default role"), err)
 	}
@@ -88,15 +89,15 @@ func (s *UsersServiceImpl) CreateDefaultAdmin(registrationID uint) (*User, error
 		return nil, ErrUserAlreadyExists
 	}
 
-	// Get default role
-	role, err := s.rolesService.GetRoleByTitle("admin")
+	// Get admin role
+	role, err := s.rolesService.GetRoleByTitle(viper.GetString("users.default_admin.role"))
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to get default role"), err)
+		return nil, errors.Join(errors.New("failed to get default admin role"), err)
 	}
 
 	// Create user object
 	newUser := &User{
-		Login:              "admin",
+		Login:              viper.GetString("users.default_admin.login"),
 		RegistrationDataID: registrationID,
 		RoleID:             role.ID,
 	}

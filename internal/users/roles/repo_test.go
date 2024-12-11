@@ -6,6 +6,7 @@ import (
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/users/roles"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +17,21 @@ var (
 func TestMain(m *testing.M) {
 	s, cleanup := datastore.InitMockStorage()
 	storage = s
+
+	viper.Set("users.default_role", "user")
+	viper.Set("users.roles", []string{"admin", "user", "interviewer", "principal"})
+	viper.Set("users.roles.user.permissions.admin", false)
+	viper.Set("users.roles.user.permissions.write_general", false)
+	viper.Set("users.roles.user.permissions.ai_access", false)
+	viper.Set("users.roles.admin.permissions.admin", true)
+	viper.Set("users.roles.admin.permissions.write_general", true)
+	viper.Set("users.roles.admin.permissions.ai_access", false)
+	viper.Set("users.roles.interviewer.permissions.admin", true)
+	viper.Set("users.roles.interviewer.permissions.write_general", false)
+	viper.Set("users.roles.interviewer.permissions.ai_access", true)
+	viper.Set("users.roles.principal.permissions.admin", true)
+	viper.Set("users.roles.principal.permissions.write_general", true)
+	viper.Set("users.roles.principal.permissions.ai_access", true)
 
 	code := m.Run()
 
