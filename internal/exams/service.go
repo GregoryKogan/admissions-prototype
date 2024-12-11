@@ -2,6 +2,7 @@ package exams
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/L2SH-Dev/admissions/internal/regdata"
 	"github.com/L2SH-Dev/admissions/internal/users"
@@ -14,6 +15,11 @@ var (
 	ErrRegistrationNotAllowed = errors.New("registration is not allowed")
 )
 
+type allocation struct {
+	Capacity uint `json:"capacity"`
+	Occupied uint `json:"occupied"`
+}
+
 type ExamsService interface {
 	Create(exam *Exam) error
 	Delete(examID uint) error
@@ -21,6 +27,8 @@ type ExamsService interface {
 	List() ([]*Exam, error)
 	ListAvailable(*users.User) ([]*Exam, error)
 	Register(user *users.User, examID uint) error
+	ListTypes() ([]*ExamType, error)
+	Allocation(examID uint) (*allocation, error)
 }
 
 type ExamsServiceImpl struct {
@@ -45,6 +53,18 @@ func (s *ExamsServiceImpl) CreateDefaultExamTypes() error {
 
 	for _, examTypeData := range examTypesConfig {
 		data := examTypeData.(map[string]interface{})
+
+		title := data["title"].(string)
+		exists, err := s.repo.TypeExistsByTitle(title)
+		if err != nil {
+			slog.Warn("Failed to check if exam type exists by title", slog.Any("title", title), slog.Any("err", err))
+			continue
+		}
+
+		if exists {
+			continue
+		}
+
 		examType := ExamType{
 			Title:      data["title"].(string),
 			Order:      data["order"].(int),
@@ -52,7 +72,7 @@ func (s *ExamsServiceImpl) CreateDefaultExamTypes() error {
 			HasPoints:  data["has_points"].(bool),
 		}
 
-		err := s.repo.CreateExamType(&examType)
+		err = s.repo.CreateExamType(&examType)
 		if err != nil {
 			return err
 		}
@@ -101,6 +121,24 @@ func (s *ExamsServiceImpl) Register(user *users.User, examID uint) error {
 	}
 
 	return s.repo.CreateRegistration(user.ID, examID)
+}
+
+func (s *ExamsServiceImpl) ListTypes() ([]*ExamType, error) {
+	return s.repo.ListTypes()
+}
+
+func (s *ExamsServiceImpl) Allocation(examID uint) (*allocation, error) {
+	exam, err := s.repo.GetByID(examID)
+	if err != nil {
+		return nil, err
+	}
+
+	occupied, err := s.repo.CountRegistrations(examID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &allocation{Capacity: exam.Capacity, Occupied: occupied}, nil
 }
 
 func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bool, error) {

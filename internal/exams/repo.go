@@ -16,6 +16,8 @@ type ExamsRepo interface {
 	CreateRegistration(userID, examID uint) error
 	IsRegistered(userID, examID uint) (bool, error)
 	CountRegistrations(examID uint) (uint, error)
+	ListTypes() ([]*ExamType, error)
+	TypeExistsByTitle(title string) (bool, error)
 }
 
 type ExamsRepoImpl struct {
@@ -126,4 +128,24 @@ func (r *ExamsRepoImpl) CountRegistrations(examID uint) (uint, error) {
 	}
 
 	return uint(count), nil
+}
+
+func (r *ExamsRepoImpl) ListTypes() ([]*ExamType, error) {
+	var types []*ExamType
+	err := r.storage.DB().Find(&types).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return types, nil
+}
+
+func (r *ExamsRepoImpl) TypeExistsByTitle(title string) (bool, error) {
+	var count int64
+	err := r.storage.DB().Model(&ExamType{}).Where("title = ?", title).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

@@ -14,14 +14,14 @@ type Exam struct {
 	Location   string    `json:"location" gorm:"not null" validate:"required"`
 	Capacity   uint      `json:"capacity" gorm:"not null" validate:"required"`
 	Grade      uint      `json:"grade" gorm:"not null" validate:"required,min=6,max=11"`
-	ExamTypeID uint      `json:"-" gorm:"not null" validate:"required"`
+	ExamTypeID uint      `json:"type_id" gorm:"not null" validate:"required"`
 	ExamType   ExamType  `json:"type" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 type ExamType struct {
 	gorm.Model
-	Title      string `json:"title" gorm:"unique;index;not null" validate:"required"`
-	Order      int    `json:"order" gorm:"not null" validate:"required"`
+	Title      string `json:"title" gorm:"unique;index;not null"`
+	Order      int    `json:"order" gorm:"not null"`
 	Dismissing bool   `json:"dismissing" gorm:"not null"`
 	HasPoints  bool   `json:"has_points" gorm:"not null"`
 }

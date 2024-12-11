@@ -20,11 +20,13 @@ type ExamsHandler interface {
 	// private endpoints
 	ListAvailable(c echo.Context) error
 	Register(c echo.Context) error
+	Allocation(c echo.Context) error
 
 	// admin endpoints
 	List(c echo.Context) error
 	Create(c echo.Context) error
 	Delete(c echo.Context) error
+	ListTypes(c echo.Context) error
 }
 
 type ExamsHandlerImpl struct {
@@ -68,6 +70,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 
 	privateGroup.GET("/available", h.ListAvailable)
 	privateGroup.POST("/register/:examID", h.Register)
+	privateGroup.GET("/allocation/:examID", h.Allocation)
 
 	// admin endpoints
 	adminGroup := privateGroup.Group("/admin")
@@ -76,6 +79,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 	adminGroup.GET("", h.List)
 	adminGroup.POST("", h.Create)
 	adminGroup.DELETE("/:examID", h.Delete)
+	adminGroup.GET("/types", h.ListTypes)
 }
 
 func (h *ExamsHandlerImpl) ListAvailable(c echo.Context) error {
@@ -102,6 +106,21 @@ func (h *ExamsHandlerImpl) Register(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusCreated)
+}
+
+func (h *ExamsHandlerImpl) Allocation(c echo.Context) error {
+	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
+	}
+	examID := uint(examID64)
+
+	allocation, err := h.service.Allocation(examID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, allocation)
 }
 
 func (h *ExamsHandlerImpl) List(c echo.Context) error {
@@ -144,4 +163,13 @@ func (h *ExamsHandlerImpl) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *ExamsHandlerImpl) ListTypes(c echo.Context) error {
+	types, err := h.service.ListTypes()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, types)
 }
