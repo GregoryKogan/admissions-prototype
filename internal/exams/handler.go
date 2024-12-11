@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"github.com/L2SH-Dev/admissions/internal/regdata"
 	"github.com/L2SH-Dev/admissions/internal/server"
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"github.com/L2SH-Dev/admissions/internal/users/auth"
@@ -46,8 +47,11 @@ func NewExamsHandler(storage datastore.Storage) server.Handler {
 	authRepo := auth.NewAuthRepo(storage)
 	authService := auth.NewAuthService(authRepo, passwordsService)
 
+	regDataRepo := regdata.NewRegistrationDataRepo(storage)
+	regDataService := regdata.NewRegistrationDataService(regDataRepo, usersService, authService, passwordsService)
+
 	repo := NewExamsRepo(storage)
-	service := NewExamsService(repo)
+	service := NewExamsService(repo, regDataService)
 
 	service.CreateDefaultExamTypes()
 

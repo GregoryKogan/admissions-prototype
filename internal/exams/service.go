@@ -11,7 +11,6 @@ import (
 
 var (
 	ErrAlreadyRegistered      = errors.New("user is already registered for this exam")
-	ErrGradeMismatch          = errors.New("user grade does not match exam grade")
 	ErrRegistrationNotAllowed = errors.New("registration is not allowed")
 )
 
@@ -36,8 +35,8 @@ type ExamsServiceImpl struct {
 	regDataService regdata.RegistrationDataService
 }
 
-func NewExamsService(repo ExamsRepo) ExamsService {
-	return &ExamsServiceImpl{repo: repo}
+func NewExamsService(repo ExamsRepo, regDataService regdata.RegistrationDataService) ExamsService {
+	return &ExamsServiceImpl{repo: repo, regDataService: regDataService}
 }
 
 func (s *ExamsServiceImpl) Create(exam *Exam) error {
@@ -158,7 +157,7 @@ func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bo
 	// TODO: Implement full allow logic
 	// Should take order of the last passed exam into account
 	if regData.Grade != exam.Grade {
-		return false, ErrGradeMismatch
+		return false, nil
 	}
 
 	currentNumOfRegistrations, err := s.repo.CountRegistrations(exam.ID)
