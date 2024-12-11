@@ -20,7 +20,7 @@
         </div>
 
         <template v-if="availableExams.length">
-          <div v-for="exam in availableExams" :key="exam.ID" class="mb-4">
+          <div v-for="exam in availableExams" :key="exam.ID">
             <ExamCard :data="exam" @status-changed="reloadAll" />
           </div>
         </template>
@@ -41,7 +41,7 @@
         </div>
 
         <template v-if="myExams.length">
-          <div v-for="exam in myExams" :key="exam.ID" class="mb-4">
+          <div v-for="exam in myExams" :key="exam.ID">
             <ExamCard
               :data="exam"
               :registered="true"
