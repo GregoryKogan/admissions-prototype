@@ -1,63 +1,65 @@
 <template>
-  <v-card>
-    <v-card-item>
-      <v-row align="center" no-gutters>
-        <v-col>
-          <div class="text-h6 mb-1">{{ capitalizedTitle }}</div>
-          <div class="text-subtitle-1">{{ props.data.location }}</div>
-        </v-col>
-        <v-col cols="auto">
-          <v-btn
-            color="error"
-            variant="text"
-            icon="mdi-delete"
-            @click="deleteExam"
-          ></v-btn>
-        </v-col>
-      </v-row>
-    </v-card-item>
+  <v-container>
+    <v-card>
+      <v-card-item>
+        <v-row align="center" no-gutters>
+          <v-col>
+            <div class="text-h6 mb-1">{{ capitalizedTitle }}</div>
+            <div class="text-subtitle-1">{{ props.data.location }}</div>
+          </v-col>
+          <v-col cols="auto">
+            <v-btn
+              color="error"
+              variant="text"
+              icon="mdi-delete"
+              @click="deleteExam"
+            ></v-btn>
+          </v-col>
+        </v-row>
+      </v-card-item>
 
-    <v-card-text>
-      <v-row>
-        <v-col cols="12" sm="6">
-          <div class="d-flex align-center mb-2">
-            <v-icon icon="mdi-calendar" class="mr-2"></v-icon>
-            <span>{{ formattedDate }}</span>
-          </div>
-          <div class="d-flex align-center mb-2">
-            <v-icon icon="mdi-clock-outline" class="mr-2"></v-icon>
-            <span>{{ formattedTime }}</span>
-          </div>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <div class="d-flex align-center">
-            <v-icon icon="mdi-school" class="mr-2"></v-icon>
-            <span>{{ props.data.grade }} класс</span>
-          </div>
-          <div class="d-flex flex-column mb-2">
-            <div class="d-flex align-center mb-1">
-              <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
-              <span>
-                {{
-                  allocation
-                    ? `${allocation.occupied}/${allocation.capacity}`
-                    : '...'
-                }}
-                мест
-              </span>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" sm="6">
+            <div class="d-flex align-center mb-2">
+              <v-icon icon="mdi-calendar" class="mr-2"></v-icon>
+              <span>{{ formattedDate }}</span>
             </div>
-            <v-progress-linear
-              v-if="allocation"
-              :model-value="(allocation.occupied / allocation.capacity) * 100"
-              :color="progressColor"
-              height="8"
-            ></v-progress-linear>
-            <v-progress-linear v-else indeterminate></v-progress-linear>
-          </div>
-        </v-col>
-      </v-row>
-    </v-card-text>
-  </v-card>
+            <div class="d-flex align-center mb-2">
+              <v-icon icon="mdi-clock-outline" class="mr-2"></v-icon>
+              <span>{{ formattedTime }}</span>
+            </div>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <div class="d-flex align-center">
+              <v-icon icon="mdi-school" class="mr-2"></v-icon>
+              <span>{{ props.data.grade }} класс</span>
+            </div>
+            <div class="d-flex flex-column mb-2">
+              <div class="d-flex align-center mb-1">
+                <v-icon icon="mdi-account-group" class="mr-2"></v-icon>
+                <span>
+                  {{
+                    allocation
+                      ? `${allocation.occupied}/${allocation.capacity}`
+                      : '...'
+                  }}
+                  мест
+                </span>
+              </div>
+              <v-progress-linear
+                v-if="allocation"
+                :model-value="(allocation.occupied / allocation.capacity) * 100"
+                :color="progressColor"
+                height="8"
+              ></v-progress-linear>
+              <v-progress-linear v-else indeterminate></v-progress-linear>
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </v-container>
 
   <v-dialog v-model="deleteDialog" width="auto">
     <v-card>

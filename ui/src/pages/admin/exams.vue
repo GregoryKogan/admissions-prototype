@@ -21,7 +21,7 @@
         </div>
 
         <template v-if="exams.length">
-          <div v-for="exam in exams" :key="exam.ID" class="mb-4">
+          <div v-for="exam in exams" :key="exam.ID">
             <Exam :data="exam" @status-changed="statusChanged" />
           </div>
         </template>
