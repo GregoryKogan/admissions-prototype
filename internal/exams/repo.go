@@ -68,7 +68,7 @@ func (r *ExamsRepoImpl) CreateExamType(examType *ExamType) error {
 
 func (r *ExamsRepoImpl) List() ([]*Exam, error) {
 	var exams []*Exam
-	err := r.storage.DB().Preload("ExamType").Find(&exams).Error
+	err := r.storage.DB().Preload("ExamType").Order("start DESC").Find(&exams).Error
 	if err != nil {
 		return nil, err
 	}
