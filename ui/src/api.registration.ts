@@ -9,6 +9,8 @@ const RegistrationService = {
   mine: async () => await instance.get('/regdata/mine'),
   register: async (registration: RegistrationRequest) =>
     await instance.post('/regdata', registration),
+  verify: async (token: string) =>
+    await instance.get(`/regdata/verify?token=${token}`),
 }
 
 export default RegistrationService
