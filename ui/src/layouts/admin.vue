@@ -18,6 +18,11 @@
           prepend-icon="mdi-format-list-bulleted"
           title="Регистрации"
         />
+        <v-list-item
+          to="/admin/exams"
+          prepend-icon="mdi-file-document"
+          title="Экзамены"
+        />
       </v-list>
     </v-navigation-drawer>
 
