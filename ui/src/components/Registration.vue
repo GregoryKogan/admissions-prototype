@@ -1,8 +1,6 @@
 <template>
   <v-card density="compact">
-    <v-card-title
-      class="d-flex flex-column flex-sm-row justify-space-between align-center"
-    >
+    <v-card-title class="d-flex flex-sm-row justify-space-between align-center">
       <div class="text-wrap">
         {{ props.data.last_name }} {{ props.data.first_name }}
         {{ props.data.patronymic }}
@@ -31,12 +29,6 @@
         <v-row dense class="ma-0">
           <v-col cols="12" sm="6" class="pa-0">
             <v-list-item>
-              <template v-slot:title>
-                <div class="text-wrap text-break">{{ props.data.email }}</div>
-              </template>
-              <v-list-item-subtitle>Электронная почта</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
               <v-list-item-title>{{ birthDate }}</v-list-item-title>
               <v-list-item-subtitle>Дата рождения</v-list-item-subtitle>
             </v-list-item>
@@ -48,14 +40,6 @@
               <v-list-item-title>{{ gender }}</v-list-item-title>
               <v-list-item-subtitle>Пол</v-list-item-subtitle>
             </v-list-item>
-            <v-list-item>
-              <template v-slot:title>
-                <div class="text-wrap text-break">
-                  {{ props.data.old_school }}
-                </div>
-              </template>
-              <v-list-item-subtitle>Предыдущая школа</v-list-item-subtitle>
-            </v-list-item>
           </v-col>
           <v-col cols="12" sm="6" class="pa-0">
             <v-list-item>
@@ -65,43 +49,23 @@
               <v-list-item-subtitle>Телефон родителя</v-list-item-subtitle>
             </v-list-item>
             <v-list-item>
-              <v-list-item-title>{{
-                props.data.parent_last_name
-              }}</v-list-item-title>
-              <v-list-item-subtitle>Фамилия родителя</v-list-item-subtitle>
+              <v-list-item-title class="text-wrap text-break">
+                {{ props.data.parent_last_name }}
+                {{ props.data.parent_first_name }}
+                {{ props.data.parent_patronymic }}
+              </v-list-item-title>
+              <v-list-item-subtitle>ФИО родителя</v-list-item-subtitle>
             </v-list-item>
             <v-list-item>
-              <v-list-item-title>{{
-                props.data.parent_first_name
-              }}</v-list-item-title>
-              <v-list-item-subtitle>Имя родителя</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>{{
-                props.data.parent_patronymic
-              }}</v-list-item-title>
-              <v-list-item-subtitle>Отчество родителя</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>{{
-                props.data.june_exam ? 'Да' : 'Нет'
-              }}</v-list-item-title>
-              <v-list-item-subtitle>Экзамен в июне</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>{{
-                props.data.vmsh ? 'Да' : 'Нет'
-              }}</v-list-item-title>
-              <v-list-item-subtitle>ВМШ</v-list-item-subtitle>
+              <template v-slot:title>
+                <div class="text-wrap text-break">
+                  {{ props.data.old_school }}
+                </div>
+              </template>
+              <v-list-item-subtitle>Предыдущая школа</v-list-item-subtitle>
             </v-list-item>
           </v-col>
         </v-row>
-        <v-list-item>
-          <template v-slot:title>
-            <div class="text-wrap text-break">{{ props.data.source }}</div>
-          </template>
-          <v-list-item-subtitle>Как узнали о Лицее</v-list-item-subtitle>
-        </v-list-item>
       </v-list>
     </v-card-text>
 
