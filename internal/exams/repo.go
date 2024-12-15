@@ -174,7 +174,7 @@ func (r *ExamsRepoImpl) Available(userID uint, grade uint) ([]*Exam, error) {
 	err = r.storage.DB().
 		Preload("ExamType").
 		Joins("JOIN exam_types ON exams.exam_type_id = exam_types.id").
-		Where("exams.grade = ? AND exams.start > NOW() AND exam_types.order = ?", grade, nextOrder).
+		Where(`exams.grade = ? AND exams.start > NOW() AND exam_types."order" = ?`, grade, nextOrder).
 		Find(&exams).Error
 	if err != nil {
 		return nil, err
@@ -230,8 +230,8 @@ func (r *ExamsRepoImpl) GetNextExamTypeOrder(userID uint) (int, error) {
 	var nextOrder int
 	err = r.storage.DB().
 		Model(&ExamType{}).
-		Select("MIN(`order`)").
-		Where("`order` > ?", lastOrder).
+		Select(`MIN("order")`).
+		Where(`"order" > ?`, lastOrder).
 		Scan(&nextOrder).Error
 	if err != nil {
 		return 0, err
