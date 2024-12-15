@@ -23,11 +23,11 @@ type ExamsService interface {
 	Delete(examID uint) error
 	CreateDefaultExamTypes() error
 	List() ([]*Exam, error)
-	ListAvailable(*users.User) ([]*Exam, error)
-	ListUserExams(user *users.User) ([]*Exam, error)
 	Register(user *users.User, examID uint) error
 	ListTypes() ([]*ExamType, error)
 	Allocation(examID uint) (*allocation, error)
+	History(user *users.User) ([]*Exam, error)
+	Available(user *users.User) ([]*Exam, error)
 }
 
 type ExamsServiceImpl struct {
@@ -84,31 +84,6 @@ func (s *ExamsServiceImpl) List() ([]*Exam, error) {
 	return s.repo.List()
 }
 
-func (s *ExamsServiceImpl) ListAvailable(user *users.User) ([]*Exam, error) {
-	allExams, err := s.List()
-	if err != nil {
-		return nil, err
-	}
-
-	var availableExams []*Exam
-	for _, exam := range allExams {
-		allowed, err := s.isAllowedToRegister(user, exam)
-		if err != nil {
-			return nil, err
-		}
-
-		if allowed {
-			availableExams = append(availableExams, exam)
-		}
-	}
-
-	return availableExams, nil
-}
-
-func (s *ExamsServiceImpl) ListUserExams(user *users.User) ([]*Exam, error) {
-	return s.repo.ListUserExams(user.ID)
-}
-
 func (s *ExamsServiceImpl) Register(user *users.User, examID uint) error {
 	exam, err := s.repo.GetByID(examID)
 	if err != nil {
@@ -142,6 +117,19 @@ func (s *ExamsServiceImpl) Allocation(examID uint) (*allocation, error) {
 	}
 
 	return &allocation{Capacity: exam.Capacity, Occupied: occupied}, nil
+}
+
+func (s *ExamsServiceImpl) History(user *users.User) ([]*Exam, error) {
+	return s.repo.History(user.ID)
+}
+
+func (s *ExamsServiceImpl) Available(user *users.User) ([]*Exam, error) {
+	regData, err := s.regDataService.GetByID(user.RegistrationDataID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.repo.Available(user.ID, regData.Grade)
 }
 
 func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bool, error) {

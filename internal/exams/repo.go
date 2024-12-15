@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
+	"gorm.io/gorm"
 )
 
 type ExamsRepo interface {
@@ -11,14 +12,14 @@ type ExamsRepo interface {
 	Delete(examID uint) error
 	CreateExamType(examType *ExamType) error
 	List() ([]*Exam, error)
-	ListAvailable(grade uint) ([]*Exam, error)
-	ListUserExams(userID uint) ([]*Exam, error)
 	GetByID(examID uint) (*Exam, error)
 	CreateRegistration(userID, examID uint) error
 	IsRegistered(userID, examID uint) (bool, error)
 	CountRegistrations(examID uint) (uint, error)
 	ListTypes() ([]*ExamType, error)
 	TypeExistsByTitle(title string) (bool, error)
+	History(userID uint) ([]*Exam, error)
+	Available(userID uint, grade uint) ([]*Exam, error)
 }
 
 type ExamsRepoImpl struct {
@@ -26,7 +27,7 @@ type ExamsRepoImpl struct {
 }
 
 func NewExamsRepo(storage datastore.Storage) ExamsRepo {
-	if err := storage.DB().AutoMigrate(&Exam{}, &ExamType{}, &ExamRegistration{}); err != nil {
+	if err := storage.DB().AutoMigrate(&Exam{}, &ExamType{}, &ExamRegistration{}, &ExamResult{}); err != nil {
 		panic(err)
 	}
 	return &ExamsRepoImpl{storage: storage}
@@ -70,26 +71,6 @@ func (r *ExamsRepoImpl) CreateExamType(examType *ExamType) error {
 func (r *ExamsRepoImpl) List() ([]*Exam, error) {
 	var exams []*Exam
 	err := r.storage.DB().Preload("ExamType").Order("start DESC").Find(&exams).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return exams, nil
-}
-
-func (r *ExamsRepoImpl) ListAvailable(grade uint) ([]*Exam, error) {
-	var exams []*Exam
-	err := r.storage.DB().Preload("ExamType").Where("grade = ?", grade).Find(&exams).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return exams, nil
-}
-
-func (r *ExamsRepoImpl) ListUserExams(userID uint) ([]*Exam, error) {
-	var exams []*Exam
-	err := r.storage.DB().Preload("ExamType").Joins("JOIN exam_registrations ON exams.id = exam_registrations.exam_id").Where("exam_registrations.user_id = ?", userID).Find(&exams).Error
 	if err != nil {
 		return nil, err
 	}
@@ -159,4 +140,71 @@ func (r *ExamsRepoImpl) TypeExistsByTitle(title string) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+func (r *ExamsRepoImpl) History(userID uint) ([]*Exam, error) {
+	var exams []*Exam
+	err := r.storage.DB().
+		Preload("ExamType").
+		Joins("JOIN exam_registrations ON exams.id = exam_registrations.exam_id").
+		Where("exam_registrations.user_id = ? AND exams.end < NOW()", userID).
+		Find(&exams).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return exams, nil
+}
+
+func (r *ExamsRepoImpl) Available(userID uint, grade uint) ([]*Exam, error) {
+	// Get the last passed exam's exam type order for the user
+	var lastPassedExamResult ExamResult
+	err := r.storage.DB().
+		Select("exam_results.*").
+		Joins("JOIN exams ON exam_results.exam_id = exams.id").
+		Joins("JOIN exam_types ON exams.exam_type_id = exam_types.id").
+		Where("exam_results.user_id = ? AND exam_results.result = ?", userID, "PASSED").
+		Order("exam_types.order DESC").
+		First(&lastPassedExamResult).Error
+
+	var lastOrder int
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No passed exams, set lastOrder to zero
+			lastOrder = 0
+		} else {
+			return nil, err
+		}
+	} else {
+		lastOrder = lastPassedExamResult.Exam.ExamType.Order
+	}
+
+	// Get the next exam type order after the last passed exam
+	var nextOrder int
+	err = r.storage.DB().
+		Model(&ExamType{}).
+		Select("MIN(`order`)").
+		Where("`order` > ?", lastOrder).
+		Scan(&nextOrder).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// If no next exam type is found, return an empty list
+	if nextOrder == 0 {
+		return []*Exam{}, nil
+	}
+
+	// Retrieve available exams matching the criteria
+	var exams []*Exam
+	err = r.storage.DB().
+		Preload("ExamType").
+		Joins("JOIN exam_types ON exams.exam_type_id = exam_types.id").
+		Where("exams.grade = ? AND exams.start > NOW() AND exam_types.order = ?", grade, nextOrder).
+		Find(&exams).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return exams, nil
 }

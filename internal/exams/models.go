@@ -33,3 +33,15 @@ type ExamRegistration struct {
 	UserID uint       `json:"-" gorm:"not null;index"`
 	User   users.User `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
+
+type ExamResult struct {
+	gorm.Model
+	ExamID    uint       `json:"-" gorm:"not null;index"`
+	Exam      Exam       `json:"exam" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	UserID    uint       `json:"-" gorm:"not null;index"`
+	User      users.User `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Result    string     `json:"result" gorm:"not null" validate:"required,oneof=PASSED FAILED ABSENT"`
+	Dismissed bool       `json:"dismissed" gorm:"not null"`
+	Points    float32    `json:"points" gorm:"not null"`
+	MaxPoints float32    `json:"max_points" gorm:"not null"`
+}
