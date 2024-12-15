@@ -28,6 +28,7 @@ type ExamsService interface {
 	Allocation(examID uint) (*allocation, error)
 	History(user *users.User) ([]*Exam, error)
 	Available(user *users.User) ([]*Exam, error)
+	RegistrationStatus(user *users.User, examID uint) (bool, bool, error)
 }
 
 type ExamsServiceImpl struct {
@@ -162,4 +163,12 @@ func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bo
 	}
 
 	return true, nil
+}
+
+func (s *ExamsServiceImpl) RegistrationStatus(user *users.User, examID uint) (bool, bool, error) {
+	registeredToExam, registeredToSameType, err := s.repo.RegistrationStatus(user.ID, examID)
+	if err != nil {
+		return false, false, err
+	}
+	return registeredToExam, registeredToSameType, nil
 }

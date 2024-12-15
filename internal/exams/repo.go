@@ -20,6 +20,7 @@ type ExamsRepo interface {
 	TypeExistsByTitle(title string) (bool, error)
 	History(userID uint) ([]*Exam, error)
 	Available(userID uint, grade uint) ([]*Exam, error)
+	RegistrationStatus(userID uint, examID uint) (bool, bool, error)
 }
 
 type ExamsRepoImpl struct {
@@ -207,4 +208,34 @@ func (r *ExamsRepoImpl) Available(userID uint, grade uint) ([]*Exam, error) {
 	}
 
 	return exams, nil
+}
+
+func (r *ExamsRepoImpl) RegistrationStatus(userID uint, examID uint) (bool, bool, error) {
+	// Check if the user is registered to the specified exam
+	registeredToExam, err := r.IsRegistered(userID, examID)
+	if err != nil {
+		return false, false, err
+	}
+
+	// Get the exam type ID for the specified exam
+	var exam Exam
+	err = r.storage.DB().First(&exam, examID).Error
+	if err != nil {
+		return false, false, err
+	}
+
+	// Check if the user is registered to another exam with the same exam type
+	var count int64
+	err = r.storage.DB().
+		Model(&ExamRegistration{}).
+		Joins("JOIN exams ON exam_registrations.exam_id = exams.id").
+		Where("exam_registrations.user_id = ? AND exams.exam_type_id = ? AND exams.id != ?", userID, exam.ExamTypeID, examID).
+		Count(&count).Error
+	if err != nil {
+		return false, false, err
+	}
+
+	registeredToSameType := count > 0
+
+	return registeredToExam, registeredToSameType, nil
 }

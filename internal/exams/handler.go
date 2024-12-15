@@ -23,6 +23,7 @@ type ExamsHandler interface {
 	Available(c echo.Context) error
 	Register(c echo.Context) error
 	Allocation(c echo.Context) error
+	RegistrationStatus(c echo.Context) error
 
 	// admin endpoints
 	List(c echo.Context) error
@@ -77,6 +78,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 	privateGroup.GET("/available", h.Available)
 	privateGroup.POST("/register/:examID", h.Register)
 	privateGroup.GET("/allocation/:examID", h.Allocation)
+	privateGroup.GET("/registration_status/:examID", h.RegistrationStatus)
 
 	// admin endpoints
 	adminGroup := privateGroup.Group("/admin")
@@ -188,4 +190,23 @@ func (h *ExamsHandlerImpl) ListTypes(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, types)
+}
+
+func (h *ExamsHandlerImpl) RegistrationStatus(c echo.Context) error {
+	user := c.Get("currentUser").(*users.User)
+	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
+	}
+	examID := uint(examID64)
+
+	registeredToExam, registeredToSameType, err := h.service.RegistrationStatus(user, examID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]bool{
+		"registered":              registeredToExam,
+		"registered_to_same_type": registeredToSameType,
+	})
 }
