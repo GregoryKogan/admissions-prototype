@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
-	"gorm.io/gorm"
 )
 
 type ExamsRepo interface {
@@ -21,6 +20,7 @@ type ExamsRepo interface {
 	History(userID uint) ([]*Exam, error)
 	Available(userID uint, grade uint) ([]*Exam, error)
 	RegistrationStatus(userID uint, examID uint) (bool, bool, error)
+	GetNextExamTypeOrder(userID uint) (int, error)
 }
 
 type ExamsRepoImpl struct {
@@ -158,41 +158,14 @@ func (r *ExamsRepoImpl) History(userID uint) ([]*Exam, error) {
 }
 
 func (r *ExamsRepoImpl) Available(userID uint, grade uint) ([]*Exam, error) {
-	// Get the last passed exam's exam type order for the user
-	var lastPassedExamResult ExamResult
-	err := r.storage.DB().
-		Select("exam_results.*").
-		Joins("JOIN exams ON exam_results.exam_id = exams.id").
-		Joins("JOIN exam_types ON exams.exam_type_id = exam_types.id").
-		Where("exam_results.user_id = ? AND exam_results.result = ?", userID, "PASSED").
-		Order("exam_types.order DESC").
-		First(&lastPassedExamResult).Error
-
-	var lastOrder int
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No passed exams, set lastOrder to zero
-			lastOrder = 0
-		} else {
-			return nil, err
-		}
-	} else {
-		lastOrder = lastPassedExamResult.Exam.ExamType.Order
-	}
-
-	// Get the next exam type order after the last passed exam
-	var nextOrder int
-	err = r.storage.DB().
-		Model(&ExamType{}).
-		Select("MIN(`order`)").
-		Where("`order` > ?", lastOrder).
-		Scan(&nextOrder).Error
+	// Get the next required exam type order
+	nextOrder, err := r.GetNextExamTypeOrder(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// If no next exam type is found, return an empty list
 	if nextOrder == 0 {
+		// No available exams
 		return []*Exam{}, nil
 	}
 
@@ -218,8 +191,7 @@ func (r *ExamsRepoImpl) RegistrationStatus(userID uint, examID uint) (bool, bool
 	}
 
 	// Get the exam type ID for the specified exam
-	var exam Exam
-	err = r.storage.DB().First(&exam, examID).Error
+	exam, err := r.GetByID(examID)
 	if err != nil {
 		return false, false, err
 	}
@@ -238,4 +210,37 @@ func (r *ExamsRepoImpl) RegistrationStatus(userID uint, examID uint) (bool, bool
 	registeredToSameType := count > 0
 
 	return registeredToExam, registeredToSameType, nil
+}
+
+func (r *ExamsRepoImpl) GetNextExamTypeOrder(userID uint) (int, error) {
+	// Get the highest exam type order the user has passed
+	var lastOrder int
+	err := r.storage.DB().
+		Model(&ExamResult{}).
+		Select("COALESCE(MAX(exam_types.order), 0)").
+		Joins("JOIN exams ON exam_results.exam_id = exams.id").
+		Joins("JOIN exam_types ON exams.exam_type_id = exam_types.id").
+		Where("exam_results.user_id = ? AND exam_results.result = ?", userID, "PASSED").
+		Scan(&lastOrder).Error
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the next exam type order
+	var nextOrder int
+	err = r.storage.DB().
+		Model(&ExamType{}).
+		Select("MIN(`order`)").
+		Where("`order` > ?", lastOrder).
+		Scan(&nextOrder).Error
+	if err != nil {
+		return 0, err
+	}
+
+	if nextOrder == 0 {
+		// No more exams to take
+		return 0, nil
+	}
+
+	return nextOrder, nil
 }

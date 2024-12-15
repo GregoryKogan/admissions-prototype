@@ -1,10 +1,18 @@
 package exams
 
 import (
+	"errors"
 	"time"
 
 	"github.com/L2SH-Dev/admissions/internal/users"
 	"gorm.io/gorm"
+)
+
+var (
+	ErrAlreadyRegistered = errors.New("user is already registered to the exam")
+	ErrInvalidGrade      = errors.New("user's grade does not match exam grade")
+	ErrExamFull          = errors.New("exam capacity has been reached")
+	ErrInvalidExamOrder  = errors.New("exam is not the next required exam type")
 )
 
 type Exam struct {

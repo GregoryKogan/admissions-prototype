@@ -112,26 +112,23 @@ func (h *ExamsHandlerImpl) Available(c echo.Context) error {
 
 func (h *ExamsHandlerImpl) Register(c echo.Context) error {
 	user := c.Get("currentUser").(*users.User)
-	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	examID, err := parseUintParam(c, "examID")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
 	}
-	examID := uint(examID64)
 
-	err = h.service.Register(user, examID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	if err := h.service.Register(user, examID); err != nil {
+		return mapServiceError(err)
 	}
 
 	return c.NoContent(http.StatusCreated)
 }
 
 func (h *ExamsHandlerImpl) Allocation(c echo.Context) error {
-	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	examID, err := parseUintParam(c, "examID")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
 	}
-	examID := uint(examID64)
 
 	allocation, err := h.service.Allocation(examID)
 	if err != nil {
@@ -169,14 +166,12 @@ func (h *ExamsHandlerImpl) Create(c echo.Context) error {
 }
 
 func (h *ExamsHandlerImpl) Delete(c echo.Context) error {
-	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	examID, err := parseUintParam(c, "examID")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
 	}
-	examID := uint(examID64)
 
-	err = h.service.Delete(examID)
-	if err != nil {
+	if err := h.service.Delete(examID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -194,11 +189,10 @@ func (h *ExamsHandlerImpl) ListTypes(c echo.Context) error {
 
 func (h *ExamsHandlerImpl) RegistrationStatus(c echo.Context) error {
 	user := c.Get("currentUser").(*users.User)
-	examID64, err := strconv.ParseUint(c.Param("examID"), 10, 32)
+	examID, err := parseUintParam(c, "examID")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
 	}
-	examID := uint(examID64)
 
 	registeredToExam, registeredToSameType, err := h.service.RegistrationStatus(user, examID)
 	if err != nil {
@@ -209,4 +203,18 @@ func (h *ExamsHandlerImpl) RegistrationStatus(c echo.Context) error {
 		"registered":              registeredToExam,
 		"registered_to_same_type": registeredToSameType,
 	})
+}
+
+func parseUintParam(c echo.Context, param string) (uint, error) {
+	value64, err := strconv.ParseUint(c.Param(param), 10, 32)
+	return uint(value64), err
+}
+
+func mapServiceError(err error) *echo.HTTPError {
+	switch err {
+	case ErrAlreadyRegistered, ErrInvalidGrade, ErrExamFull, ErrInvalidExamOrder:
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	default:
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 }

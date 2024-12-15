@@ -91,15 +91,56 @@ func (s *ExamsServiceImpl) Register(user *users.User, examID uint) error {
 		return err
 	}
 
-	allowed, err := s.isAllowedToRegister(user, exam)
+	// Check if the user is allowed to register
+	if err := s.canRegister(user, exam); err != nil {
+		return err
+	}
+
+	return s.repo.CreateRegistration(user.ID, exam.ID)
+}
+
+func (s *ExamsServiceImpl) canRegister(user *users.User, exam *Exam) error {
+	// Check if the user is already registered to the exam
+	registered, err := s.repo.IsRegistered(user.ID, exam.ID)
 	if err != nil {
 		return err
 	}
-	if !allowed {
-		return ErrRegistrationNotAllowed
+	if registered {
+		return ErrAlreadyRegistered
 	}
 
-	return s.repo.CreateRegistration(user.ID, examID)
+	// Retrieve the user's registration data
+	regData, err := s.regDataService.GetByID(user.RegistrationDataID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the user's grade matches the exam's grade
+	if regData.Grade != exam.Grade {
+		return ErrInvalidGrade
+	}
+
+	// Check if the exam capacity has not been exceeded
+	currentRegistrations, err := s.repo.CountRegistrations(exam.ID)
+	if err != nil {
+		return err
+	}
+	if currentRegistrations >= exam.Capacity {
+		return ErrExamFull
+	}
+
+	// Get the next required exam type order for the user
+	nextOrder, err := s.repo.GetNextExamTypeOrder(user.ID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the exam's type order matches the next required order
+	if exam.ExamType.Order != nextOrder {
+		return ErrInvalidExamOrder
+	}
+
+	return nil
 }
 
 func (s *ExamsServiceImpl) ListTypes() ([]*ExamType, error) {
@@ -131,38 +172,6 @@ func (s *ExamsServiceImpl) Available(user *users.User) ([]*Exam, error) {
 	}
 
 	return s.repo.Available(user.ID, regData.Grade)
-}
-
-func (s *ExamsServiceImpl) isAllowedToRegister(user *users.User, exam *Exam) (bool, error) {
-	registered, err := s.repo.IsRegistered(user.ID, exam.ID)
-	if err != nil {
-		return false, err
-	}
-	if registered {
-		return false, nil
-	}
-
-	regData, err := s.regDataService.GetByID(user.RegistrationDataID)
-	if err != nil {
-		return false, err
-	}
-
-	// TODO: Implement full allow logic
-	// Should take order of the last passed exam into account
-	if regData.Grade != exam.Grade {
-		return false, nil
-	}
-
-	currentNumOfRegistrations, err := s.repo.CountRegistrations(exam.ID)
-	if err != nil {
-		return false, err
-	}
-
-	if currentNumOfRegistrations >= exam.Capacity {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func (s *ExamsServiceImpl) RegistrationStatus(user *users.User, examID uint) (bool, bool, error) {
