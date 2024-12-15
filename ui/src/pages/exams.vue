@@ -1,8 +1,8 @@
 <template>
   <v-container>
     <v-tabs v-model="activeTab">
-      <v-tab value="available">Доступные экзамены</v-tab>
-      <v-tab value="mine">Мои экзамены</v-tab>
+      <v-tab value="available">Доступные</v-tab>
+      <v-tab value="history">История</v-tab>
     </v-tabs>
 
     <v-tabs-window v-model="activeTab" class="pt-4">
@@ -10,7 +10,7 @@
         <div class="d-flex align-center justify-space-between mb-4">
           <v-btn
             color="primary"
-            @click="reloadAvailable"
+            @click="reloadAll"
             :icon="$vuetify.display.xs"
             variant="tonal"
           >
@@ -21,17 +21,17 @@
 
         <template v-if="availableExams.length">
           <div v-for="exam in availableExams" :key="exam.ID">
-            <ExamCard :data="exam" @status-changed="reloadAll" />
+            <ExamCard :data="exam" @status-changed="delayReloadAll" />
           </div>
         </template>
         <v-alert v-else type="info" text="Нет доступных экзаменов"></v-alert>
       </v-tabs-window-item>
 
-      <v-tabs-window-item value="mine">
+      <v-tabs-window-item value="history">
         <div class="d-flex align-center justify-space-between mb-4">
           <v-btn
             color="primary"
-            @click="reloadMine"
+            @click="reloadAll"
             :icon="$vuetify.display.xs"
             variant="tonal"
           >
@@ -40,20 +40,16 @@
           </v-btn>
         </div>
 
-        <template v-if="myExams.length">
-          <div v-for="exam in myExams" :key="exam.ID">
+        <template v-if="historyExams.length">
+          <div v-for="exam in historyExams" :key="exam.ID">
             <ExamCard
               :data="exam"
               :registered="true"
-              @status-changed="reloadAll"
+              @status-changed="delayReloadAll"
             />
           </div>
         </template>
-        <v-alert
-          v-else
-          type="info"
-          text="Вы не записаны ни на один экзамен"
-        ></v-alert>
+        <v-alert v-else type="info" text="Нет истории экзаменов"></v-alert>
       </v-tabs-window-item>
     </v-tabs-window>
   </v-container>
@@ -67,23 +63,25 @@ import ExamCard from '@/components/ExamCard.vue'
 
 const activeTab = ref('available')
 const availableExams = ref<Exam[]>([])
-const myExams = ref<Exam[]>([])
+const historyExams = ref<Exam[]>([])
 
-async function reloadAvailable() {
+async function reloadAvailableExams() {
   const response = await ExamsService.available()
   availableExams.value = response.data
 }
 
-async function reloadMine() {
-  const response = await ExamsService.mine()
-  myExams.value = response.data
+async function reloadHistoryExams() {
+  const response = await ExamsService.history()
+  historyExams.value = response.data
 }
 
 function reloadAll() {
-  setTimeout(() => {
-    reloadAvailable()
-    reloadMine()
-  }, 500)
+  reloadAvailableExams()
+  reloadHistoryExams()
+}
+
+function delayReloadAll() {
+  setTimeout(reloadAll, 500)
 }
 
 onMounted(reloadAll)
