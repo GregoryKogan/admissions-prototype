@@ -84,6 +84,23 @@ services:
     secrets:
       - db_password
 
+  postgrest:
+    container_name: postgrest
+    image: postgrest/postgrest:latest
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://l2sh:l2sh@database:5432/admissions
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: l2sh
+      PGRST_SERVER_PROXY_URI: http://database:5432
+      PGRST_SERVER_PORT: 3333
+      PGRST_SERVER_HOST:
+    ports:
+      - "3333:3333"
+
 secrets:
   db_password:
     file: ./secrets/db_password.txt
