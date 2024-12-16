@@ -27,3 +27,19 @@ type RegistrationData struct {
 	Source           string     `json:"source"`
 	User             users.User `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
+
+func (r *RegistrationData) BeforeDelete(tx *gorm.DB) error {
+	if r.ID == 0 {
+		return nil
+	}
+
+	if r.User.ID == 0 {
+		return nil
+	}
+
+	if err := tx.Delete(&r.User).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

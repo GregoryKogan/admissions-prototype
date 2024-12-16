@@ -53,3 +53,19 @@ type ExamResult struct {
 	Points    float32    `json:"points" gorm:"not null"`
 	MaxPoints float32    `json:"max_points" gorm:"not null"`
 }
+
+func (e *Exam) BeforeDelete(tx *gorm.DB) error {
+	if e.ID == 0 {
+		return nil
+	}
+
+	if err := tx.Model(&ExamRegistration{}).Where("exam_id = ?", e.ID).Delete(&ExamRegistration{}).Error; err != nil {
+		return err
+	}
+
+	if err := tx.Model(&ExamResult{}).Where("exam_id = ?", e.ID).Delete(&ExamResult{}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
