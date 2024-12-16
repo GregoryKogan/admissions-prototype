@@ -29,6 +29,7 @@ type ExamsService interface {
 	History(user *users.User) ([]*Exam, error)
 	Available(user *users.User) ([]*Exam, error)
 	RegistrationStatus(user *users.User, examID uint) (bool, bool, error)
+	GetRegistrations(examID uint) ([]*regdata.RegistrationData, error)
 }
 
 type ExamsServiceImpl struct {
@@ -180,4 +181,22 @@ func (s *ExamsServiceImpl) RegistrationStatus(user *users.User, examID uint) (bo
 		return false, false, err
 	}
 	return registeredToExam, registeredToSameType, nil
+}
+
+func (s *ExamsServiceImpl) GetRegistrations(examID uint) ([]*regdata.RegistrationData, error) {
+	regs, err := s.repo.GetRegistrations(examID)
+	if err != nil {
+		return nil, err
+	}
+
+	var regData []*regdata.RegistrationData
+	for _, reg := range regs {
+		data, err := s.regDataService.GetByID(reg.User.RegistrationDataID)
+		if err != nil {
+			return nil, err
+		}
+		regData = append(regData, data)
+	}
+
+	return regData, nil
 }

@@ -1,6 +1,8 @@
 package exams
 
 import (
+	"bytes"
+	"encoding/csv"
 	"net/http"
 	"strconv"
 
@@ -30,6 +32,7 @@ type ExamsHandler interface {
 	Create(c echo.Context) error
 	Delete(c echo.Context) error
 	ListTypes(c echo.Context) error
+	DownloadRegistrations(c echo.Context) error
 }
 
 type ExamsHandlerImpl struct {
@@ -88,6 +91,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 	adminGroup.POST("", h.Create)
 	adminGroup.DELETE("/:examID", h.Delete)
 	adminGroup.GET("/types", h.ListTypes)
+	adminGroup.GET("/registrations/:examID/download", h.DownloadRegistrations)
 }
 
 func (h *ExamsHandlerImpl) History(c echo.Context) error {
@@ -203,6 +207,42 @@ func (h *ExamsHandlerImpl) RegistrationStatus(c echo.Context) error {
 		"registered":              registeredToExam,
 		"registered_to_same_type": registeredToSameType,
 	})
+}
+
+func (h *ExamsHandlerImpl) DownloadRegistrations(c echo.Context) error {
+	examID, err := parseUintParam(c, "examID")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
+	}
+
+	registrations, err := h.service.GetRegistrations(examID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Prepare CSV data with UTF-8 BOM
+	var csvData bytes.Buffer
+	// Write UTF-8 BOM
+	csvData.Write([]byte{0xEF, 0xBB, 0xBF})
+	writer := csv.NewWriter(&csvData)
+	// Write header
+	writer.Write([]string{"ID", "Last Name", "First Name", "Patronymic", "Parent Phone", "Parent Last Name", "Parent First Name", "Parent Patronymic"})
+	// Write data
+	for _, reg := range registrations {
+		writer.Write([]string{
+			strconv.FormatUint(uint64(reg.User.ID), 10),
+			reg.LastName,
+			reg.FirstName,
+			reg.Patronymic,
+			reg.ParentPhone,
+			reg.ParentLastName,
+			reg.ParentFirstName,
+			reg.ParentPatronymic,
+		})
+	}
+	writer.Flush()
+
+	return c.Blob(http.StatusOK, "text/csv; charset=utf-8", csvData.Bytes())
 }
 
 func parseUintParam(c echo.Context, param string) (uint, error) {

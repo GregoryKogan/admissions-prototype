@@ -21,6 +21,7 @@ type ExamsRepo interface {
 	Available(userID uint, grade uint) ([]*Exam, error)
 	RegistrationStatus(userID uint, examID uint) (bool, bool, error)
 	GetNextExamTypeOrder(userID uint) (int, error)
+	GetRegistrations(examID uint) ([]*ExamRegistration, error)
 }
 
 type ExamsRepoImpl struct {
@@ -243,4 +244,16 @@ func (r *ExamsRepoImpl) GetNextExamTypeOrder(userID uint) (int, error) {
 	}
 
 	return nextOrder, nil
+}
+
+func (r *ExamsRepoImpl) GetRegistrations(examID uint) ([]*ExamRegistration, error) {
+	var registrations []*ExamRegistration
+	err := r.storage.DB().
+		Preload("User").
+		Where("exam_id = ?", examID).
+		Find(&registrations).Error
+	if err != nil {
+		return nil, err
+	}
+	return registrations, nil
 }

@@ -15,6 +15,10 @@ const ExamsService = {
   registrationStatus: async (examId: number) =>
     await instance.get(`/exams/registration_status/${examId}`),
   history: async () => await instance.get('/exams/history'),
+  downloadRegistrations: async (examId: number) =>
+    await instance.get(`/exams/admin/registrations/${examId}/download`, {
+      responseType: 'blob',
+    }),
 }
 
 export default ExamsService
