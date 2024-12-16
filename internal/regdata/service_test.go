@@ -178,7 +178,7 @@ func TestAcceptService(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
 	assert.Equal(t, data.ID, user.RegistrationDataID)
-	assert.Equal(t, "Test User", user.Login)
+	assert.Equal(t, "t.user-00001", user.Login)
 }
 
 func TestGetAllService(t *testing.T) {

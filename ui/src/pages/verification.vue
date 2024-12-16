@@ -44,6 +44,7 @@
 </template>
 
 <script lang="ts">
+import RegistrationService from '@/api/api.registration'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
@@ -51,17 +52,11 @@ export default defineComponent({
     loading: true,
     success: false,
   }),
-  mounted() {
+  async mounted() {
     if (this.token.length == 0) return
-    fetch(`/api/regdata/verify?token=${this.token}`)
-      .then((res) => {
-        if (res.ok) {
-          this.success = true
-        }
-      })
-      .finally(() => {
-        this.loading = false
-      })
+    const response = await RegistrationService.verify(this.token)
+    this.success = response.status === 200
+    this.loading = false
   },
   computed: {
     token() {

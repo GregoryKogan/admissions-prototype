@@ -16,7 +16,7 @@
             >
               <v-list-item>
                 <v-list-item-title>{{ admin.login }}</v-list-item-title>
-                <v-list-item-subtitle>Login</v-list-item-subtitle>
+                <v-list-item-subtitle>Логин</v-list-item-subtitle>
               </v-list-item>
             </v-list>
 
@@ -63,7 +63,6 @@
     <v-dialog
       v-model="logoutDialog"
       :width="$vuetify.display.smAndDown ? '90%' : 'auto'"
-      :fullscreen="$vuetify.display.xs"
     >
       <v-card>
         <v-card-title class="text-body-1 text-sm-h6"

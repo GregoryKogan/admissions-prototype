@@ -15,13 +15,13 @@
           :rules="[rules.required, rules.email]"
         ></v-text-field>
         <v-text-field
-          v-model="first_name"
-          label="Имя"
+          v-model="last_name"
+          label="Фамилия"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="last_name"
-          label="Фамилия"
+          v-model="first_name"
+          label="Имя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field v-model="patronymic" label="Отчество"></v-text-field>
@@ -48,13 +48,13 @@
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="parent_first_name"
-          label="Имя родителя"
+          v-model="parent_last_name"
+          label="Фамилия родителя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
-          v-model="parent_last_name"
-          label="Фамилия родителя"
+          v-model="parent_first_name"
+          label="Имя родителя"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
@@ -89,7 +89,7 @@
       <v-card-title>Вы успешно заполнили анкету</v-card-title>
       <v-card-text>
         <v-alert
-          text="Для завершения регистрации подтвердите почту, перейдя по ссылке из письма"
+          text="Для завершения регистрации подтвердите почту, перейдя по ссылке из письма. Проверьте папку «Спам», если письмо не пришло."
           variant="tonal"
           type="success"
         ></v-alert>
@@ -102,6 +102,7 @@
 </template>
 
 <script lang="ts">
+import RegistrationService from '@/api/api.registration'
 import { defineComponent } from 'vue'
 import { VForm } from 'vuetify/components'
 
@@ -137,10 +138,10 @@ export default defineComponent({
     }
   },
   computed: {
-    formattedGender(): string | null {
+    formattedGender(): string {
       if (this.gender === 'Мужской') return 'M'
       if (this.gender === 'Женский') return 'F'
-      return null
+      return 'N'
     },
   },
   methods: {
@@ -148,34 +149,28 @@ export default defineComponent({
       const isValid = await (this.$refs.form as VForm).validate()
       if (!isValid.valid) return
 
-      const response = await fetch('/api/regdata', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: this.email,
-          first_name: this.first_name,
-          last_name: this.last_name,
-          patronymic: this.patronymic,
-          gender: this.formattedGender,
-          birth_date: this.birth_date,
-          grade: this.grade,
-          old_school: this.old_school,
-          parent_first_name: this.parent_first_name,
-          parent_last_name: this.parent_last_name,
-          parent_patronymic: this.parent_patronymic,
-          parent_phone: this.parent_phone,
-          june_exam: this.june_exam,
-          vmsh: this.vmsh,
-          source: this.source,
-        }),
+      const response = await RegistrationService.register({
+        email: this.email,
+        first_name: this.first_name,
+        last_name: this.last_name,
+        patronymic: this.patronymic,
+        gender: this.formattedGender,
+        birth_date: this.birth_date,
+        grade: this.grade,
+        old_school: this.old_school,
+        parent_first_name: this.parent_first_name,
+        parent_last_name: this.parent_last_name,
+        parent_patronymic: this.parent_patronymic,
+        parent_phone: this.parent_phone,
+        june_exam: this.june_exam,
+        vmsh: this.vmsh,
+        source: this.source,
       })
 
-      if (response.ok) {
+      if (response.status === 201) {
         this.finished = true
       } else {
-        const responseText = await response.text()
-        const responseBody = JSON.parse(responseText)
-        this.errorText = responseBody.message
+        this.errorText = response.data.message
         this.errorSnackbar = true
       }
     },

@@ -2,6 +2,8 @@ package roles
 
 import (
 	"errors"
+
+	"github.com/spf13/viper"
 )
 
 type RolesService interface {
@@ -30,34 +32,18 @@ func (s *RolesServiceImpl) CreateRole(role *Role) error {
 }
 
 func (s *RolesServiceImpl) CreateDefaultRoles() error {
-	roles := []Role{
-		{
-			Title:        "user",
-			Admin:        false,
-			WriteGeneral: false,
-			AIAccess:     false,
-		},
-		{
-			Title:        "admin",
-			Admin:        true,
-			WriteGeneral: true,
-			AIAccess:     false,
-		},
-		{
-			Title:        "interviewer",
-			Admin:        true,
-			WriteGeneral: false,
-			AIAccess:     true,
-		},
-		{
-			Title:        "principal",
-			Admin:        true,
-			WriteGeneral: true,
-			AIAccess:     true,
-		},
-	}
+	rolesConfig := viper.GetStringMap("users.roles")
 
-	for _, role := range roles {
+	for roleTitle, roleData := range rolesConfig {
+		permissions := roleData.(map[string]interface{})["permissions"].(map[string]interface{})
+
+		role := Role{
+			Title:        roleTitle,
+			Admin:        permissions["admin"].(bool),
+			WriteGeneral: permissions["write_general"].(bool),
+			AIAccess:     permissions["ai_access"].(bool),
+		}
+
 		if exists, err := s.RoleExists(role.Title); err != nil {
 			return errors.Join(errors.New("failed to check if role exists"), err)
 		} else if exists {

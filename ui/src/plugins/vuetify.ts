@@ -13,6 +13,7 @@ import { ru } from 'vuetify/locale'
 
 // Composables
 import { createVuetify } from 'vuetify'
+import { VTimePicker } from 'vuetify/labs/VTimePicker'
 
 // Get system preference or stored theme
 const getInitialTheme = () => {
@@ -32,5 +33,8 @@ export default createVuetify({
     locale: 'ru',
     fallback: 'en',
     messages: { ru },
+  },
+  components: {
+    VTimePicker,
   },
 })

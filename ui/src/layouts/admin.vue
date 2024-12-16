@@ -2,10 +2,10 @@
   <v-app style="height: 100vh">
     <v-navigation-drawer
       v-model="drawer"
-      :rail="!mobile && rail"
+      :rail="!smAndDown && rail"
       @click="rail = false"
-      :temporary="mobile"
-      :permanent="!mobile"
+      :temporary="smAndDown"
+      :permanent="!smAndDown"
     >
       <v-list>
         <v-list-item
@@ -18,18 +18,23 @@
           prepend-icon="mdi-format-list-bulleted"
           title="Регистрации"
         />
+        <v-list-item
+          to="/admin/exams"
+          prepend-icon="mdi-file-document"
+          title="Экзамены"
+        />
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar v-if="mobile">
+    <v-app-bar v-if="smAndDown" position="fixed">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Админ панель</v-toolbar-title>
     </v-app-bar>
 
     <v-main
-      @click="!mobile && (rail = true)"
+      @click="!smAndDown && (rail = true)"
       style="overflow: auto; max-height: 100vh"
-      :class="{ 'pt-15': mobile }"
+      :class="{ 'pt-15': smAndDown }"
     >
       <router-view />
     </v-main>
@@ -41,14 +46,14 @@ import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import { useDisplay } from 'vuetify'
 
-const drawer = ref(false)
+const { smAndDown } = useDisplay()
+const drawer = ref(!smAndDown.value)
 const rail = ref(false)
-const { mobile } = useDisplay()
 const router = useRouter()
 
 // Close drawer when route changes on mobile
 router.afterEach(() => {
-  if (mobile.value) {
+  if (smAndDown.value) {
     drawer.value = false
   }
 })

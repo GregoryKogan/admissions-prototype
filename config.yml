@@ -34,5 +34,45 @@ mailing:
   enabled: true
   api_base: https://api.notisend.ru/v1
 
-admin:
-  email: admin@l2sh-admissions.ru
+users:
+  default_role: user
+  default_admin:
+    role: admin
+    login: admin
+    email: admin@l2sh-admissions.ru
+  roles:
+    user:
+      permissions:
+        admin: false
+        write_general: false
+        ai_access: false
+    admin:
+      permissions:
+        admin: true
+        write_general: true
+        ai_access: false
+    interviewer:
+      permissions:
+        admin: true
+        write_general: false
+        ai_access: true
+    principal:
+      permissions:
+        admin: true
+        write_general: true
+        ai_access: true
+
+exams:
+  types:
+    - title: "письменная математика"
+      order: 1
+      dismissing: true
+      has_points: true
+    - title: "устная математика"
+      order: 2
+      dismissing: true
+      has_points: true
+    - title: "русский язык"
+      order: 3
+      dismissing: true
+      has_points: false
