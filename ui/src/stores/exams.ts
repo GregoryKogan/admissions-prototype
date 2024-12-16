@@ -26,9 +26,6 @@ export const useExamsStore = defineStore('exams', {
         this.reloadHistoryExams(),
       ])
     },
-    delayReloadAll() {
-      setTimeout(() => this.reloadAll(), 500)
-    },
     async reloadExamData(examId: number) {
       const [allocation, status] = await Promise.all([
         ExamsService.allocation(examId),

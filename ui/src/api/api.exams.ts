@@ -12,6 +12,8 @@ const ExamsService = {
   available: async () => await instance.get('/exams/available'),
   register: async (examId: number) =>
     await instance.post(`/exams/register/${examId}`),
+  unregister: async (examId: number) =>
+    await instance.delete(`/exams/register/${examId}`),
   registrationStatus: async (examId: number) =>
     await instance.get(`/exams/registration_status/${examId}`),
   history: async () => await instance.get('/exams/history'),

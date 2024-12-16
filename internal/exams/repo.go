@@ -22,6 +22,7 @@ type ExamsRepo interface {
 	RegistrationStatus(userID uint, examID uint) (bool, bool, error)
 	GetNextExamTypeOrder(userID uint) (int, error)
 	GetRegistrations(examID uint) ([]*ExamRegistration, error)
+	DeleteRegistration(userID, examID uint) error
 }
 
 type ExamsRepoImpl struct {
@@ -256,4 +257,10 @@ func (r *ExamsRepoImpl) GetRegistrations(examID uint) ([]*ExamRegistration, erro
 		return nil, err
 	}
 	return registrations, nil
+}
+
+func (r *ExamsRepoImpl) DeleteRegistration(userID, examID uint) error {
+	return r.storage.DB().
+		Where("user_id = ? AND exam_id = ?", userID, examID).
+		Delete(&ExamRegistration{}).Error
 }

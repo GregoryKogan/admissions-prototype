@@ -11,6 +11,7 @@ import (
 
 var (
 	ErrRegistrationNotAllowed = errors.New("registration is not allowed")
+	ErrNotRegistered          = errors.New("user is not registered to this exam")
 )
 
 type allocation struct {
@@ -24,6 +25,7 @@ type ExamsService interface {
 	CreateDefaultExamTypes() error
 	List() ([]*Exam, error)
 	Register(user *users.User, examID uint) error
+	Unregister(user *users.User, examID uint) error
 	ListTypes() ([]*ExamType, error)
 	Allocation(examID uint) (*allocation, error)
 	History(user *users.User) ([]*Exam, error)
@@ -98,6 +100,19 @@ func (s *ExamsServiceImpl) Register(user *users.User, examID uint) error {
 	}
 
 	return s.repo.CreateRegistration(user.ID, exam.ID)
+}
+
+func (s *ExamsServiceImpl) Unregister(user *users.User, examID uint) error {
+	// Check if the user is registered to the exam
+	registered, err := s.repo.IsRegistered(user.ID, examID)
+	if err != nil {
+		return err
+	}
+	if !registered {
+		return ErrNotRegistered
+	}
+	// Delete the registration
+	return s.repo.DeleteRegistration(user.ID, examID)
 }
 
 func (s *ExamsServiceImpl) canRegister(user *users.User, exam *Exam) error {
