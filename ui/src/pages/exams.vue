@@ -19,9 +19,9 @@
           </v-btn>
         </div>
 
-        <template v-if="availableExams.length">
-          <div v-for="exam in availableExams" :key="exam.ID">
-            <ExamCard :data="exam" @status-changed="delayReloadAll" />
+        <template v-if="examsStore.availableExams.length">
+          <div v-for="exam in examsStore.availableExams" :key="exam.ID">
+            <ExamCard :data="exam" />
           </div>
         </template>
         <v-alert v-else type="info" text="Нет доступных экзаменов"></v-alert>
@@ -40,13 +40,9 @@
           </v-btn>
         </div>
 
-        <template v-if="historyExams.length">
-          <div v-for="exam in historyExams" :key="exam.ID">
-            <ExamCard
-              :data="exam"
-              :registered="true"
-              @status-changed="delayReloadAll"
-            />
+        <template v-if="examsStore.historyExams.length">
+          <div v-for="exam in examsStore.historyExams" :key="exam.ID">
+            <ExamCard :data="exam" />
           </div>
         </template>
         <v-alert v-else type="info" text="Нет истории экзаменов"></v-alert>
@@ -57,31 +53,15 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
-import { Exam } from '@/api/api.exams'
-import ExamsService from '@/api/api.exams'
+import { useExamsStore } from '@/stores/exams'
 import ExamCard from '@/components/ExamCard.vue'
 
 const activeTab = ref('available')
-const availableExams = ref<Exam[]>([])
-const historyExams = ref<Exam[]>([])
+const examsStore = useExamsStore()
 
-async function reloadAvailableExams() {
-  const response = await ExamsService.available()
-  availableExams.value = response.data
-}
-
-async function reloadHistoryExams() {
-  const response = await ExamsService.history()
-  historyExams.value = response.data
-}
-
-function reloadAll() {
-  reloadAvailableExams()
-  reloadHistoryExams()
-}
-
-function delayReloadAll() {
-  setTimeout(reloadAll, 500)
+async function reloadAll() {
+  await examsStore.reloadAll()
+  await examsStore.reloadAllExamData()
 }
 
 onMounted(reloadAll)

@@ -12,7 +12,9 @@ const ExamsService = {
   available: async () => await instance.get('/exams/available'),
   register: async (examId: number) =>
     await instance.post(`/exams/register/${examId}`),
-  mine: async () => await instance.get('/exams/mine'),
+  registrationStatus: async (examId: number) =>
+    await instance.get(`/exams/registration_status/${examId}`),
+  history: async () => await instance.get('/exams/history'),
 }
 
 export default ExamsService

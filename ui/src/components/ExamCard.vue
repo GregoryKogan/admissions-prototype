@@ -1,27 +1,38 @@
 <template>
   <v-container>
-    <v-card>
+    <v-card :class="{ 'registered-border': registered }">
       <v-card-item>
-        <v-row align="center" no-gutters>
-          <v-col>
+        <v-row align="center" no-gutters justify="space-between">
+          <v-col cols="8" sm="6">
             <div class="text-h6 mb-1">{{ capitalizedTitle }}</div>
-            <div class="text-subtitle-1">{{ props.data.location }}</div>
+            <div class="text-subtitle-1">{{ data.location }}</div>
           </v-col>
-          <v-col cols="auto">
-            <v-btn
-              v-if="!props.registered"
-              color="primary"
-              variant="tonal"
-              :loading="isRegistering"
-              @click="register"
-            >
-              Записаться
-            </v-btn>
-            <v-chip v-else color="success">
-              <v-icon start icon="mdi-check"></v-icon>
-              Вы записаны
-            </v-chip>
-          </v-col>
+          <v-btn
+            v-if="!registered"
+            color="primary"
+            variant="tonal"
+            :loading="isRegistering"
+            @click="register"
+            :disabled="registeredSameType"
+          >
+            {{ registeredSameType ? 'Выбран другой слот' : 'Записаться' }}
+          </v-btn>
+          <v-btn
+            v-else-if="registered && new Date(data.start) > new Date()"
+            color="success"
+            variant="tonal"
+            disabled
+          >
+            Записаны
+          </v-btn>
+          <v-btn
+            v-if="registered && new Date(data.start) < new Date()"
+            color="info"
+            variant="tonal"
+            disabled
+          >
+            Результат
+          </v-btn>
         </v-row>
       </v-card-item>
 
@@ -39,10 +50,10 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="12" sm="6">
+          <v-col cols="8" sm="6">
             <div class="d-flex align-center mb-2">
               <v-icon icon="mdi-school" class="mr-2"></v-icon>
-              <span>{{ props.data.grade }} класс</span>
+              <span>{{ data.grade }} класс</span>
             </div>
             <div class="d-flex flex-column">
               <div class="d-flex align-center mb-1">
@@ -71,69 +82,104 @@
   </v-container>
 </template>
 
-<script lang="ts" setup>
-import { computed, ref, onMounted } from 'vue'
-import { Exam, Allocation } from '@/api/api.exams'
-import ExamsService from '@/api/api.exams'
+<script lang="ts">
+import { defineComponent } from 'vue'
+import ExamsService, { Exam } from '@/api/api.exams'
+import { useExamsStore } from '@/stores/exams'
 
-const props = defineProps<{
-  data: Exam
-  registered?: boolean
-}>()
+export default defineComponent({
+  props: {
+    data: {
+      type: Object as () => Exam,
+      required: true,
+    },
+  },
 
-const emit = defineEmits<{
-  (e: 'status-changed'): void
-}>()
+  data: () => ({
+    isRegistering: false,
+  }),
 
-const isRegistering = ref(false)
-const allocation = ref<Allocation | null>(null)
+  computed: {
+    formattedDate(): string {
+      const start = new Date(this.data.start)
+      return start.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    },
 
-const formattedDate = computed(() => {
-  const start = new Date(props.data.start)
-  return start.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-})
+    formattedTime(): string {
+      const start = new Date(this.data.start)
+      const end = new Date(this.data.end)
+      return `${start.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })} - ${end.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    },
 
-const formattedTime = computed(() => {
-  const start = new Date(props.data.start)
-  const end = new Date(props.data.end)
-  return `${start.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })} - ${end.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`
-})
+    capitalizedTitle(): string {
+      const title = this.data.type.title
+      return title.charAt(0).toUpperCase() + title.slice(1)
+    },
 
-const capitalizedTitle = computed(() => {
-  const title = props.data.type.title
-  return title.charAt(0).toUpperCase() + title.slice(1)
-})
+    progressColor(): string {
+      if (!this.allocation) return 'primary'
+      const ratio = this.allocation.occupied / this.allocation.capacity
+      if (ratio >= 0.9) return 'error'
+      if (ratio >= 0.7) return 'warning'
+      return 'success'
+    },
 
-const progressColor = computed(() => {
-  if (!allocation.value) return 'primary'
-  const ratio = allocation.value.occupied / allocation.value.capacity
-  if (ratio >= 0.9) return 'error'
-  if (ratio >= 0.7) return 'warning'
-  return 'success'
-})
+    allocation() {
+      const examsStore = useExamsStore()
+      return examsStore.allocations.get(this.data.ID) || null
+    },
+    registrationStatus() {
+      const examsStore = useExamsStore()
+      return (
+        examsStore.registrationStatuses.get(this.data.ID) || {
+          registered: false,
+          registered_to_same_type: false,
+        }
+      )
+    },
+    registered() {
+      return this.registrationStatus.registered
+    },
+    registeredSameType() {
+      return this.registrationStatus.registered_to_same_type
+    },
+  },
 
-async function register() {
-  try {
-    isRegistering.value = true
-    await ExamsService.register(props.data.ID)
-    emit('status-changed')
-  } finally {
-    isRegistering.value = false
-  }
-}
+  methods: {
+    async register() {
+      const examsStore = useExamsStore()
+      try {
+        this.isRegistering = true
+        await ExamsService.register(this.data.ID)
+        await Promise.all([
+          examsStore.reloadAll(),
+          examsStore.reloadAllExamData(),
+        ])
+      } finally {
+        this.isRegistering = false
+      }
+    },
+  },
 
-onMounted(async () => {
-  const response = await ExamsService.allocation(props.data.ID)
-  allocation.value = response.data
+  mounted() {
+    const examsStore = useExamsStore()
+    examsStore.reloadExamData(this.data.ID)
+  },
 })
 </script>
+
+<style scoped>
+.registered-border {
+  border-left: 6px solid rgb(var(--v-theme-success)) !important;
+}
+</style>
