@@ -12,7 +12,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar style="position: fixed">
+    <v-app-bar style="position: fixed" :color="appBarColor" elevation="3">
       <v-app-bar-nav-icon
         class="d-md-none"
         @click="drawer = !drawer"
@@ -51,12 +51,18 @@
 
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useTheme } from 'vuetify'
 
 const router = useRouter()
 const drawer = ref(false)
+const theme = useTheme()
 
 const goToIndex = () => {
   router.push('/')
 }
+
+const appBarColor = computed(() => {
+  return theme.global.current.value.dark ? '' : '#EEEEEE'
+})
 </script>
