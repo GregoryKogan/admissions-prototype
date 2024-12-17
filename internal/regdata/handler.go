@@ -1,9 +1,13 @@
 package regdata
 
 import (
+	"bytes"
+	"encoding/csv"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
+	_ "time/tzdata"
 
 	"github.com/L2SH-Dev/admissions/internal/datastore"
 	"github.com/L2SH-Dev/admissions/internal/mailing"
@@ -85,6 +89,8 @@ func (h *RegistrationDataHandlerImpl) AddRoutes(g *echo.Group) {
 	adminGroup.POST("/accept/:id", h.Accept)
 	adminGroup.POST("/reject/:id", h.Reject)
 	adminGroup.GET("/pending", h.ListPending)
+	adminGroup.GET("/accepted", h.ListAccepted)
+	adminGroup.GET("/accepted/download", h.DownloadAcceptedRegistrations)
 }
 
 func (h *RegistrationDataHandlerImpl) Register(c echo.Context) error {
@@ -202,4 +208,78 @@ func (h *RegistrationDataHandlerImpl) ListPending(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, registrations)
+}
+
+func (h *RegistrationDataHandlerImpl) ListAccepted(c echo.Context) error {
+	registrations, err := h.service.GetAccepted()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, registrations)
+}
+
+func (h *RegistrationDataHandlerImpl) DownloadAcceptedRegistrations(c echo.Context) error {
+	registrations, err := h.service.GetAccepted()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Prepare CSV data with UTF-8 BOM
+	var csvData bytes.Buffer
+	// Write UTF-8 BOM
+	csvData.Write([]byte{0xEF, 0xBB, 0xBF})
+	writer := csv.NewWriter(&csvData)
+	// Write header
+	writer.Write([]string{
+		"№",
+		"ID",
+		"Email",
+		"Фамилия",
+		"Имя",
+		"Отчество",
+		"Дата рождения",
+		"Класс поступления",
+		"Телефон родителя",
+		"Фамилия родителя",
+		"Имя родителя",
+		"Отчество родителя",
+		"Школа",
+		"ВМШ",
+		"Июньский экзамен",
+		"Как узнали о Лицее",
+		"Логин",
+		"Дата регистрации",
+	})
+
+	tz, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Write data with line numbers
+	for i, reg := range registrations {
+		writer.Write([]string{
+			strconv.Itoa(i + 1),
+			strconv.FormatUint(uint64(reg.ID), 10),
+			reg.Email,
+			reg.LastName,
+			reg.FirstName,
+			reg.Patronymic,
+			reg.BirthDate.In(tz).Format("2006.01.02"),
+			strconv.FormatUint(uint64(reg.Grade), 10),
+			reg.ParentPhone,
+			reg.ParentLastName,
+			reg.ParentFirstName,
+			reg.ParentPatronymic,
+			reg.OldSchool,
+			strconv.FormatBool(reg.VMSH),
+			strconv.FormatBool(reg.JuneExam),
+			reg.Source,
+			reg.User.Login,
+			reg.CreatedAt.In(tz).Format("2006.01.02 15:04:05"),
+		})
+	}
+	writer.Flush()
+
+	return c.Blob(http.StatusOK, "text/csv; charset=utf-8", csvData.Bytes())
 }

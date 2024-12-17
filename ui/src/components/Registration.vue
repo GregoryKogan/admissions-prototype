@@ -5,7 +5,7 @@
         {{ props.data.last_name }} {{ props.data.first_name }}
         {{ props.data.patronymic }}
       </div>
-      <div class="d-flex flex-column flex-sm-row mt-2 mt-sm-0">
+      <div v-if="isPending" class="d-flex flex-column flex-sm-row mt-2 mt-sm-0">
         <v-btn
           density="compact"
           variant="tonal"
@@ -111,11 +111,19 @@
 
 <script lang="ts" setup>
 import RegistrationService, { Registration } from '@/api/api.registration'
-import { ref } from 'vue'
+import { ref, withDefaults, defineProps, defineEmits } from 'vue'
 
-const props = defineProps<{
-  data: Registration
-}>()
+const props = withDefaults(
+  defineProps<{
+    data: Registration
+    isPending?: boolean
+  }>(),
+  {
+    isPending: true,
+  }
+)
+
+const isPending = props.isPending
 
 const createdAt = new Date(props.data.CreatedAt).toLocaleString('ru-RU')
 
