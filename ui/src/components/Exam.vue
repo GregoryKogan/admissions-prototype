@@ -11,9 +11,12 @@
             <v-btn
               color="primary"
               variant="text"
-              icon="mdi-download"
+              icon
               @click="downloadRegistrations"
-            ></v-btn>
+            >
+              <v-tooltip activator="parent"> Скачать регистрации </v-tooltip>
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
             <v-btn
               color="error"
               variant="text"
