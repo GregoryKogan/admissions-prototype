@@ -7,9 +7,9 @@
         class="px-4 pt-4 messages-container w-100"
         style="height: calc(100vh - 135px)"
       >
-        <template v-slot:default="{ item, index }">
+        <template v-slot:default="{ item }">
           <div
-            :ref="index === messages.length - 1 ? 'lastMessage' : undefined"
+            ref="lastMessage"
             :class="[
               'd-flex mb-4',
               item.sent ? 'justify-end' : 'justify-start',
@@ -63,7 +63,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import { VVirtualScroll } from 'vuetify/components'
 
 interface ChatMessage {
@@ -96,18 +96,16 @@ const sendMessage = () => {
   })
   newMessage.value = ''
 
-  nextTick(() => {
-    setTimeout(() => {
-      const container = messagesContainer.value?.$el
-      const lastMsg = lastMessage.value
-      if (container && lastMsg) {
-        container.scrollTo({
-          top: lastMsg.offsetTop + lastMsg.offsetHeight,
-          behavior: 'smooth',
-        })
-      }
-    }, 50)
-  })
+  setTimeout(() => {
+    const container = messagesContainer.value?.$el
+    const lastMsg = lastMessage.value
+    if (container && lastMsg) {
+      container.scrollTo({
+        top: lastMsg.offsetTop + lastMsg.offsetHeight,
+        behavior: 'smooth',
+      })
+    }
+  }, 50)
 }
 </script>
 
