@@ -67,6 +67,7 @@
         <v-text-field
           v-model="parent_phone"
           label="Телефон родителя"
+          hint="Формат: +79160000000"
           :rules="[rules.required, rules.phone]"
         ></v-text-field>
         <v-checkbox
