@@ -83,7 +83,11 @@
           v-model="source"
           label="Откуда узнали о лицее?"
         ></v-textarea>
-        <v-btn color="primary" type="submit" class="mt-4 mx-auto d-block"
+        <v-btn
+          color="primary"
+          type="submit"
+          class="mt-4 mx-auto d-block"
+          :loading="registering"
           >Зарегистрироваться</v-btn
         >
       </v-form>
@@ -138,6 +142,7 @@ export default defineComponent({
       source: '',
       errorSnackbar: false,
       errorText: '',
+      registering: false,
       finished: false,
       rules: {
         required: (value: string) => !!value || 'Обязательное поле.',
@@ -172,6 +177,7 @@ export default defineComponent({
       if (!isValid.valid) return
 
       try {
+        this.registering = true
         await RegistrationService.register({
           email: this.email,
           first_name: this.first_name,
@@ -189,7 +195,6 @@ export default defineComponent({
           vmsh: this.vmsh,
           source: this.source,
         })
-
         this.finished = true
       } catch (e: unknown) {
         const error = e as AxiosError
@@ -204,6 +209,8 @@ export default defineComponent({
           console.warn(e)
         }
         this.errorSnackbar = true
+      } finally {
+        this.registering = false
       }
     },
   },
