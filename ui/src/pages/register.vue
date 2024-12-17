@@ -112,7 +112,6 @@
             </span>
           </template>
         </v-checkbox>
-
         <v-dialog v-model="rulesDialog" fullscreen>
           <v-card>
             <v-card-title>Положение о приеме</v-card-title>
@@ -124,6 +123,13 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
+        <v-checkbox
+          v-model="personalDataConsent"
+          :rules="[rules.consent]"
+          required
+          label="Согласен на обработку персональных данных"
+        ></v-checkbox>
 
         <v-btn
           color="primary"
@@ -195,6 +201,7 @@ export default defineComponent({
       registering: false,
       finished: false,
       rulesDialog: false,
+      personalDataConsent: false,
       rules: {
         required: (value: string) => !!value || 'Обязательное поле.',
         email: (value: string) =>
@@ -202,6 +209,8 @@ export default defineComponent({
         phone: (value: string) =>
           /^((8|\+7)[- ]?)?(\(?\d{3}\)?[- ]?)?[\d\- ]{7,10}$/.test(value) ||
           'Некорректный номер телефона.',
+        consent: (value: boolean) =>
+          value || 'Вы должны согласиться на обработку данных.',
       },
     }
   },
