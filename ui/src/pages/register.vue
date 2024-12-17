@@ -16,15 +16,18 @@
         ></v-text-field>
         <v-text-field
           v-model="last_name"
-          label="Фамилия"
+          label="Фамилия поступающего"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
           v-model="first_name"
-          label="Имя"
+          label="Имя поступающего"
           :rules="[rules.required]"
         ></v-text-field>
-        <v-text-field v-model="patronymic" label="Отчество"></v-text-field>
+        <v-text-field
+          v-model="patronymic"
+          label="Отчество поступающего"
+        ></v-text-field>
         <v-select
           v-model="gender"
           :items="['Мужской', 'Женский']"
