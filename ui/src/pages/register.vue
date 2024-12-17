@@ -36,8 +36,12 @@
         ></v-select>
         <v-date-picker
           v-model="birth_date"
-          title="Дата рождения"
+          title="Дата рождения поступающего"
+          width="70%"
+          min-width="300px"
           :rules="[rules.required]"
+          :max="maxDate"
+          :min="minDate"
         ></v-date-picker>
         <v-select
           v-model="grade"
@@ -113,13 +117,16 @@ import { VForm } from 'vuetify/components'
 
 export default defineComponent({
   data() {
+    const defaultDate = new Date()
+    defaultDate.setFullYear(defaultDate.getFullYear() - 14)
+
     return {
       email: '',
       first_name: '',
       last_name: '',
       patronymic: '',
       gender: '', // 'Мужской' or 'Женский'
-      birth_date: new Date(),
+      birth_date: defaultDate,
       grade: 6, // 6, 7, 8, 9, 10, 11
       old_school: '',
       parent_first_name: '',
@@ -147,6 +154,16 @@ export default defineComponent({
       if (this.gender === 'Мужской') return 'M'
       if (this.gender === 'Женский') return 'F'
       return 'N'
+    },
+    maxDate(): Date {
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - 9)
+      return date
+    },
+    minDate(): Date {
+      const date = new Date()
+      date.setFullYear(date.getFullYear() - 18)
+      return date
     },
   },
   methods: {
