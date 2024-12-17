@@ -242,10 +242,21 @@ func (h *ExamsHandlerImpl) DownloadRegistrations(c echo.Context) error {
 	csvData.Write([]byte{0xEF, 0xBB, 0xBF})
 	writer := csv.NewWriter(&csvData)
 	// Write header
-	writer.Write([]string{"ID", "Last Name", "First Name", "Patronymic", "Parent Phone", "Parent Last Name", "Parent First Name", "Parent Patronymic"})
-	// Write data
-	for _, reg := range registrations {
+	writer.Write([]string{
+		"№",
+		"ID",
+		"Фамилия",
+		"Имя",
+		"Отчество",
+		"Телефон",
+		"Фамилия родителя",
+		"Имя родителя",
+		"Отчество родителя",
+	})
+	// Write data with line numbers
+	for i, reg := range registrations {
 		writer.Write([]string{
+			strconv.Itoa(i + 1),
 			strconv.FormatUint(uint64(reg.User.ID), 10),
 			reg.LastName,
 			reg.FirstName,
