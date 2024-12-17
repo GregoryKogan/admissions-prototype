@@ -21,16 +21,6 @@
                 mdi-account-circle
               </v-icon>
             </v-avatar>
-            <v-btn
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-camera"
-              rounded
-              disabled
-              class="px-4"
-            >
-              Изменить фото
-            </v-btn>
           </div>
 
           <v-card-subtitle class="px-3 px-sm-4 pb-0">

@@ -100,6 +100,14 @@
           :rules="[(v) => !!v || 'Введите источник']"
           required
         />
+        <v-file-input
+          disabled
+          label="Загрузите фото поступающего"
+          prepend-icon="mdi-camera"
+          accept="image/*"
+          required
+          class="mt-4"
+        ></v-file-input>
         <v-checkbox
           :rules="[(v) => !!v || 'Необходимо ознакомиться с положением']"
         >
