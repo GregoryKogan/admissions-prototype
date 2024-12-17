@@ -104,9 +104,27 @@
           :rules="[(v) => !!v || 'Необходимо ознакомиться с положением']"
         >
           <template v-slot:label>
-            Ознакомлен с "Положением о приеме в ГБОУ Лицей "Вторая школа"
+            <span>
+              Ознакомлен с
+              <a href="#" @click.prevent="openRulesDialog"
+                >Положением о приеме в ГБОУ Лицей "Вторая школа"</a
+              >
+            </span>
           </template>
         </v-checkbox>
+
+        <v-dialog v-model="rulesDialog" fullscreen>
+          <v-card>
+            <v-card-title>Положение о приеме</v-card-title>
+            <Regulations />
+            <v-card-actions>
+              <v-btn color="primary" variant="text" @click="rulesDialog = false"
+                >Закрыть</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <v-btn
           color="primary"
           type="submit"
@@ -176,6 +194,7 @@ export default defineComponent({
       errorText: '',
       registering: false,
       finished: false,
+      rulesDialog: false,
       rules: {
         required: (value: string) => !!value || 'Обязательное поле.',
         email: (value: string) =>
@@ -254,6 +273,9 @@ export default defineComponent({
       } else {
         this.source = value
       }
+    },
+    openRulesDialog() {
+      this.rulesDialog = true
     },
   },
   watch: {

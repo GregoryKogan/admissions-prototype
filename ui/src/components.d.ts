@@ -11,6 +11,7 @@ declare module 'vue' {
     Exam: typeof import('./components/Exam.vue')['default']
     ExamCard: typeof import('./components/ExamCard.vue')['default']
     Registration: typeof import('./components/Registration.vue')['default']
+    Regulations: typeof import('./components/Regulations.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
