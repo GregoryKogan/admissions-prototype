@@ -79,10 +79,20 @@
           label="Буду сдавать экзамен в июне"
         ></v-checkbox>
         <v-checkbox v-model="vmsh" label="Учился в ВМШ"></v-checkbox>
-        <v-textarea
+        <v-select
+          v-model="selectedPredefinedSource"
+          :items="predefinedSources"
+          label="Как узнали о Лицее?"
+          :rules="[(v) => !!v || 'Выберите источник']"
+          required
+        />
+        <v-text-field
+          v-if="showCustomSource"
           v-model="source"
-          label="Откуда узнали о лицее?"
-        ></v-textarea>
+          label="Введите источник"
+          :rules="[(v) => !!v || 'Введите источник']"
+          required
+        />
         <v-btn
           color="primary"
           type="submit"
@@ -140,6 +150,14 @@ export default defineComponent({
       june_exam: false,
       vmsh: false,
       source: '',
+      selectedPredefinedSource: null as string | null,
+      predefinedSources: [
+        'Здесь учился (учится) кто-то из моей семьи',
+        'Нашел в рейтинге школ Москвы',
+        'Порекомендовали друзья/знакомые',
+        'Узнал из социальных сетей',
+        'Другое',
+      ],
       errorSnackbar: false,
       errorText: '',
       registering: false,
@@ -169,6 +187,9 @@ export default defineComponent({
       const date = new Date()
       date.setFullYear(date.getFullYear() - 18)
       return date
+    },
+    showCustomSource(): boolean {
+      return this.selectedPredefinedSource === 'Другое'
     },
   },
   methods: {
@@ -212,6 +233,18 @@ export default defineComponent({
       } finally {
         this.registering = false
       }
+    },
+    updateSource(value: string | null) {
+      if (!value || value === 'Другое') {
+        this.source = ''
+      } else {
+        this.source = value
+      }
+    },
+  },
+  watch: {
+    selectedPredefinedSource(newVal) {
+      this.updateSource(newVal)
     },
   },
 })
