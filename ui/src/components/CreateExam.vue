@@ -61,12 +61,25 @@
         </v-text-field>
       </v-col>
     </v-row>
-    <v-text-field
-      v-model="form.location"
-      label="Место проведения"
-      :rules="[(v) => !!v || 'Введите место проведения']"
-      required
-    />
+    <v-row>
+      <v-col cols="12" :md="showCustomLocation ? 6 : 12">
+        <v-select
+          v-model="selectedPredefinedLocation"
+          :items="predefinedLocations"
+          label="Место проведения"
+          :rules="[(v) => !!v || 'Выберите место проведения']"
+          required
+        />
+      </v-col>
+      <v-col v-if="showCustomLocation" cols="12" md="6">
+        <v-text-field
+          v-model="form.location"
+          label="Введите место проведения"
+          :rules="[(v) => !!v || 'Введите место проведения']"
+          required
+        />
+      </v-col>
+    </v-row>
     <v-text-field
       v-model.number="form.capacity"
       label="Количество мест"
@@ -116,6 +129,8 @@ export default defineComponent({
     endPickerDialog: false,
     start: '00:01',
     end: '23:59',
+    selectedPredefinedLocation: null as string | null,
+    predefinedLocations: ['Новое здание', 'Старое здание', 'Другое'],
     form: {
       location: '',
       capacity: 30,
@@ -149,6 +164,13 @@ export default defineComponent({
       await ExamsService.create(examRequest)
       this.$emit('exam-created')
     },
+    updateLocation(value: string | null) {
+      if (!value || value === 'Другое') {
+        this.form.location = ''
+      } else {
+        this.form.location = value
+      }
+    },
   },
   computed: {
     formattedSelectedDate() {
@@ -165,6 +187,14 @@ export default defineComponent({
       const date = new Date(this.selectedDate)
       date.setHours(parseInt(hours), parseInt(minutes), 0)
       return date
+    },
+    showCustomLocation(): boolean {
+      return this.selectedPredefinedLocation === 'Другое'
+    },
+  },
+  watch: {
+    selectedPredefinedLocation(newVal) {
+      this.updateLocation(newVal)
     },
   },
 })
