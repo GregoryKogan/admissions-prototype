@@ -46,12 +46,12 @@
         <v-select
           v-model="grade"
           :items="[6, 7, 8, 9, 10, 11]"
-          label="Класс поступления"
+          label="В какой класс вы хотите поступить?"
           :rules="[rules.required]"
         ></v-select>
         <v-text-field
           v-model="old_school"
-          label="Предыдущая школа"
+          label="В какой школе вы учитесь сейчас?"
           :rules="[rules.required]"
         ></v-text-field>
         <v-text-field
@@ -74,17 +74,24 @@
           hint="Формат: +79160000000"
           :rules="[rules.required, rules.phone]"
         ></v-text-field>
-        <v-checkbox
-          v-model="june_exam"
-          label="Буду сдавать экзамен в июне"
-        ></v-checkbox>
-        <v-checkbox v-model="vmsh" label="Учился в ВМШ"></v-checkbox>
+        <span>
+          Отметьте этот пункт, если поступающий проживает не в Москве или
+          Московской области и хочет сдавать экзамены в июне.
+        </span>
+        <v-checkbox v-model="june_exam" label="Экзамены в июне"></v-checkbox>
+        <span>
+          Посещали ли вы занятия Вечерней Математической Школы Л2Ш в текущем
+          учебном году?
+        </span>
+        <v-checkbox v-model="vmsh" label="Да"></v-checkbox>
+        <span>Ответьте, пожалуйста, как Вы узнали о Лицее "Вторая школа"?</span>
         <v-select
           v-model="selectedPredefinedSource"
+          label="Источник"
           :items="predefinedSources"
-          label="Как узнали о Лицее?"
           :rules="[(v) => !!v || 'Выберите источник']"
           required
+          class="mt-4"
         />
         <v-text-field
           v-if="showCustomSource"
@@ -93,6 +100,13 @@
           :rules="[(v) => !!v || 'Введите источник']"
           required
         />
+        <v-checkbox
+          :rules="[(v) => !!v || 'Необходимо ознакомиться с положением']"
+        >
+          <template v-slot:label>
+            Ознакомлен с "Положением о приеме в ГБОУ Лицей "Вторая школа"
+          </template>
+        </v-checkbox>
         <v-btn
           color="primary"
           type="submit"
