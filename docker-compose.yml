@@ -32,7 +32,6 @@ services:
   database:
     container_name: database
     image: postgres:latest
-    profiles: [ dev ]
     restart: unless-stopped
     environment:
       POSTGRES_USER: l2sh
@@ -67,7 +66,6 @@ services:
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
-    profiles: [ dev ]
     restart: unless-stopped
     depends_on:
       database:
