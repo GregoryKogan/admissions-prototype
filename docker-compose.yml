@@ -13,11 +13,11 @@ services:
     ports:
       - "8888:8888"
     command: ./admissions
-    secrets:
-      - db_password
-      - jwt_key
-      - mail_api_key
-      - admin_password
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_KEY: ${JWT_KEY}
+      MAIL_API_KEY: ${MAIL_API_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     develop:
       watch:
         - action: rebuild
@@ -36,13 +36,11 @@ services:
     environment:
       POSTGRES_USER: l2sh
       POSTGRES_DB: admissions
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - database:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    secrets:
-      - db_password
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       interval: 1s
@@ -72,15 +70,13 @@ services:
         condition: service_healthy
     environment:
       PGADMIN_DEFAULT_EMAIL: l2sh@localhost.org
-      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/db_password
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       GUNICORN_ACCESS_LOGFILE: /dev/null
     volumes:
       - pgadmin:/var/lib/pgadmin
     ports:
       - "5050:80"
-    secrets:
-      - db_password
 
   postgrest:
     container_name: postgrest
@@ -109,16 +105,6 @@ services:
     depends_on:
       - postgrest
     restart: unless-stopped
-
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
-  jwt_key:
-    file: ./secrets/jwt_key.txt
-  mail_api_key:
-    file: ./secrets/mail_api_key.txt
-  admin_password:
-    file: ./secrets/admin_password.txt
 
 volumes:
   pgadmin:
