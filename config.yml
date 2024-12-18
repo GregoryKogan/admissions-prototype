@@ -2,6 +2,7 @@ server:
   host: localhost
   port: 8888
   protocol: http
+  domain: https://l2sh-admissions.gkogan.ru
 
 database:
   user: l2sh
