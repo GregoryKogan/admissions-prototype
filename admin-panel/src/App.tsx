@@ -15,7 +15,7 @@ import postgrestRestProvider, {
 } from "@raphiniert/ra-data-postgrest";
 
 export const config: IDataProviderConfig = {
-  apiUrl: "https://l2sh-admissions-postgrest.gkogan.ru",
+  apiUrl: "http://localhost:3333",
   httpClient: fetchUtils.fetchJson,
   defaultListOp: "eq",
   primaryKeys: defaultPrimaryKeys,
