@@ -99,6 +99,17 @@ services:
     ports:
       - "3333:3333"
 
+  admin-panel:
+    container_name: admin-panel
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+    ports:
+      - "4444:80"
+    depends_on:
+      - postgrest
+    restart: unless-stopped
+
 secrets:
   db_password:
     file: ./secrets/db_password.txt
