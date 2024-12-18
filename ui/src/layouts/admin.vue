@@ -25,6 +25,7 @@
         />
         <v-list-item title="Результаты" prepend-icon="mdi-chart-bar" disabled />
         <v-list-item title="Показ работ" prepend-icon="mdi-eye" disabled />
+        <v-list-item title="Чаты" prepend-icon="mdi-message" disabled />
         <v-list-item title="Достижения" prepend-icon="mdi-trophy" disabled />
         <v-list-item title="Отзывы" prepend-icon="mdi-comment" disabled />
       </v-list>
