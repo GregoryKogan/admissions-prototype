@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent="handleSubmit" v-model="isFormValid" ref="form">
+  <v-form @submit.prevent="handleSubmit" ref="form">
     <v-row>
       <v-col cols="12" md="4">
         <v-text-field
@@ -24,49 +24,60 @@
         <v-text-field
           v-model="start"
           label="Начало экзамена"
-          prepend-icon="mdi-clock-time-four-outline"
-          :rules="[(v) => !!v || 'Выберите время начала']"
-          readonly
-          :active="startPickerDialog"
+          prepend-icon="mdi-clock-time-ten-outline"
+          placeholder="ЧЧ:ММ"
+          clearable
+          :rules="[
+            (v) => !!v || 'Выберите время начала',
+            (v) =>
+              /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v) ||
+              'Неверный формат времени (ЧЧ:ММ)',
+            (v) =>
+              isStartTimeValid ||
+              'Время начала должно быть раньше времени окончания',
+          ]"
         >
-          <v-dialog v-model="startPickerDialog" activator="parent" width="auto">
-            <v-time-picker
-              v-if="startPickerDialog"
-              v-model="start"
-              :max="end"
-              format="24hr"
-              title="Начало экзамена"
-            ></v-time-picker>
-          </v-dialog>
         </v-text-field>
       </v-col>
       <v-col cols="12" md="4">
         <v-text-field
           v-model="end"
           label="Конец экзамена"
-          prepend-icon="mdi-clock-time-four-outline"
-          :rules="[(v) => !!v || 'Выберите время окончания']"
-          readonly
-          :active="endPickerDialog"
+          prepend-icon="mdi-clock-time-three-outline"
+          placeholder="ЧЧ:ММ"
+          clearable
+          :rules="[
+            (v) => !!v || 'Выберите время окончания',
+            (v) =>
+              /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v) ||
+              'Неверный формат времени (ЧЧ:ММ)',
+            (v) =>
+              isEndTimeValid ||
+              'Время окончания должно быть позже времени начала',
+          ]"
         >
-          <v-dialog v-model="endPickerDialog" activator="parent" width="auto">
-            <v-time-picker
-              v-if="endPickerDialog"
-              v-model="end"
-              :min="start"
-              format="24hr"
-              title="Конец экзамена"
-            ></v-time-picker>
-          </v-dialog>
         </v-text-field>
       </v-col>
     </v-row>
-    <v-text-field
-      v-model="form.location"
-      label="Место проведения"
-      :rules="[(v) => !!v || 'Введите место проведения']"
-      required
-    />
+    <v-row>
+      <v-col cols="12" :md="showCustomLocation ? 6 : 12">
+        <v-select
+          v-model="selectedPredefinedLocation"
+          :items="predefinedLocations"
+          label="Место проведения"
+          :rules="[(v) => !!v || 'Выберите место проведения']"
+          required
+        />
+      </v-col>
+      <v-col v-if="showCustomLocation" cols="12" md="6">
+        <v-text-field
+          v-model="form.location"
+          label="Введите место проведения"
+          :rules="[(v) => !!v || 'Введите место проведения']"
+          required
+        />
+      </v-col>
+    </v-row>
     <v-text-field
       v-model.number="form.capacity"
       label="Количество мест"
@@ -98,9 +109,7 @@
       :rules="[(v) => !!v || 'Выберите тип экзамена']"
       required
     />
-    <v-btn type="submit" color="primary" :disabled="!isFormValid">
-      Создать экзамен
-    </v-btn>
+    <v-btn type="submit" color="primary"> Создать экзамен </v-btn>
   </v-form>
 </template>
 
@@ -114,8 +123,10 @@ export default defineComponent({
     datePickerDialog: false,
     startPickerDialog: false,
     endPickerDialog: false,
-    start: '00:01',
-    end: '23:59',
+    start: '10:00',
+    end: '12:00',
+    selectedPredefinedLocation: null as string | null,
+    predefinedLocations: ['Новое здание', 'Старое здание', 'Другое'],
     form: {
       location: '',
       capacity: 30,
@@ -125,7 +136,6 @@ export default defineComponent({
     selectedDate: new Date(),
     grades: [6, 7, 8, 9, 10, 11],
     examTypes: [] as ExamType[],
-    isFormValid: false,
   }),
   async mounted() {
     const response = await ExamsService.types()
@@ -149,6 +159,13 @@ export default defineComponent({
       await ExamsService.create(examRequest)
       this.$emit('exam-created')
     },
+    updateLocation(value: string | null) {
+      if (!value || value === 'Другое') {
+        this.form.location = ''
+      } else {
+        this.form.location = value
+      }
+    },
   },
   computed: {
     formattedSelectedDate() {
@@ -165,6 +182,32 @@ export default defineComponent({
       const date = new Date(this.selectedDate)
       date.setHours(parseInt(hours), parseInt(minutes), 0)
       return date
+    },
+    showCustomLocation(): boolean {
+      return this.selectedPredefinedLocation === 'Другое'
+    },
+    isEndTimeValid(): boolean {
+      if (!this.start || !this.end) return true
+      const [startHours, startMinutes] = this.start.split(':').map(Number)
+      const [endHours, endMinutes] = this.end.split(':').map(Number)
+
+      if (endHours > startHours) return true
+      if (endHours === startHours) return endMinutes > startMinutes
+      return false
+    },
+    isStartTimeValid(): boolean {
+      if (!this.start || !this.end) return true
+      const [startHours, startMinutes] = this.start.split(':').map(Number)
+      const [endHours, endMinutes] = this.end.split(':').map(Number)
+
+      if (startHours < endHours) return true
+      if (startHours === endHours) return startMinutes < endMinutes
+      return false
+    },
+  },
+  watch: {
+    selectedPredefinedLocation(newVal) {
+      this.updateLocation(newVal)
     },
   },
 })

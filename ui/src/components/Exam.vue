@@ -11,9 +11,12 @@
             <v-btn
               color="primary"
               variant="text"
-              icon="mdi-download"
+              icon
               @click="downloadRegistrations"
-            ></v-btn>
+            >
+              <v-tooltip activator="parent"> Скачать регистрации </v-tooltip>
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
             <v-btn
               color="error"
               variant="text"
@@ -151,15 +154,17 @@ async function confirmDelete() {
 async function downloadRegistrations() {
   try {
     const response = await ExamsService.downloadRegistrations(props.data.ID)
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(
+      new Blob([response.data], { type: 'text/csv' })
+    )
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `registrations_exam_${props.data.ID}.csv`)
+    link.setAttribute('download', `exam_registrations_${props.data.ID}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
   } catch (error) {
-    console.error('Failed to download registrations', error)
+    console.error(error)
   }
 }
 </script>

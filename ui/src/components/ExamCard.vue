@@ -18,12 +18,13 @@
             {{ registeredSameType ? 'Выбран другой слот' : 'Записаться' }}
           </v-btn>
           <v-btn
-            v-else-if="registered && new Date(data.start) > new Date()"
-            color="success"
+            v-if="registered && canCancel"
+            color="error"
             variant="tonal"
-            disabled
+            :loading="isUnregistering"
+            @click="unregister"
           >
-            Записаны
+            Отказаться
           </v-btn>
           <v-btn
             v-if="registered && new Date(data.start) < new Date()"
@@ -97,6 +98,7 @@ export default defineComponent({
 
   data: () => ({
     isRegistering: false,
+    isUnregistering: false,
   }),
 
   computed: {
@@ -153,6 +155,9 @@ export default defineComponent({
     registeredSameType() {
       return this.registrationStatus.registered_to_same_type
     },
+    canCancel(): boolean {
+      return new Date(this.data.start) > new Date()
+    },
   },
 
   methods: {
@@ -167,6 +172,17 @@ export default defineComponent({
         ])
       } finally {
         this.isRegistering = false
+      }
+    },
+    async unregister() {
+      const examsStore = useExamsStore()
+      try {
+        this.isUnregistering = true
+        await ExamsService.unregister(this.data.ID)
+        await examsStore.reloadAll()
+        await examsStore.reloadAllExamData()
+      } finally {
+        this.isUnregistering = false
       }
     },
   },

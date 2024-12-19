@@ -33,13 +33,11 @@ type rejectionParams struct {
 }
 
 func SendVerificationEmail(email string, token string) error {
-	protocol := viper.GetString("server.protocol")
-	host := viper.GetString("server.host")
-	port := viper.GetString("server.port")
+	domain := viper.GetString("server.domain")
 
 	params := &verificationParams{
 		Email:            email,
-		VerificationLink: fmt.Sprintf("%s://%s:%s/verification?token=%s", protocol, host, port, token),
+		VerificationLink: fmt.Sprintf("%s/verification?token=%s", domain, token),
 	}
 
 	request := &emailRequest{
@@ -52,15 +50,13 @@ func SendVerificationEmail(email string, token string) error {
 }
 
 func SendLoginAndPassword(email, login, password string) error {
-	protocol := viper.GetString("server.protocol")
-	host := viper.GetString("server.host")
-	port := viper.GetString("server.port")
+	domain := viper.GetString("server.domain")
 
 	params := &loginCredentialsParams{
 		Email:     email,
 		Login:     login,
 		Password:  password,
-		LoginLink: fmt.Sprintf("%s://%s:%s/login", protocol, host, port),
+		LoginLink: fmt.Sprintf("%s/login", domain),
 	}
 
 	request := &emailRequest{

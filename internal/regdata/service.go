@@ -27,6 +27,7 @@ type RegistrationDataService interface {
 	Accept(id uint) (*users.User, error)
 	Reject(id uint) error
 	GetPending() ([]*RegistrationData, error)
+	GetAccepted() ([]*RegistrationData, error)
 }
 
 type RegistrationDataServiceImpl struct {
@@ -119,6 +120,10 @@ func (s *RegistrationDataServiceImpl) Reject(id uint) error {
 
 func (s *RegistrationDataServiceImpl) GetPending() ([]*RegistrationData, error) {
 	return s.repo.GetPending()
+}
+
+func (s *RegistrationDataServiceImpl) GetAccepted() ([]*RegistrationData, error) {
+	return s.repo.GetAccepted()
 }
 
 func (s *RegistrationDataServiceImpl) existsByEmailNameAndGrade(email, name string, grade uint) (bool, error) {

@@ -24,6 +24,7 @@ type ExamsHandler interface {
 	History(c echo.Context) error
 	Available(c echo.Context) error
 	Register(c echo.Context) error
+	Unregister(c echo.Context) error
 	Allocation(c echo.Context) error
 	RegistrationStatus(c echo.Context) error
 
@@ -80,6 +81,7 @@ func (h *ExamsHandlerImpl) AddRoutes(g *echo.Group) {
 	privateGroup.GET("/history", h.History)
 	privateGroup.GET("/available", h.Available)
 	privateGroup.POST("/register/:examID", h.Register)
+	privateGroup.DELETE("/register/:examID", h.Unregister)
 	privateGroup.GET("/allocation/:examID", h.Allocation)
 	privateGroup.GET("/registration_status/:examID", h.RegistrationStatus)
 
@@ -126,6 +128,20 @@ func (h *ExamsHandlerImpl) Register(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusCreated)
+}
+
+func (h *ExamsHandlerImpl) Unregister(c echo.Context) error {
+	user := c.Get("currentUser").(*users.User)
+	examID, err := parseUintParam(c, "examID")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid exam ID")
+	}
+
+	if err := h.service.Unregister(user, examID); err != nil {
+		return mapServiceError(err)
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *ExamsHandlerImpl) Allocation(c echo.Context) error {
@@ -226,10 +242,21 @@ func (h *ExamsHandlerImpl) DownloadRegistrations(c echo.Context) error {
 	csvData.Write([]byte{0xEF, 0xBB, 0xBF})
 	writer := csv.NewWriter(&csvData)
 	// Write header
-	writer.Write([]string{"ID", "Last Name", "First Name", "Patronymic", "Parent Phone", "Parent Last Name", "Parent First Name", "Parent Patronymic"})
-	// Write data
-	for _, reg := range registrations {
+	writer.Write([]string{
+		"№",
+		"ID",
+		"Фамилия",
+		"Имя",
+		"Отчество",
+		"Телефон",
+		"Фамилия родителя",
+		"Имя родителя",
+		"Отчество родителя",
+	})
+	// Write data with line numbers
+	for i, reg := range registrations {
 		writer.Write([]string{
+			strconv.Itoa(i + 1),
 			strconv.FormatUint(uint64(reg.User.ID), 10),
 			reg.LastName,
 			reg.FirstName,
@@ -253,6 +280,8 @@ func parseUintParam(c echo.Context, param string) (uint, error) {
 func mapServiceError(err error) *echo.HTTPError {
 	switch err {
 	case ErrAlreadyRegistered, ErrInvalidGrade, ErrExamFull, ErrInvalidExamOrder:
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	case ErrNotRegistered:
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

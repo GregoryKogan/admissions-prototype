@@ -11,6 +11,11 @@ const RegistrationService = {
     await instance.post('/regdata', registration),
   verify: async (token: string) =>
     await instance.get(`/regdata/verify?token=${token}`),
+  accepted: async () => await instance.get('/regdata/admin/accepted'),
+  downloadAccepted: async () =>
+    await instance.get('/regdata/admin/accepted/download', {
+      responseType: 'blob',
+    }),
 }
 
 export default RegistrationService
