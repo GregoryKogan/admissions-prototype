@@ -19,16 +19,17 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server .
+RUN go build -o admissions ./cmd/admissions
 
 # Stage 3: Create the final image
 FROM alpine:latest
 
+RUN adduser -D -u 1001 app
+
 WORKDIR /root/
 
-COPY --from=backend-builder /app/server .
-COPY --from=frontend-builder /app/dist ./ui/dist
+COPY --from=backend-builder --chown=app:app /app/admissions ./admissions
+COPY --from=backend-builder --chown=app:app /app/config.yml ./
+COPY --from=frontend-builder --chown=app:app /app/dist ./ui/dist
 
 EXPOSE 8888
-
-CMD ["./server"]

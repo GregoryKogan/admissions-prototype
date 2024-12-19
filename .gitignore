@@ -22,3 +22,8 @@ go.work
 
 # Visual Studio Code specific files
 .vscode
+
+# secrets
+secrets/
+!internal/secrets/
+.env

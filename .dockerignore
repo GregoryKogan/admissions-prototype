@@ -1,0 +1,34 @@
+# Ignore the secrets directory
+secrets/
+
+# Ignore the migrations directory
+migrations/
+
+# Ignore the tests directory
+tests/
+
+# Ignore the .git directory
+.git
+
+# Ignore the .github directory
+.github
+
+# Ignore the .vscode directory
+.vscode
+
+# Ignore the ui/node_modules directory
+ui/node_modules
+
+# Ignore the coverage report
+coverage.out
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore Docker-related files
+docker-compose.yml
+Dockerfile

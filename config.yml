@@ -1,0 +1,79 @@
+server:
+  host: localhost
+  port: 8888
+  protocol: http
+  domain: https://l2sh-admissions.gkogan.ru
+
+database:
+  user: l2sh
+  name: admissions
+  host: database
+  port: 5432
+  connection:
+    timezone: Europe/Moscow
+
+cache:
+  host: cache
+  port: 6379
+
+logging:
+  # available modes: text, json
+  mode: text
+  level: debug
+
+auth:
+  access_lifetime: 15m
+  refresh_lifetime: 720h
+  auto_logout: 24h
+  passwords:
+    min_length: 8
+    gen_length: 12
+  email_verification:
+    token_lifetime: 30m
+
+mailing:
+  enabled: true
+  api_base: https://api.notisend.ru/v1
+
+users:
+  default_role: user
+  default_admin:
+    role: admin
+    login: admin
+    email: admin@l2sh-admissions.ru
+  roles:
+    user:
+      permissions:
+        admin: false
+        write_general: false
+        ai_access: false
+    admin:
+      permissions:
+        admin: true
+        write_general: true
+        ai_access: false
+    interviewer:
+      permissions:
+        admin: true
+        write_general: false
+        ai_access: true
+    principal:
+      permissions:
+        admin: true
+        write_general: true
+        ai_access: true
+
+exams:
+  types:
+    - title: "письменная математика"
+      order: 1
+      dismissing: true
+      has_points: true
+    - title: "устная математика"
+      order: 2
+      dismissing: true
+      has_points: true
+    - title: "русский язык"
+      order: 3
+      dismissing: true
+      has_points: false

@@ -1,30 +1,102 @@
 # admissions
 
-Сервис для поступающих в Лицей "Вторая школа"
+Service for applicants to the L2SH
 
-## Структура проекта
+## ToC <!-- omit in toc -->
 
-- `server.go` - точка входа
-- `ui/` - фронтенд
+- [Project structure](#project-structure)
+- [Build and run](#build-and-run)
+  - [Development](#development)
+  - [Production](#production)
+  - [Ports](#ports)
+  - [Secrets](#secrets)
+- [Administration](#administration)
+  - [Logging](#logging)
+  - [PgAdmin](#pgadmin)
+- [Testing](#testing)
+  - [Run tests](#run-tests)
+  - [Code coverage](#code-coverage)
 
-## Сборка и запуск
+## Project structure
 
-### С Docker (рекомендуется)
+- `cmd/` - application entry points
+  - `cmd/admissions/main.go` - main entry point
+- `internal/` - internal packages
+- `tests/` - tests
+- `ui/` - frontend
+- `secrets/` - secrets (ignored by git)
+- `config.yml` - configuration file
+
+## Build and run
+
+Before running the application, make sure to create the necessary secrets files (see [Secrets](#secrets)).
+
+### Development
 
 ```bash
-docker-compose up --build
+docker compose --profile dev up --build --watch
 ```
 
-### Без Docker
+- `--profile dev` - use `dev` profile that is bound to `database` and `pgadmin` services
+- `--watch` - update the container on code changes
+
+### Production
 
 ```bash
-# Сборка фронтенда
-cd ui
-yarn install
-yarn build
-cd ..
-# Сборка и запуск сервера
-go mod download
-go build -o server .
-./server
+docker compose up --build
+```
+
+### Ports
+
+Default ports:
+
+- `server` - 8888 (set in `config.yml`)
+- `pgadmin` - 5050
+- `database` - 5432
+
+### Secrets
+
+Secrets are stored in `secrets/` directory.  
+`docker-compose.yml` expects the following files:
+
+- `secrets/db_password.txt` - database password
+- `secrets/jwt_key.txt` - JWT signing key
+- `secrets/mail_api_key.txt` - NotiSend API key
+- `secrets/admin_password.txt` - password for the default admin user
+
+## Administration
+
+### Logging
+
+The application logs to `stdout`, which can be viewed with `docker logs` command.
+
+```bash
+docker logs admissions
+```
+
+### PgAdmin
+
+- URL: http://localhost:5050
+
+Credentials to connect to the development database are in `docker-compose.yml` and `secrets/db_password.txt`.
+
+## Testing
+
+### Run tests
+
+```bash
+go test -v ./...
+```
+
+### Code coverage
+
+```bash
+go test -v -coverprofile=coverage.out ./...
+```
+
+`coverage.out` file will be generated in the project root directory.  
+To view the coverage report, run:
+
+```bash
+go tool cover -html=coverage.out
 ```

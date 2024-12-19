@@ -4,6 +4,7 @@
  * ESLint configuration file.
  */
 
+// eslint-disable-next-line no-undef
 module.exports = {
   root: true,
   env: {
