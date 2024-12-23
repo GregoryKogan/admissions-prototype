@@ -19,6 +19,7 @@ The system is built with Go (Echo framework) and Vue.js. It uses Redis for cachi
 - [🧪 Testing](#-testing)
   - [✅ Run tests](#-run-tests)
   - [Code coverage](#code-coverage)
+- [✉️ Email sending with NotiSend](#-email-sending-with-notisend)
 
 ## 🗂️ Project structure
 
@@ -72,6 +73,10 @@ Set the following variables before running the application:
 This project features a robust JWT-based authentication system with automatic token rotation for every login or refresh, ensuring users are seamlessly re-authenticated without manual re-login. Each token is stored in Redis for quick invalidation, allowing flexible auto-logout and enhanced session control.
 
 Passwords are secured using Argon2 with distinct, randomly generated salts, providing state-of-the-art security against brute force attacks. User-friendly password guidelines (minimum length, mixed case, digits, and special characters) further strengthen credentials and reduce the risk of weak passwords.
+
+## ✉️ Email sending with NotiSend
+
+This service uses [NotiSend](https://notisend.ru/) for email verification and other automated notifications. It calls a NotiSend API endpoint in the “mailing” package using an API key secured in environment variables. This approach removes SMTP complexity and lets NotiSend handle delivery. Email can be disabled locally by setting “mailing.enabled” to false in config.yml or mocking the calls.
 
 ## 🛎️ Administration
 
