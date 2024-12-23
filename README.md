@@ -13,6 +13,7 @@ Service for applicants to the L2SH
 - [Administration](#administration)
   - [Logging](#logging)
   - [PgAdmin](#pgadmin)
+- [Admin Panel](#admin-panel)
 - [Testing](#testing)
   - [Run tests](#run-tests)
   - [Code coverage](#code-coverage)
@@ -56,13 +57,13 @@ Default ports:
 
 ### Secrets
 
-Secrets are stored in `secrets/` directory.  
-`docker-compose.yml` expects the following files:
+Secrets are loaded from environment variables.  
+Set the following variables before running the application:
 
-- `secrets/db_password.txt` - database password
-- `secrets/jwt_key.txt` - JWT signing key
-- `secrets/mail_api_key.txt` - NotiSend API key
-- `secrets/admin_password.txt` - password for the default admin user
+- DB_PASSWORD - password for the database
+- JWT_KEY - secret key for JWT signing
+- MAIL_API_KEY - NotiSend API key
+- ADMIN_PASSWORD - password for the default admin user
 
 ## Administration
 
@@ -79,6 +80,12 @@ docker logs admissions
 - URL: http://localhost:5050
 
 Credentials to connect to the development database are in `docker-compose.yml` and `secrets/db_password.txt`.
+
+## Admin Panel
+
+The admin panel is a separate frontend built with PostgREST and React Admin. A Docker service is provided
+in the docker-compose.yml under the "admin-panel" service. It can be accessed at http://localhost:4444
+once the container is running.
 
 ## Testing
 
