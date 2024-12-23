@@ -1,6 +1,7 @@
 # admissions
 
-This is an early prototype of an admissions system for the L2SH (Лицей "Вторая школа") school.  
+**This is an early prototype of an admissions system for the L2SH (Лицей "Вторая школа") school.**  
+
 The system is built with Go (Echo framework) and Vue.js. It uses Redis for caching and PostgreSQL for the database. A React Admin panel is provided for administration and API for it is built with PostgREST.
 
 ## ToC <!-- omit in toc -->
@@ -26,7 +27,6 @@ The system is built with Go (Echo framework) and Vue.js. It uses Redis for cachi
 - `ui/` - frontend
 - `tests/` - tests
 - `admin-panel/` - React Admin panel
-- `secrets/` - secrets (ignored by git)
 - `config.yml` - configuration
 
 ## 🚀 Build and run
