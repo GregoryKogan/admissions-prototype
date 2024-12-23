@@ -12,6 +12,8 @@ The system is built with Go (Echo framework) and Vue.js. It uses Redis for cachi
   - [🛠️ Production](#️-production)
   - [🔌 Ports](#-ports)
   - [Secrets](#secrets)
+- [🔒 Authentication](#-authentication)
+- [✉️ Email sending with NotiSend](#️-email-sending-with-notisend)
 - [🛎️ Administration](#️-administration)
   - [📈 Logging](#-logging)
   - [🌐 PgAdmin](#-pgadmin)
@@ -19,7 +21,6 @@ The system is built with Go (Echo framework) and Vue.js. It uses Redis for cachi
 - [🧪 Testing](#-testing)
   - [✅ Run tests](#-run-tests)
   - [Code coverage](#code-coverage)
-- [✉️ Email sending with NotiSend](#-email-sending-with-notisend)
 
 ## 🗂️ Project structure
 
