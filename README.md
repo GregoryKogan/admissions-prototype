@@ -1,6 +1,6 @@
 # admissions
 
-**This is an early prototype of an admissions system for the L2SH (Лицей "Вторая школа") school.**  
+**This is an early prototype of an admissions system for the L2SH (Лицей "Вторая школа") school.**
 
 The system is built with Go (Echo framework) and Vue.js. It uses Redis for caching and PostgreSQL for the database. A React Admin panel is provided for administration and API for it is built with PostgREST.
 
@@ -66,6 +66,12 @@ Set the following variables before running the application:
 - JWT_KEY - secret key for JWT signing
 - MAIL_API_KEY - NotiSend API key
 - ADMIN_PASSWORD - password for the default admin user
+
+## 🔒 Authentication
+
+This project features a robust JWT-based authentication system with automatic token rotation for every login or refresh, ensuring users are seamlessly re-authenticated without manual re-login. Each token is stored in Redis for quick invalidation, allowing flexible auto-logout and enhanced session control.
+
+Passwords are secured using Argon2 with distinct, randomly generated salts, providing state-of-the-art security against brute force attacks. User-friendly password guidelines (minimum length, mixed case, digits, and special characters) further strengthen credentials and reduce the risk of weak passwords.
 
 ## 🛎️ Administration
 
